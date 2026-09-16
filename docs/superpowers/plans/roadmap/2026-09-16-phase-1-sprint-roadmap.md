@@ -2,124 +2,165 @@
 
 | | |
 |---|---|
-| **Date** | 2026-09-16 |
-| **Team** | 2 people, full-stack, working in parallel |
+| **Date** | 2026-09-16 (revised same day: team changed from 2 people to solo) |
+| **Team** | 1 person, full-stack |
 | **Sprint length** | 1 week |
-| **Total sprints** | 5 (Sprints 1–5), plus Sprint 0 already complete |
+| **Total sprints** | 10 (Sprints 1–10), plus Sprint 0 already complete |
 | **Source proposal** | `direct-booking-saas-proposal.md`, §7 Phase 1 feature list |
 | **Source schema** | `docs/superpowers/specs/2026-09-15-database-schema-design.md` |
 
+## Revision note
+
+This roadmap originally planned 5 sprints for a 2-person team (parallel backend/frontend work each week). The team is now solo, which roughly halves weekly capacity — no more building the server side and the UI side of a feature at the same time. Rather than stretch each of the original 5 sprints to 2 weeks, the same total scope is now split into 10 one-week sprints, each a **single vertical feature slice** (server + UI together, since one person builds both anyway — there's no backend/frontend split left to preserve). Total Phase 1 timeline is roughly the same either way (~9–10 weeks); this version keeps sprints small and each one finishable in a week, which matters more for solo momentum than hitting an arbitrary 5-sprint number.
+
 ## How this is organized
 
-Each sprint is a **vertical, end-to-end slice** — not "backend week" then "frontend week." Every sprint ships something a host or guest could actually click through, with both people working full-stack in parallel on different parts of that slice. Roles below (Dev A / Dev B) are a suggested split, not a rigid assignment — swap as needed.
+Same principle as before: every sprint ships something you could actually click through end to end, not a layer (“just the API” or “just the UI”) with nothing to show for it.
 
 ---
 
 ## Sprint 0 — Database schema ✅ Already complete
 
-Not counted in the 5 sprints below since it's done. Recap: all 10 Phase 1 tables, constraints (including the AI payment-state safety constraint and the double-booking exclusion constraint), and Row-Level Security are implemented, tested (60 pgTAP assertions), and committed. This is a real head start — Sprint 1 starts with a working database, not a blank one.
+Unchanged from the original plan. All 10 Phase 1 tables, constraints (including the AI payment-state safety constraint and the double-booking exclusion constraint), and Row-Level Security are implemented, tested (60 pgTAP assertions), and pushed to GitHub.
 
 ---
 
-## Sprint 1 (Week 1) — Foundation & Host Onboarding
+## Sprint 1 (Week 1) — Foundation & Auth
 
-**Goal:** A host can sign up, create their organization, and add a property with its full knowledge base. Nothing public-facing yet — this sprint is entirely the host side.
+**Goal:** The app exists, talks to Supabase, and a host can sign up, log in, and log out.
 
-**Dev A (backend/infra):**
-- Scaffold the Next.js app (App Router), connect it to the existing local Supabase project
-- Supabase Auth wiring: host signup/login (email+password to start)
-- Server actions/API routes for organization CRUD and property CRUD, using the authenticated user's session (so RLS from Sprint 0 does the access-control work — no separate authorization logic needed)
-- Deploy pipeline: Vercel project connected to the repo, environment variables wired to Supabase
+- Scaffold the Next.js app, connect it to the existing local Supabase project
+- Supabase Auth: signup/login/logout pages, session-refresh middleware
 
-**Dev B (frontend):**
-- Auth pages (signup/login/logout)
-- "Create organization" onboarding form (name, slug, contact info)
-- Property form covering all the knowledge-base fields from the schema (wifi, gate code, checkout time, etc.) — this is the biggest single form in the product, worth getting the UX right early
-- Bare-bones host dashboard shell: list of the host's properties, nav structure that later sprints hang off of
+**Already planned in detail:** this is Tasks 1–3 of `docs/superpowers/plans/implementation/2026-09-16-sprint-1-foundation-onboarding.md` (that plan was written for the old 2-person Sprint 1; it splits cleanly at the Task 3/4 boundary into this sprint and the next one — no need to rewrite it).
 
-**End-of-sprint demo:** A host signs up, creates an org, adds a property with a full knowledge base, and sees it listed in their dashboard.
+**End-of-sprint demo:** Sign up, get redirected into the app, log out, log back in.
 
 ---
 
-## Sprint 2 (Week 2) — Public Catalogue & Availability
+## Sprint 2 (Week 2) — Host Organization & Property CRUD
 
-**Goal:** Anyone (no login) can browse a host's published properties and see a real, live availability calendar. Hosts can manage photos and block dates.
+**Goal:** A host can create their organization and add/edit a property with its full AI knowledge base.
 
-**Dev A (backend/infra):**
-- Photo upload to Supabase Storage (`property_photos`), image compression/resizing pipeline
-- Availability calendar logic: host date-blocking endpoint, booking-derived blocks (wired up now even though bookings don't exist until Sprint 4 — the `availability_blocks` table already supports both)
-- Seasonal pricing CRUD (host-side)
-- Public read endpoints for published properties/photos/availability/pricing — these hit the public RLS policies from Sprint 0 directly via the anon key, no server route needed
+- Organization creation (onboarding form + server action)
+- Dashboard shell with the auth/onboarding guard chain
+- Property creation form and the full knowledge-base edit page
+- RLS cross-tenant regression test (proving the app respects Sprint 0's access control, not just the raw database)
+- Deployment prep (env var docs, Vercel checklist)
 
-**Dev B (frontend):**
+**Already planned in detail:** Tasks 4–8 of the same `sprint-1-foundation-onboarding.md` plan.
+
+**End-of-sprint demo:** Full loop — sign up → create org → create a property → fill in its knowledge base → log out → log back in → it's all still there.
+
+---
+
+## Sprint 3 (Week 3) — Public Catalogue
+
+**Goal:** Anyone (no login) can browse a host's published properties on their phone.
+
+- Photo upload to Supabase Storage, image compression/resizing
 - Public host catalogue page (`stay.ourapp.com/{org_slug}`)
-- Public property page: photos, price, amenities, live calendar — mobile-first, this is where nearly all real traffic lands (Instagram bio taps)
-- Host-side photo manager (upload, reorder, delete) and availability/pricing management UI
+- Public property page: photos, price, amenities, host profile — mobile-first, since nearly all real traffic is an Instagram bio tap on a phone
+- Host-side photo manager (upload, reorder, delete)
 
-**End-of-sprint demo:** A published property is browsable by an anonymous visitor on mobile, showing real photos and a real calendar reflecting host-set blocks.
+Public reads hit Sprint 0's public RLS policies directly via the anon key — no server route needed for this part, which keeps this sprint mostly UI + storage work.
 
----
-
-## Sprint 3 (Week 3) — AI Agent, Guest Chat & Host Inbox
-
-**Goal:** A guest can chat with the AI about a property; the host sees the conversation live and can take over.
-
-**Dev A (backend/infra):**
-- LLM integration (Gemini Flash or DeepSeek) — server route that builds the prompt from a single property's row (per the "whole row is the knowledge base" design decision), calls the model, writes to `messages`
-- Guest-facing actions (start conversation, send message) implemented as Next.js server routes using the **service role** key, per the RLS design decision from Sprint 0 — guests never get a Supabase session
-- Escalation logic: detect "I don't know" / guest asks for a human → flip `ai_enabled=false, ai_disabled_reason='escalation'`
-- Supabase Realtime wiring for the `messages` table
-
-**Dev B (frontend):**
-- Guest-facing chat widget embedded on the property page
-- Host inbox: conversation list, live message view (Realtime subscription), per-chat AI on/off toggle, visual AI-vs-host message labelling, unread counts and escalation alerts
-
-**End-of-sprint demo:** A guest asks the AI a question about a live property (in English, Urdu, or Roman Urdu) and gets a correct, property-specific answer; the host watches it happen in real time and can jump into that one conversation.
+**End-of-sprint demo:** Publish a property, open its public URL in an incognito/mobile browser, see real photos and details with no login.
 
 ---
 
-## Sprint 4 (Week 4) — Booking Flow, Payment State Machine & Hotel Eye
+## Sprint 4 (Week 4) — Availability & Pricing
 
-**Goal:** The full booking lifecycle works end-to-end, including the money-safety AI state machine and CNIC capture.
+**Goal:** The calendar on the public property page is real and live, not a mockup.
 
-**Dev A (backend/infra):**
-- Booking request submission (guest, via service-role server route) with server-computed `total_price_pkr`/`advance_amount_pkr` from the property's rate + any matching seasonal rule
-- Host approve/reject action: on approval, create the `availability_blocks` row and flip the conversation to `ai_state='payment'` (the database constraint from Sprint 0 guarantees the AI can't stay active through this transition)
-- "Mark payment received" action: flips booking to `paid`/`staying`, conversation back to `ai_state='stay'`
-- CNIC/passport upload to Supabase Storage (private bucket, signed URLs), `guest_documents` write with `retention_expires_at` set
+- Host date-blocking UI + backend (writes to `availability_blocks`)
+- Seasonal pricing CRUD (host-side)
+- Live calendar rendered on the public property page from Sprint 3, reflecting real blocks and seasonal rates
 
-**Dev B (frontend):**
-- Guest booking flow UI: date selection against the live calendar, request submission, confirmation screen with check-in details
-- Host booking management: requested/approved/paid/staying/checked-out pipeline view, approve/reject buttons, "mark paid" button
-- CNIC upload UI (guest-facing) and the host's guest-document record view with CSV export
-
-**End-of-sprint demo:** A guest requests a booking, the host approves it (AI visibly goes silent in that conversation), the host marks it paid (AI comes back for check-in questions), and the guest uploads a CNIC that shows up cleanly in the host's dashboard.
+**End-of-sprint demo:** Block a date range as the host, refresh the public property page, see those dates correctly marked unavailable.
 
 ---
 
-## Sprint 5 (Week 5) — Trust Features, Hardening & Launch
+## Sprint 5 (Week 5) — AI Agent & Guest Chat
 
-**Goal:** The product is trustworthy-looking and production-ready, not just functionally complete.
+**Goal:** A guest can chat with the AI about a property and get a correct, property-specific answer.
 
-**Dev A (backend/infra):**
+- LLM integration (Gemini Flash or DeepSeek), prompt built from a single property's full row (the "whole row is the knowledge base" design decision from Sprint 0)
+- Guest-facing chat widget on the property page
+- Guest actions (start conversation, send message) implemented as server routes using the **service role** key — guests never get a Supabase session, per Sprint 0's RLS design
+- Escalation logic: AI detects "I don't know" or an explicit request for a human, flips `ai_enabled=false, ai_disabled_reason='escalation'`
+
+**End-of-sprint demo:** Ask the AI a real question (English, Urdu, or Roman Urdu) about a live property and get a correct answer sourced only from that property's data.
+
+---
+
+## Sprint 6 (Week 6) — Host Inbox
+
+**Goal:** The host can watch every AI conversation live and take over any one of them.
+
+- Conversation list + live message view via Supabase Realtime
+- Per-chat AI on/off toggle
+- Visual AI-vs-host message labelling, unread counts, escalation alerts
+
+**End-of-sprint demo:** Message the AI as a guest in one browser tab, watch it appear live in the host inbox in another, take over the chat, hand it back.
+
+---
+
+## Sprint 7 (Week 7) — Booking Request & Approval
+
+**Goal:** A guest can request a booking, and approving it correctly locks the calendar and silences the AI.
+
+- Guest booking request UI + backend (server-computed price from rate + any seasonal rule)
+- Host approve/reject UI
+- On approval: create the `availability_blocks` row, flip the conversation to `ai_state='payment'` — Sprint 0's database constraint guarantees the AI can't stay active through this transition
+
+**End-of-sprint demo:** Request a booking as a guest, approve it as the host, watch the AI go visibly silent in that conversation and the calendar lock those dates.
+
+---
+
+## Sprint 8 (Week 8) — Payment Confirmation & Hotel Eye
+
+**Goal:** The full booking lifecycle closes out, including the legally-required CNIC capture.
+
+- "Mark payment received" host action: booking → `paid`/`staying`, conversation → `ai_state='stay'` (AI resumes for check-in questions)
+- Booking status pipeline view (requested/approved/paid/staying/checked-out) on the host dashboard
+- CNIC/passport upload (guest-facing, private storage) + host document view + CSV export
+
+**End-of-sprint demo:** Mark a booking paid, watch the AI come back for check-in questions, upload a CNIC as the guest, see it show up cleanly in the host's dashboard.
+
+---
+
+## Sprint 9 (Week 9) — Trust Features & Hardening
+
+**Goal:** The product looks and behaves like something worth trusting with money and ID documents.
+
 - Airbnb badge verification flow (temp-code check against the host's Airbnb listing description)
-- Retention/deletion scheduled job for `guest_documents` past `retention_expires_at` (finally resolving the open question from the schema spec — needs the retention period confirmed first)
-- Security pass: confirm signed URLs are short-lived, confirm no service-role key is ever exposed client-side, review all RLS policies against real usage
-- Production Supabase project setup (`supabase link` + `supabase db push` to move Sprint 0's schema off local Docker and onto a real hosted project) and production deploy
+- Trust polish: host profile display, cancellation/refund terms shown before booking
+- Retention/deletion scheduled job for `guest_documents` past `retention_expires_at`
+- Security pass: confirm signed URLs are short-lived, confirm the service-role key is never exposed client-side, review RLS policies against real usage
+- Mobile performance pass (lazy-loading, Lighthouse audit on a slow-connection profile)
 
-**Dev B (frontend):**
-- Trust elements on property pages: verified Airbnb badge display, host profile polish, cancellation/refund terms display
-- Mobile performance pass: image lazy-loading, Lighthouse audit on a slow-connection profile (this is explicitly called out in the proposal as important — most traffic is a phone on a mobile network)
-- Bug bash across the full guest and host journeys built in Sprints 1–4
-
-**End-of-sprint demo:** A full cold-start walkthrough — new host signs up, sets up a property, gets a real guest booking through chat, collects payment and CNIC, all on the production URL — with nothing left mocked or stubbed.
+**End-of-sprint demo:** A verified Airbnb badge shows correctly on a property that has one; a Lighthouse mobile audit comes back clean.
 
 ---
 
-## What's deliberately excluded from these 5 sprints
+## Sprint 10 (Week 10) — Production Launch
 
-Per the proposal's explicit Phase 1/2/3 split and out-of-scope list: reviews, upsells, repeat-guest tooling, analytics, Airbnb iCal sync, team accounts, WhatsApp Business API, and any Airbnb inbox/account integration. None of these should creep into Sprints 1–5 — they're deferred by design, not by oversight.
+**Goal:** The product exists somewhere real, not just on a laptop.
+
+- Hosted Supabase project setup (`supabase link` + `supabase db push` to move Sprint 0's schema off local Docker)
+- Production Vercel deploy with real environment variables
+- Full cold-start smoke test on the production URL: new host signs up, sets up a property, gets a real guest booking through chat, collects payment and CNIC — nothing mocked
+- Bug bash buffer
+
+**End-of-sprint demo:** The walkthrough above, done live on the actual production URL.
+
+---
+
+## What's deliberately excluded from these 10 sprints
+
+Unchanged from the original roadmap: reviews, upsells, repeat-guest tooling, analytics, Airbnb iCal sync, team accounts, WhatsApp Business API, and any Airbnb inbox/account integration are all Phase 2/3, deferred by design.
 
 ## Before Sprint 1 starts
 
-The proposal's own validation step (§11 — talking to 10–15 real operators, one week, no code) is not represented as a sprint here because it's not engineering work. If that hasn't happened yet, it should gate Sprint 1, not run in parallel with it — the whole point is to confirm there's a customer before building five weeks of product for them.
+Also unchanged: the proposal's own validation step (§11 — talking to 10–15 real operators, one week, no code) should gate Sprint 1 if it hasn't happened yet, not run in parallel with it.

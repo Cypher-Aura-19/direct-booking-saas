@@ -1541,4 +1541,4 @@ npm test
 npm run build
 ```
 
-Expected: all tests pass, the production build succeeds. Then walk the full manual path once: sign up → create organization → create a property → fill in its knowledge base → log out → log back in → see it still there. This is Sprint 1's end-of-sprint demo from the roadmap (`docs/superpowers/plans/2026-09-16-phase-1-sprint-roadmap.md`).
+Expected: all tests pass, the production build succeeds. Then walk the full manual path once: sign up → create organization → create a property → fill in its knowledge base → log out → log back in → see it still there. This is Sprint 1's end-of-sprint demo from the roadmap (`docs/superpowers/plans/roadmap/2026-09-16-phase-1-sprint-roadmap.md`).

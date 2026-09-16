@@ -2,20 +2,32 @@
 
 | | |
 |---|---|
-| **Date** | 2026-09-16 (revised same day: team changed from 2 people to solo) |
-| **Team** | 1 person, full-stack |
-| **Sprint length** | 1 week |
-| **Total sprints** | 10 (Sprints 1–10), plus Sprint 0 already complete |
+| **Date** | 2026-09-16 (revised same day: team changed from 2 people → solo → AI-executed) |
+| **Executor** | Claude (this agent), same task-by-task/TDD approach used for Sprint 0 |
+| **Sprint length** | 1 working day per sprint |
+| **Total sprints** | 10 (Sprints 1–10 = 10 working days / ~2 calendar weeks), plus Sprint 0 already complete |
 | **Source proposal** | `direct-booking-saas-proposal.md`, §7 Phase 1 feature list |
 | **Source schema** | `docs/superpowers/specs/2026-09-15-database-schema-design.md` |
 
-## Revision note
+## Revision history
 
-This roadmap originally planned 5 sprints for a 2-person team (parallel backend/frontend work each week). The team is now solo, which roughly halves weekly capacity — no more building the server side and the UI side of a feature at the same time. Rather than stretch each of the original 5 sprints to 2 weeks, the same total scope is now split into 10 one-week sprints, each a **single vertical feature slice** (server + UI together, since one person builds both anyway — there's no backend/frontend split left to preserve). Total Phase 1 timeline is roughly the same either way (~9–10 weeks); this version keeps sprints small and each one finishable in a week, which matters more for solo momentum than hitting an arbitrary 5-sprint number.
+1. **Original:** 5 sprints, 1 week each, 2-person team (parallel backend/frontend work).
+2. **Revision 1 (solo):** team dropped to 1 person, which roughly halves weekly capacity. Split the same scope into 10 one-week sprints, each a single vertical feature slice (server + UI together, since one person builds both anyway).
+3. **Revision 2 (this one — AI-executed):** the person is no longer doing the implementation work by hand — Claude is, the same way Sprint 0's database layer was actually built (task-by-task, TDD, real local Supabase, committed as it goes). Human-week estimates don't apply to that execution mode. **Each of the 10 sprints from Revision 1 becomes one working day** — same scope, same order, same demo criteria per sprint, just executed at agent pace instead of human coding pace. Total Phase 1: **10 working days**, not 10 weeks.
 
 ## How this is organized
 
-Same principle as before: every sprint ships something you could actually click through end to end, not a layer (“just the API” or “just the UI”) with nothing to show for it.
+Same principle as before: every sprint ships something that actually works end to end, not a layer (“just the API” or “just the UI”) with nothing to show for it. Before finalizing this revision, five technical unknowns were researched rather than assumed — findings below feed directly into the affected sprints.
+
+## Research findings behind this plan
+
+| Question | Finding | Affects |
+|---|---|---|
+| Is the `@supabase/ssr` cookie pattern (`getAll`/`setAll`) used in the already-written Sprint 1 auth code still current? | Yes — confirmed current as of Sep 2026 via Supabase's own docs. No changes needed to the existing plan. | Sprint 1 |
+| Best way to serve property photos efficiently? | Supabase Storage has built-in image transformation (resize/quality via URL params), usable as a custom `next/image` loader — no separate compression pipeline needed. | Sprint 3 |
+| Which LLM: Gemini Flash or DeepSeek? | Gemini Flash: $0.75/$3.75 per 1M input/output tokens (promo through end of 2026). DeepSeek Flash is far cheaper (~$0.003–0.3 in / $0.6–1.2 out per 1M) but its tokenizer is optimized for English/Chinese, not South Asian languages. Given the proposal's own "cost isn't the constraint" framing and the hard requirement for solid Urdu/Roman Urdu, **Gemini Flash is primary**; DeepSeek stays as a documented cost-fallback, not the default. | Sprint 5 |
+| Any gotchas with Supabase Realtime for the live host inbox? | Yes — a documented timing gap between a client reporting `SUBSCRIBED` and the backend replication listener being ready; a message sent in that gap can be missed. The inbox must fetch existing messages *after* subscribing (or reconcile on load), not assume subscribe-then-fetch is gap-free. | Sprint 6 |
+| Does Hotel Eye (hoteleye.punjab.gov.pk) have a public API to submit guest records automatically? | No official API confirmed (PITB/Punjab Police sources). Third-party "auto-sync" tools exist but aren't official integrations. The proposal's original decision — prepare a clean record, host submits it manually — is correct and unchanged. | Sprint 8 |
 
 ---
 
@@ -25,7 +37,7 @@ Unchanged from the original plan. All 10 Phase 1 tables, constraints (including 
 
 ---
 
-## Sprint 1 (Week 1) — Foundation & Auth
+## Sprint 1 (Day 1) — Foundation & Auth
 
 **Goal:** The app exists, talks to Supabase, and a host can sign up, log in, and log out.
 
@@ -38,7 +50,7 @@ Unchanged from the original plan. All 10 Phase 1 tables, constraints (including 
 
 ---
 
-## Sprint 2 (Week 2) — Host Organization & Property CRUD
+## Sprint 2 (Day 2) — Host Organization & Property CRUD
 
 **Goal:** A host can create their organization and add/edit a property with its full AI knowledge base.
 
@@ -54,11 +66,11 @@ Unchanged from the original plan. All 10 Phase 1 tables, constraints (including 
 
 ---
 
-## Sprint 3 (Week 3) — Public Catalogue
+## Sprint 3 (Day 3) — Public Catalogue
 
 **Goal:** Anyone (no login) can browse a host's published properties on their phone.
 
-- Photo upload to Supabase Storage, image compression/resizing
+- Photo upload to Supabase Storage; serve via Supabase's built-in Storage image transformation (resize/quality via URL params) through a custom `next/image` loader — no separate compression library needed
 - Public host catalogue page (`stay.ourapp.com/{org_slug}`)
 - Public property page: photos, price, amenities, host profile — mobile-first, since nearly all real traffic is an Instagram bio tap on a phone
 - Host-side photo manager (upload, reorder, delete)
@@ -69,7 +81,7 @@ Public reads hit Sprint 0's public RLS policies directly via the anon key — no
 
 ---
 
-## Sprint 4 (Week 4) — Availability & Pricing
+## Sprint 4 (Day 4) — Availability & Pricing
 
 **Goal:** The calendar on the public property page is real and live, not a mockup.
 
@@ -81,11 +93,11 @@ Public reads hit Sprint 0's public RLS policies directly via the anon key — no
 
 ---
 
-## Sprint 5 (Week 5) — AI Agent & Guest Chat
+## Sprint 5 (Day 5) — AI Agent & Guest Chat
 
 **Goal:** A guest can chat with the AI about a property and get a correct, property-specific answer.
 
-- LLM integration (Gemini Flash or DeepSeek), prompt built from a single property's full row (the "whole row is the knowledge base" design decision from Sprint 0)
+- LLM integration — **Gemini Flash primary** (better multilingual coverage for Urdu/Roman Urdu; DeepSeek documented as a cheaper fallback if cost ever becomes a real constraint), prompt built from a single property's full row (the "whole row is the knowledge base" design decision from Sprint 0)
 - Guest-facing chat widget on the property page
 - Guest actions (start conversation, send message) implemented as server routes using the **service role** key — guests never get a Supabase session, per Sprint 0's RLS design
 - Escalation logic: AI detects "I don't know" or an explicit request for a human, flips `ai_enabled=false, ai_disabled_reason='escalation'`
@@ -94,11 +106,11 @@ Public reads hit Sprint 0's public RLS policies directly via the anon key — no
 
 ---
 
-## Sprint 6 (Week 6) — Host Inbox
+## Sprint 6 (Day 6) — Host Inbox
 
 **Goal:** The host can watch every AI conversation live and take over any one of them.
 
-- Conversation list + live message view via Supabase Realtime
+- Conversation list + live message view via Supabase Realtime — subscribe first, then fetch/reconcile existing messages, to close the documented `SUBSCRIBED`-vs-replication-ready timing gap that can otherwise drop a message sent right at page load
 - Per-chat AI on/off toggle
 - Visual AI-vs-host message labelling, unread counts, escalation alerts
 
@@ -106,7 +118,7 @@ Public reads hit Sprint 0's public RLS policies directly via the anon key — no
 
 ---
 
-## Sprint 7 (Week 7) — Booking Request & Approval
+## Sprint 7 (Day 7) — Booking Request & Approval
 
 **Goal:** A guest can request a booking, and approving it correctly locks the calendar and silences the AI.
 
@@ -118,19 +130,19 @@ Public reads hit Sprint 0's public RLS policies directly via the anon key — no
 
 ---
 
-## Sprint 8 (Week 8) — Payment Confirmation & Hotel Eye
+## Sprint 8 (Day 8) — Payment Confirmation & Hotel Eye
 
 **Goal:** The full booking lifecycle closes out, including the legally-required CNIC capture.
 
 - "Mark payment received" host action: booking → `paid`/`staying`, conversation → `ai_state='stay'` (AI resumes for check-in questions)
 - Booking status pipeline view (requested/approved/paid/staying/checked-out) on the host dashboard
-- CNIC/passport upload (guest-facing, private storage) + host document view + CSV export
+- CNIC/passport upload (guest-facing, private storage) + host document view + CSV export — record preparation only; no portal auto-submission, since Hotel Eye has no public API (confirmed above)
 
 **End-of-sprint demo:** Mark a booking paid, watch the AI come back for check-in questions, upload a CNIC as the guest, see it show up cleanly in the host's dashboard.
 
 ---
 
-## Sprint 9 (Week 9) — Trust Features & Hardening
+## Sprint 9 (Day 9) — Trust Features & Hardening
 
 **Goal:** The product looks and behaves like something worth trusting with money and ID documents.
 
@@ -144,7 +156,7 @@ Public reads hit Sprint 0's public RLS policies directly via the anon key — no
 
 ---
 
-## Sprint 10 (Week 10) — Production Launch
+## Sprint 10 (Day 10) — Production Launch
 
 **Goal:** The product exists somewhere real, not just on a laptop.
 
@@ -154,6 +166,8 @@ Public reads hit Sprint 0's public RLS policies directly via the anon key — no
 - Bug bash buffer
 
 **End-of-sprint demo:** The walkthrough above, done live on the actual production URL.
+
+**Note:** this sprint is the one exception to "Claude executes it" — creating the hosted Supabase project and running `vercel login`/first deploy both need your own account credentials. Claude prepares everything (migrations ready to push, env vars documented, deploy config committed) and can drive both CLIs once you've logged in, but the login step itself is yours to do.
 
 ---
 

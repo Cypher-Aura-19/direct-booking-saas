@@ -2,6 +2,16 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+## Status: executed 2026-09-16 — all 8 tasks complete, all tests passing, production build clean
+
+Executed end-to-end in one session, with a few real deviations from the plan as written, discovered while actually building against the installed tool versions rather than assumed ones:
+
+- **Next.js scaffolded as 16.3.5, not 15** (latest at execution time). Its `middleware.ts` convention is deprecated in favor of `proxy.ts` (rename file + rename the exported function to `proxy`) — done, no functional change.
+- **UI is not plain Tailwind utility classes as originally sketched.** Per a later request for an elevated, distinctive design, a small design system was built first: named color tokens (pine/lake/lantern/mist/stone/ash, evoking Northern Pakistan's lake-and-pine landscape rather than a generic SaaS palette), Fraunces/Manrope/IBM Plex Mono via `next/font`, and reusable primitives (`components/ui/panel.tsx`, `button.tsx`, `field.tsx`, `badge.tsx`) with a signature "ledger spine" accent used consistently across every card/panel. All page-level code below still reflects the correct data flow and server-action logic; only the JSX/class names differ from what's shown in this doc's original code blocks.
+- **Real bug caught by live testing, not just unit tests:** the onboarding page (`/dashboard/onboarding`) was originally nested under `app/dashboard/`, so it inherited the dashboard shell layout (header + sign-out button) even though a host has no organization yet at that point. Fixed by moving the dashboard-shell routes into an `app/dashboard/(shell)/` route group, leaving `onboarding/` as a sibling outside it. Caught by driving the actual HTTP flow (signup → onboarding → org → property) against the running dev server and real local Supabase instance — the unit/integration tests never would have caught this, since they don't render layouts.
+- `vitest.config.ts` needed an explicit `@` path alias (vitest doesn't read `tsconfig.json` paths automatically) and a bumped `testTimeout` (15s) since these tests hit a real local Auth service, not mocks, and the 5s default was occasionally too tight under concurrent test-file load.
+- Task 7's `updatePropertyAction` originally typed its form-field accumulator as `Record<string, string>`; self-review before execution caught that this doesn't type-check against `UpdatePropertyInput`, and it was fixed to build the object with the correct type up front.
+
 **Goal:** A host can sign up, log in, create their organization, add a property with its full knowledge base, and see it in a dashboard — end to end, on top of the already-implemented Phase 1 database schema.
 
 **Architecture:** A Next.js 15 (App Router, TypeScript) app in `web/`, talking to the existing local Supabase project in `supabase/`. Business logic lives in a plain-function data-access layer (`web/lib/*.ts`) that takes a Supabase client and returns/throws normally — this is what gets unit/integration tested directly against the real local database. Next.js Server Actions in `app/**/actions.ts` are thin wrappers around that layer, so the framework glue is never what's under test. Auth uses `@supabase/ssr` for cookie-based sessions shared between Server Components, Server Actions, and middleware.
@@ -31,14 +41,14 @@
 - Consumes: nothing (first task)
 - Produces: a running Next.js dev server and a working `npm test` command. Every later task's `npm run dev`/`npm test` commands run from `web/`.
 
-- [ ] **Step 1: Scaffold the app**
+- [x] **Step 1: Scaffold the app**
 
 ```bash
 cd "C:\Users\HP\Desktop\open source projects\airbnb like system"
 npx create-next-app@latest web --typescript --tailwind --app --eslint --no-src-dir --import-alias "@/*" --use-npm
 ```
 
-- [ ] **Step 2: Install Supabase and test dependencies**
+- [x] **Step 2: Install Supabase and test dependencies**
 
 ```bash
 cd web
@@ -46,7 +56,7 @@ npm install @supabase/ssr @supabase/supabase-js
 npm install -D vitest dotenv
 ```
 
-- [ ] **Step 3: Configure Vitest**
+- [x] **Step 3: Configure Vitest**
 
 ```typescript
 // web/vitest.config.ts
@@ -66,7 +76,7 @@ import { config } from 'dotenv'
 config({ path: '.env.test.local' })
 ```
 
-- [ ] **Step 4: Add the test script and verify the toolchain**
+- [x] **Step 4: Add the test script and verify the toolchain**
 
 Edit `web/package.json` `scripts` to add:
 
@@ -83,7 +93,7 @@ npm test
 
 Expected: `npm run build` succeeds (default Next.js starter page). `npm test` reports "No test files found" (exit code 1 is expected here since there are no tests yet — this just confirms Vitest itself runs).
 
-- [ ] **Step 5: Update .gitignore and commit**
+- [x] **Step 5: Update .gitignore and commit**
 
 ```bash
 cd "C:\Users\HP\Desktop\open source projects\airbnb like system"
@@ -122,7 +132,7 @@ EOF
 - Consumes: the local Supabase instance from Sprint 0 (must be running via `supabase start`)
 - Produces: `createServerSupabaseClient()`, `createBrowserSupabaseClient()`, `createServiceRoleSupabaseClient()`. Tasks 3–7 use the server and service-role clients; the browser client isn't needed until client-side interactivity arrives in a later sprint (e.g. the Sprint 3 chat widget), but is scaffolded now alongside its siblings.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // web/lib/supabase/service-role.test.ts
@@ -138,7 +148,7 @@ describe('createServiceRoleSupabaseClient', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 ```bash
 cd web
@@ -147,7 +157,7 @@ npm test
 
 Expected: FAIL — `Cannot find module './service-role'`.
 
-- [ ] **Step 3: Create the env files**
+- [x] **Step 3: Create the env files**
 
 Get the current local Supabase keys (from Sprint 0's `supabase start` output, or re-print them):
 
@@ -165,7 +175,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<ANON_KEY from supabase status>
 SUPABASE_SERVICE_ROLE_KEY=<SERVICE_ROLE_KEY from supabase status>
 ```
 
-- [ ] **Step 4: Write the three client factories**
+- [x] **Step 4: Write the three client factories**
 
 ```typescript
 // web/lib/supabase/service-role.ts
@@ -225,7 +235,7 @@ export async function createServerSupabaseClient() {
 }
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 ```bash
 npm test
@@ -233,7 +243,7 @@ npm test
 
 Expected: PASS. If it fails with a connection error, confirm `supabase start` is running (`npx supabase status` from the repo root).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add web/lib/supabase web/.gitignore
@@ -264,7 +274,7 @@ EOF
 - Consumes: `createServerSupabaseClient`, `createServiceRoleSupabaseClient` (Task 2)
 - Produces: `signUpAction(formData)`, `signInAction(formData)`, `signOutAction()` in `web/app/login/actions.ts`, and a `createTestUser()` helper in `web/lib/supabase/test-helpers.ts` that every later test needing an authenticated user reuses. Session cookies are refreshed on every request via `middleware.ts`.
 
-- [ ] **Step 1: Write the test helper for creating authenticated test users**
+- [x] **Step 1: Write the test helper for creating authenticated test users**
 
 ```typescript
 // web/lib/supabase/test-helpers.ts
@@ -305,7 +315,7 @@ export async function deleteTestUser(userId: string) {
 }
 ```
 
-- [ ] **Step 2: Write the failing test for the auth actions' underlying behavior**
+- [x] **Step 2: Write the failing test for the auth actions' underlying behavior**
 
 ```typescript
 // web/app/login/actions.test.ts
@@ -341,7 +351,7 @@ describe('auth', () => {
 })
 ```
 
-- [ ] **Step 3: Run the test to verify it fails**
+- [x] **Step 3: Run the test to verify it fails**
 
 ```bash
 npm test
@@ -349,7 +359,7 @@ npm test
 
 Expected: FAIL — `Cannot find module '@/lib/supabase/test-helpers'` (the module doesn't exist as a resolvable path yet until Step 1's file is saved — if it's already saved this step should actually pass since nothing in it depends on unwritten code; verify by temporarily confirming, then proceed. The meaningful new-code check is Step 5 below, for the actions themselves.)
 
-- [ ] **Step 4: Write the middleware session-refresh helper**
+- [x] **Step 4: Write the middleware session-refresh helper**
 
 ```typescript
 // web/lib/supabase/middleware.ts
@@ -397,7 +407,7 @@ export const config = {
 }
 ```
 
-- [ ] **Step 5: Write the auth actions and pages**
+- [x] **Step 5: Write the auth actions and pages**
 
 ```typescript
 // web/app/login/actions.ts
@@ -512,7 +522,7 @@ export default async function LoginPage({
 }
 ```
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 ```bash
 npm test
@@ -520,7 +530,7 @@ npm test
 
 Expected: PASS (2/2 in the new `auth` describe block).
 
-- [ ] **Step 7: Manually verify in the browser**
+- [x] **Step 7: Manually verify in the browser**
 
 ```bash
 npm run dev
@@ -528,7 +538,7 @@ npm run dev
 
 Visit `http://localhost:3000/signup`, create an account, confirm it redirects to `/dashboard/onboarding` (a 404 is expected right now — that page is built in Task 4 — the redirect itself succeeding is what this step confirms).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add web/middleware.ts web/lib/supabase/middleware.ts web/lib/supabase/test-helpers.ts web/app/login web/app/signup
@@ -554,7 +564,7 @@ EOF
 - Consumes: `createTestUser`/`deleteTestUser` (Task 3), a Supabase client (Task 2)
 - Produces: `createOrganization(supabase, input)` and `getOrganizationForUser(supabase, userId)` in `web/lib/organizations.ts`. Task 5 (dashboard shell) and Task 6 (properties) both call `getOrganizationForUser`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // web/lib/organizations.test.ts
@@ -610,7 +620,7 @@ describe('organizations', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 ```bash
 cd web
@@ -619,7 +629,7 @@ npm test
 
 Expected: FAIL — `Cannot find module './organizations'`.
 
-- [ ] **Step 3: Write the data-access functions**
+- [x] **Step 3: Write the data-access functions**
 
 ```typescript
 // web/lib/organizations.ts
@@ -675,7 +685,7 @@ export async function getOrganizationForUser(
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 ```bash
 npm test
@@ -683,7 +693,7 @@ npm test
 
 Expected: PASS (3/3 in the new `organizations` describe block).
 
-- [ ] **Step 5: Build the onboarding page and action**
+- [x] **Step 5: Build the onboarding page and action**
 
 ```typescript
 // web/app/dashboard/onboarding/actions.ts
@@ -761,7 +771,7 @@ export default async function OnboardingPage({
 }
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add web/lib/organizations.ts web/lib/organizations.test.ts web/app/dashboard/onboarding
@@ -785,7 +795,7 @@ EOF
 - Consumes: `getOrganizationForUser` (Task 4)
 - Produces: a `/dashboard` route that redirects to `/login` if unauthenticated and to `/dashboard/onboarding` if authenticated but orgless. Task 6/7's property pages nest under this layout and can assume an organization exists.
 
-- [ ] **Step 1: Write the dashboard layout guard**
+- [x] **Step 1: Write the dashboard layout guard**
 
 ```tsx
 // web/app/dashboard/layout.tsx
@@ -818,7 +828,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 }
 ```
 
-- [ ] **Step 2: Write the dashboard landing page**
+- [x] **Step 2: Write the dashboard landing page**
 
 ```tsx
 // web/app/dashboard/page.tsx
@@ -870,7 +880,7 @@ export default async function DashboardPage() {
 
 This task has no new automated test of its own — `listPropertiesForOrganization` (used above) is written and tested in Task 6, and this page is a thin composition of already-tested functions. Verification is manual (Step 3) plus the RLS-focused test added in Task 7.
 
-- [ ] **Step 3: Manually verify the guard chain**
+- [x] **Step 3: Manually verify the guard chain**
 
 ```bash
 npm run dev
@@ -880,7 +890,7 @@ npm run dev
 - Log in as a user with no organization → redirected to `/dashboard/onboarding`.
 - Complete onboarding → lands on `/dashboard` showing "No properties yet."
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add web/app/dashboard/layout.tsx web/app/dashboard/page.tsx
@@ -906,7 +916,7 @@ EOF
 - Consumes: `createOrganization` (Task 4, for test fixtures), a Supabase client (Task 2)
 - Produces: `createProperty`, `listPropertiesForOrganization`, `getProperty`, `updateProperty` in `web/lib/properties.ts`. `listPropertiesForOrganization` is already consumed by Task 5's dashboard page; `updateProperty`/`getProperty` are consumed by Task 7.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // web/lib/properties.test.ts
@@ -994,7 +1004,7 @@ describe('properties', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 ```bash
 npm test
@@ -1002,7 +1012,7 @@ npm test
 
 Expected: FAIL — `Cannot find module './properties'`.
 
-- [ ] **Step 3: Write the data-access functions**
+- [x] **Step 3: Write the data-access functions**
 
 ```typescript
 // web/lib/properties.ts
@@ -1174,7 +1184,7 @@ export async function updateProperty(
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 ```bash
 npm test
@@ -1182,7 +1192,7 @@ npm test
 
 Expected: PASS (3/3 in the new `properties` describe block).
 
-- [ ] **Step 5: Build the "new property" form and action**
+- [x] **Step 5: Build the "new property" form and action**
 
 ```typescript
 // web/app/dashboard/properties/new/actions.ts
@@ -1271,7 +1281,7 @@ export default async function NewPropertyPage({
 
 Note: this form intentionally covers only the fields needed to create a valid row (matching the `properties` table's `not null` columns plus a few common optional ones). The full knowledge-base field set (wifi, gate code, generator instructions, etc.) is edited on the property detail page built in Task 7, via `updateProperty` — splitting "create" from "fill in the knowledge base" keeps this form short enough for a host to actually complete in one sitting.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add web/lib/properties.ts web/lib/properties.test.ts web/app/dashboard/properties/new
@@ -1296,7 +1306,7 @@ EOF
 - Consumes: `getProperty`, `updateProperty` (Task 6)
 - Produces: a page where a host edits every knowledge-base field of one of their own properties, and an automated proof that RLS (built in Sprint 0) actually blocks a different host from reading or editing it through this app's own code path — not just at the raw database level.
 
-- [ ] **Step 1: Write the failing cross-tenant test**
+- [x] **Step 1: Write the failing cross-tenant test**
 
 ```typescript
 // web/lib/properties.rls.test.ts
@@ -1346,7 +1356,7 @@ describe('properties RLS', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it currently passes (this is a regression test, not new behavior)**
+- [x] **Step 2: Run the test to verify it currently passes (this is a regression test, not new behavior)**
 
 ```bash
 npm test
@@ -1354,7 +1364,7 @@ npm test
 
 Expected: PASS already — this test exercises RLS policies from Sprint 0, which are already correct. It's written here specifically to catch any future regression introduced by app-layer code (e.g., someone accidentally routing a read through the service-role client and bypassing RLS). If it fails, stop and investigate before continuing — it means either the RLS policy or the data-access function has a real bug.
 
-- [ ] **Step 3: Build the property detail/edit page and action**
+- [x] **Step 3: Build the property detail/edit page and action**
 
 ```typescript
 // web/app/dashboard/properties/[id]/actions.ts
@@ -1460,7 +1470,7 @@ export default async function PropertyDetailPage({
 }
 ```
 
-- [ ] **Step 4: Manually verify**
+- [x] **Step 4: Manually verify**
 
 ```bash
 npm run dev
@@ -1468,7 +1478,7 @@ npm run dev
 
 Log in, open a property from the dashboard list, edit a few knowledge-base fields, save, and confirm they persist on reload.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add web/app/dashboard/properties/[id] web/lib/properties.rls.test.ts
@@ -1492,7 +1502,7 @@ EOF
 - Consumes: nothing new
 - Produces: documented environment variables and a deploy checklist. No later task depends on this one.
 
-- [ ] **Step 1: Document the required environment variables**
+- [x] **Step 1: Document the required environment variables**
 
 ```bash
 # web/.env.example
@@ -1501,7 +1511,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 ```
 
-- [ ] **Step 2: Write the deploy checklist**
+- [x] **Step 2: Write the deploy checklist**
 
 Add to (or create) the repo root `README.md`:
 
@@ -1517,7 +1527,7 @@ Before the first deploy:
 4. `vercel login` and `vercel --cwd web` (or connect the GitHub repo to Vercel with `web` as the project root) — this step requires your own Vercel account and is not automated by this plan.
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add web/.env.example README.md

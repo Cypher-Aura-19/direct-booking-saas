@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+:root {
+  /* Named palette — grounded in Northern Pakistan's lake-and-pine landscape,
+     not a generic SaaS default. */
+  --pine: #14261f;
+  --pine-light: #1e352c;
+  --lake: #1e6e6a;
+  --lake-light: #2f8d88;
+  --lake-dark: #164f4c;
+  --lantern: #d98c3f;
+  --lantern-light: #e6a862;
+  --lantern-ink: #8a5420; /* accessible text color on lantern-tinted backgrounds */
+  --mist: #f4f5f1;
+  --stone: #dedcd2;
+  --ash: #5b655f;
+
+  /* Semantic tokens */
+  --background: var(--mist);
+  --foreground: var(--pine);
+  --muted-foreground: var(--ash);
+  --border: var(--stone);
+  --primary: var(--lake);
+  --primary-hover: var(--lake-dark);
+  --primary-foreground: #ffffff;
+  --accent: var(--lantern);
+  --surface: #ffffff;
+  --danger: #b3401f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-surface: var(--surface);
+  --color-danger: var(--danger);
+  --color-pine: var(--pine);
+  --color-lake: var(--lake);
+  --color-lantern: var(--lantern);
+  --color-lantern-ink: var(--lantern-ink);
+  --color-stone: var(--stone);
+  --color-ash: var(--ash);
+
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-manrope);
+  --font-mono: var(--font-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--pine);
+    --foreground: var(--mist);
+    --muted-foreground: #9fb0aa;
+    --border: var(--pine-light);
+    --surface: var(--pine-light);
+    --primary: var(--lake-light);
+    --primary-hover: var(--lake);
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Visible keyboard focus everywhere — never suppressed. */
+:focus-visible {
+  outline: 2px solid var(--lake);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

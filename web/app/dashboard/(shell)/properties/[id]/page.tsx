@@ -7,10 +7,11 @@ import { Panel } from "@/components/ui/panel";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-1 mt-10 text-xs font-semibold uppercase tracking-wider text-muted-foreground first:mt-0">
+    <h2 className="mb-1 mt-10 border-t border-border pt-8 text-xs font-semibold uppercase tracking-wider text-muted-foreground first:mt-0 first:border-t-0 first:pt-0">
       {children}
     </h2>
   );
@@ -45,7 +46,7 @@ export default async function PropertyDetailPage({
 
       <div className="mb-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="font-display text-2xl font-medium text-foreground">{property.name}</h1>
+          <h1 className="text-xl font-semibold text-foreground">{property.name}</h1>
           <StatusBadge status={property.status} />
         </div>
         <form action={toggleAction}>
@@ -55,15 +56,19 @@ export default async function PropertyDetailPage({
         </form>
       </div>
 
-      <Panel accent={property.status === "published" ? "lake" : "lantern"}>
+      <Panel>
         {error && (
-          <p className="mb-4 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>
+          <div className="mb-4">
+            <Alert tone="danger">{error}</Alert>
+          </div>
         )}
         {saved && (
-          <p className="mb-4 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">Saved.</p>
+          <div className="mb-4">
+            <Alert tone="success">Saved.</Alert>
+          </div>
         )}
 
-        <form action={updateWithId} className="space-y-5">
+        <form action={updateWithId} className="space-y-4">
           <SectionLabel>Basics</SectionLabel>
           <Field label="Name" htmlFor="name">
             <Input id="name" name="name" defaultValue={property.name} />

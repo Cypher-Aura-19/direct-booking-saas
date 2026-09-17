@@ -2,6 +2,7 @@ import { createOrganizationAction } from "./actions";
 import { Panel } from "@/components/ui/panel";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 
 export default async function OnboardingPage({
   searchParams,
@@ -12,27 +13,25 @@ export default async function OnboardingPage({
   return (
     <main className="flex min-h-dvh items-center justify-center px-6 py-16">
       <div className="w-full max-w-lg">
-        <div className="mb-6 flex items-center gap-2">
-          <span className="h-1.5 w-8 rounded-full bg-primary" />
-          <span className="h-1.5 w-8 rounded-full bg-stone" />
-          <span className="ml-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Step 1 of 2 — Your organization
-          </span>
+        <div className="mb-6 flex items-center gap-3">
+          <span className="h-1 w-8 rounded-full bg-primary" />
+          <span className="h-1 w-8 rounded-full bg-border" />
+          <span className="text-xs font-medium text-muted-foreground">Step 1 of 2 — Your organization</span>
         </div>
 
         <Panel>
-          <h1 className="font-display text-2xl font-medium text-foreground">
-            Set up your organization
-          </h1>
+          <h1 className="text-xl font-semibold text-foreground">Set up your organization</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             This is your business on the platform — one or more properties live under it.
           </p>
 
           {error && (
-            <p className="mt-4 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>
+            <div className="mt-4">
+              <Alert tone="danger">{error}</Alert>
+            </div>
           )}
 
-          <form action={createOrganizationAction} className="mt-6 space-y-5">
+          <form action={createOrganizationAction} className="mt-6 space-y-4">
             <Field label="Business name" htmlFor="name" hint="e.g. Hunza View Guesthouse">
               <Input id="name" name="name" required autoFocus />
             </Field>
@@ -43,7 +42,7 @@ export default async function OnboardingPage({
             >
               <Input id="slug" name="slug" required pattern="[a-z0-9-]+" placeholder="hunza-view" />
             </Field>
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Your name" htmlFor="contactName">
                 <Input id="contactName" name="contactName" required />
               </Field>

@@ -19,7 +19,7 @@ export default async function DashboardPage() {
     <div>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-medium text-foreground">Properties</h1>
+          <h1 className="text-xl font-semibold text-foreground">Properties</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {properties.length === 0
               ? "Nothing here yet."
@@ -31,7 +31,7 @@ export default async function DashboardPage() {
 
       {properties.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border px-8 py-16 text-center">
-          <p className="font-display text-lg italic text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Add your first property to start building its guest page.
           </p>
         </div>

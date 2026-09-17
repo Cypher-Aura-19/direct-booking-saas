@@ -3,6 +3,7 @@ import { createPropertyAction } from "./actions";
 import { Panel } from "@/components/ui/panel";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 
 export default async function NewPropertyPage({
   searchParams,
@@ -14,22 +15,24 @@ export default async function NewPropertyPage({
     <div className="mx-auto max-w-2xl">
       <Link
         href="/dashboard"
-        className="mb-6 inline-block text-sm font-medium text-muted-foreground hover:text-foreground"
+        className="mb-6 inline-block text-sm text-muted-foreground hover:text-foreground"
       >
         ← Properties
       </Link>
 
       <Panel>
-        <h1 className="font-display text-2xl font-medium text-foreground">New property</h1>
+        <h1 className="text-xl font-semibold text-foreground">New property</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Start with the basics — you&apos;ll fill in wifi, house rules, and directions next.
         </p>
 
         {error && (
-          <p className="mt-4 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>
+          <div className="mt-4">
+            <Alert tone="danger">{error}</Alert>
+          </div>
         )}
 
-        <form action={createPropertyAction} className="mt-6 space-y-5">
+        <form action={createPropertyAction} className="mt-6 space-y-4">
           <Field label="Property name" htmlFor="name">
             <Input id="name" name="name" required autoFocus placeholder="Deluxe Cabin" />
           </Field>

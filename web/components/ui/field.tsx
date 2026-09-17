@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 
 const CONTROL_CLASS =
-  "w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-[15px] text-foreground placeholder:text-muted-foreground/70 transition-colors focus:border-lake focus:outline-none";
+  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none";
 
 type FieldProps = {
   label: string;
@@ -10,7 +10,6 @@ type FieldProps = {
   children: React.ReactNode;
 };
 
-/** A labeled form field wrapper — label, control, and an optional hint line, consistently spaced. */
 export function Field({ label, htmlFor, hint, children }: FieldProps) {
   return (
     <div className="space-y-1.5">

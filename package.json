@@ -1,0 +1,24 @@
+{
+  "name": "direct-booking-platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "npm run dev --prefix web",
+    "build": "npm run build --prefix web",
+    "lint": "npm run lint --prefix web",
+    "test:web": "npm run test --prefix web",
+    "test:scripts": "node --test tests/",
+    "test": "npm run test:scripts && npm run test:web",
+    "audit": "node scripts/audit.mjs",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:status": "supabase status"
+  },
+  "devDependencies": {
+    "supabase": "2.117.0"
+  }
+}

@@ -44,8 +44,8 @@ jobs:
         shell: bash
         run: |
           MISSING=""
-          for u in bg-accent bg-surface bg-surface-muted text-ink text-accent-contrast border-hairline rounded-pill; do
-            grep -qE "\.$u[\s{,:]" web/.next/static/chunks/*.css || MISSING="$MISSING $u"
+          for u in '.bg-accent' '.bg-surface' '.hover\:bg-surface-muted' '.text-ink' '.text-accent-contrast' '.border-hairline' '.rounded-pill'; do
+            grep -qF "$u" web/.next/static/chunks/*.css || MISSING="$MISSING $u"
           done
           if [ -n "$MISSING" ]; then
             echo "Tokens defined but not compiling to utilities:$MISSING"

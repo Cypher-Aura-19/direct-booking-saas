@@ -1444,6 +1444,18 @@ describe("findServiceRoleLeaks", () => {
     ]);
     assert.equal(found.length, 1);
   });
+
+  // @req FOUND-15
+  test("still detects a real leak behind a leading block comment header", () => {
+    const found = findServiceRoleLeaks([
+      {
+        path: "a.tsx",
+        content:
+          '/**\n * License header\n */\n"use client";\nconst k = process.env.SUPABASE_SERVICE_ROLE_KEY;',
+      },
+    ]);
+    assert.equal(found.length, 1);
+  });
 });
 
 describe("renderTracker", () => {
@@ -1555,7 +1567,13 @@ export function findServiceRoleLeaks(files) {
     const firstStatement = file.content
       .split(/\r?\n/)
       .map((line) => line.trim())
-      .find((line) => line !== "" && !line.startsWith("//") && !line.startsWith("*"));
+      .find(
+        (line) =>
+          line !== "" &&
+          !line.startsWith("//") &&
+          !line.startsWith("*") &&
+          !line.startsWith("/*"),
+      );
     const isClient = /^["']use client["'];?$/.test(firstStatement ?? "");
 
     if (isClient && file.content.includes("SERVICE_ROLE")) {

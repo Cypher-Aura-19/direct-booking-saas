@@ -59,6 +59,7 @@ body {
   at normal spacing.
 */
 [lang="ur"] {
+  direction: rtl;
   font-family: var(--font-urdu), serif;
   line-height: 2.1;
 }

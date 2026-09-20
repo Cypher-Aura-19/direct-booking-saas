@@ -226,6 +226,6 @@ Status is computed, never asserted.
 | A11Y-01 | Cross-cutting | done | web/components/ui/button.test.tsx |
 | A11Y-02 | Cross-cutting | done | web/components/ui/button.test.tsx |
 | A11Y-03 | Cross-cutting | todo | — |
-| I18N-01 | Cross-cutting | done | web/lib/i18n.test.ts |
-| I18N-02 | Cross-cutting | done | web/lib/i18n.test.ts |
+| I18N-01 | Cross-cutting | done | web/app/globals.test.ts, web/lib/i18n.test.ts |
+| I18N-02 | Cross-cutting | done | web/app/layout.test.tsx |
 | I18N-03 | Cross-cutting | todo | — |

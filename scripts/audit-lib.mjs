@@ -91,20 +91,31 @@ export function summarise(registry, tags) {
 }
 
 /*
-  Physical utilities break RTL. Each pattern requires a digit or bracket
-  after the dash so that ordinary identifiers containing the same letters
-  are not flagged.
+  Physical utilities break RTL. Each pattern requires a digit, bracket, or
+  one of the auto/px/full suffixes after the dash so that ordinary
+  identifiers containing the same letters are not flagged. The border-[lr]-
+  pattern additionally accepts the bare border-l / border-r form (no
+  suffix), and rounded-* corner radii are physical whenever they name a
+  literal side or corner instead of a logical one.
 */
+const SUFFIX = "(?:\\d|\\[|auto\\b|px\\b|full\\b)";
 const PHYSICAL_PATTERNS = [
-  [/\bp[lr]-(?:\d|\[)/, "use ps- or pe- instead of pl- / pr-"],
-  [/\bm[lr]-(?:\d|\[)/, "use ms- or me- instead of ml- / mr-"],
-  [/\bborder-[lr]-(?:\d|\[)/, "use border-s- or border-e-"],
+  [new RegExp(`\\bp[lr]-${SUFFIX}`), "use ps- or pe- instead of pl- / pr-"],
+  [new RegExp(`\\bm[lr]-${SUFFIX}`), "use ms- or me- instead of ml- / mr-"],
+  [
+    new RegExp(`\\bborder-[lr]\\b(?:-${SUFFIX})?`),
+    "use border-s- or border-e-",
+  ],
   [/\btext-(?:left|right)\b/, "use text-start or text-end"],
   [/\bfloat-(?:left|right)\b/, "use float-start or float-end"],
-  [/\b(?:left|right)-(?:\d|\[)/, "use start- or end-"],
+  [new RegExp(`\\b(?:left|right)-${SUFFIX}`), "use start- or end-"],
+  [
+    /\brounded-(?:tl|tr|bl|br|l|r)-/,
+    "use rounded-s- / rounded-e- / rounded-ss- etc. instead of a physical corner",
+  ],
   // Raw CSS, not just Tailwind utilities.
   [
-    /\b(?:padding|margin|border)-(?:left|right)\s*:/,
+    /\b(?:padding|margin|border)-(?:left|right)(?:-\w+)?\s*:/,
     "use the -inline-start / -inline-end property",
   ],
   [/\btext-align\s*:\s*(?:left|right)\b/, "use text-align: start or end"],

@@ -82,6 +82,12 @@ describe("Urdu typography", () => {
     expect(css).not.toContain('[lang*="ur"]');
   });
 
+  // @req FOUND-09
+  // @req I18N-01
+  it("renders lang=ur right to left", () => {
+    expect(css).toMatch(/\[lang="ur"\]\s*\{[^}]*direction:\s*rtl/);
+  });
+
   // @req FOUND-10
   it("gives Nastaliq a larger line-height than Latin body text", () => {
     const urduBlock = css.match(/\[lang="ur"\]\s*\{([^}]*)\}/)?.[1] ?? "";

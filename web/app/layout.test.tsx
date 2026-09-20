@@ -26,6 +26,7 @@ describe("root layout fonts", () => {
   });
 
   // @req FOUND-08
+  // @req I18N-02
   it("requests only weights 400 and 700 for Nastaliq", () => {
     const weights = source.match(/weight: \[([^\]]*)\]/)?.[1] ?? "";
     expect(weights).toContain('"400"');

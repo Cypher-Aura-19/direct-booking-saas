@@ -19,17 +19,14 @@ describe("locale direction", () => {
 });
 
 describe("Nastaliq selection", () => {
-  // @req I18N-02
   it("selects Nastaliq for Urdu", () => {
     expect(isNastaliq("ur")).toBe(true);
   });
 
-  // @req I18N-02
   it("does not select Nastaliq for Roman Urdu", () => {
     expect(isNastaliq("ur-Latn")).toBe(false);
   });
 
-  // @req I18N-02
   it("does not select Nastaliq for English", () => {
     expect(isNastaliq("en")).toBe(false);
   });

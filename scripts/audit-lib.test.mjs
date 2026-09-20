@@ -260,6 +260,50 @@ describe("findPhysicalUtilities", () => {
     ]);
     assert.equal(found[0].line, 3);
   });
+
+  // @req FOUND-14
+  test("flags ml-auto", () => {
+    const found = findPhysicalUtilities([
+      { path: "a.tsx", content: '<div className="ml-auto" />' },
+    ]);
+    assert.equal(found.length, 1);
+  });
+
+  // @req FOUND-14
+  test("flags bare border-l", () => {
+    const found = findPhysicalUtilities([
+      { path: "a.tsx", content: '<div className="border-l" />' },
+    ]);
+    assert.equal(found.length, 1);
+  });
+
+  // @req FOUND-14
+  test("flags rounded-tl-lg", () => {
+    const found = findPhysicalUtilities([
+      { path: "a.tsx", content: '<div className="rounded-tl-lg" />' },
+    ]);
+    assert.equal(found.length, 1);
+  });
+
+  // @req FOUND-14
+  test("flags border-left-width:", () => {
+    const found = findPhysicalUtilities([
+      { path: "a.css", content: ".x { border-left-width: 1px; }" },
+    ]);
+    assert.equal(found.length, 1);
+  });
+
+  // @req FOUND-14
+  test("does not flag px-, pr-px or full suffix false positives", () => {
+    const found = findPhysicalUtilities([
+      {
+        path: "a.tsx",
+        content:
+          '<div className="ps-4 rounded-s-lg border-inline-start px-4 mx-4" />',
+      },
+    ]);
+    assert.deepEqual(found, []);
+  });
 });
 
 describe("findServiceRoleLeaks", () => {

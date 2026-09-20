@@ -5,7 +5,18 @@ import {
   scanTags,
   findUnknownTags,
   summarise,
+  findPhysicalUtilities,
+  findServiceRoleLeaks,
+  renderTracker,
 } from "./audit-lib.mjs";
+
+// This file is itself scanned by the real auditor (it carries the @req
+// tags that prove FOUND-12..FOUND-16). Fixture content below feeds fake
+// "@req ID" strings into scanTags/findUnknownTags to test the library in
+// isolation. Built via concatenation, not written as a literal "@req"
+// substring, so those fixtures are not mistaken by the real auditor run
+// for genuine proof tags or genuine unknown-tag violations.
+const TAG_MARK = "@" + "req";
 
 const REGISTRY = `
 # Phase 1 Requirement Registry
@@ -77,7 +88,7 @@ describe("scanTags", () => {
   // @req FOUND-13
   test("finds a tag above a test", () => {
     const tags = scanTags([
-      { path: "a.test.ts", content: "// @req FOUND-01\nit('works', ...)" },
+      { path: "a.test.ts", content: `// ${TAG_MARK} FOUND-01\nit('works', ...)` },
     ]);
     assert.deepEqual(tags.get("FOUND-01"), ["a.test.ts"]);
   });
@@ -85,8 +96,8 @@ describe("scanTags", () => {
   // @req FOUND-13
   test("records every file that tags the same requirement", () => {
     const tags = scanTags([
-      { path: "a.test.ts", content: "// @req FOUND-01" },
-      { path: "b.test.ts", content: "// @req FOUND-01" },
+      { path: "a.test.ts", content: `// ${TAG_MARK} FOUND-01` },
+      { path: "b.test.ts", content: `// ${TAG_MARK} FOUND-01` },
     ]);
     assert.deepEqual(tags.get("FOUND-01"), ["a.test.ts", "b.test.ts"]);
   });
@@ -94,7 +105,7 @@ describe("scanTags", () => {
   // @req FOUND-13
   test("finds several tags in one file", () => {
     const tags = scanTags([
-      { path: "a.test.ts", content: "// @req FOUND-01\n// @req DB-01" },
+      { path: "a.test.ts", content: `// ${TAG_MARK} FOUND-01\n// ${TAG_MARK} DB-01` },
     ]);
     assert.deepEqual([...tags.keys()], ["FOUND-01", "DB-01"]);
   });
@@ -110,7 +121,7 @@ describe("findUnknownTags", () => {
   test("flags a tag whose id is absent from the registry", () => {
     const registry = parseRegistry(REGISTRY);
     const tags = scanTags([
-      { path: "a.test.ts", content: "// @req FOUND-99" },
+      { path: "a.test.ts", content: `// ${TAG_MARK} FOUND-99` },
     ]);
     assert.deepEqual(findUnknownTags(tags, registry), [
       { id: "FOUND-99", path: "a.test.ts" },
@@ -121,7 +132,7 @@ describe("findUnknownTags", () => {
   test("accepts a tag that exists", () => {
     const registry = parseRegistry(REGISTRY);
     const tags = scanTags([
-      { path: "a.test.ts", content: "// @req FOUND-01" },
+      { path: "a.test.ts", content: `// ${TAG_MARK} FOUND-01` },
     ]);
     assert.deepEqual(findUnknownTags(tags, registry), []);
   });
@@ -132,7 +143,7 @@ describe("summarise", () => {
   test("counts covered requirements and a percentage", () => {
     const registry = parseRegistry(REGISTRY);
     const tags = scanTags([
-      { path: "a.test.ts", content: "// @req FOUND-01\n// @req DB-01" },
+      { path: "a.test.ts", content: `// ${TAG_MARK} FOUND-01\n// ${TAG_MARK} DB-01` },
     ]);
     const summary = summarise(registry, tags);
     assert.equal(summary.total, 4);
@@ -143,7 +154,7 @@ describe("summarise", () => {
   // @req FOUND-16
   test("breaks the summary down by milestone", () => {
     const registry = parseRegistry(REGISTRY);
-    const tags = scanTags([{ path: "a.test.ts", content: "// @req FOUND-01" }]);
+    const tags = scanTags([{ path: "a.test.ts", content: `// ${TAG_MARK} FOUND-01` }]);
     const summary = summarise(registry, tags);
     assert.deepEqual(summary.byMilestone.get("M1"), {
       total: 2,
@@ -162,5 +173,162 @@ describe("summarise", () => {
     const summary = summarise(parseRegistry(REGISTRY), new Map());
     assert.equal(summary.covered, 0);
     assert.equal(summary.percent, 0);
+  });
+});
+
+describe("findPhysicalUtilities", () => {
+  // @req FOUND-14
+  test("flags physical padding", () => {
+    const found = findPhysicalUtilities([
+      { path: "a.tsx", content: '<div className="pl-4" />' },
+    ]);
+    assert.equal(found.length, 1);
+    assert.equal(found[0].path, "a.tsx");
+    assert.match(found[0].fix, /ps-/);
+  });
+
+  // @req FOUND-14
+  test("flags physical margin", () => {
+    const found = findPhysicalUtilities([
+      { path: "a.tsx", content: '<div className="mr-2" />' },
+    ]);
+    assert.equal(found.length, 1);
+  });
+
+  // @req FOUND-14
+  test("flags text-left and text-right", () => {
+    const found = findPhysicalUtilities([
+      { path: "a.tsx", content: '<p className="text-left" />' },
+      { path: "b.tsx", content: '<p className="text-right" />' },
+    ]);
+    assert.equal(found.length, 2);
+  });
+
+  // @req FOUND-14
+  test("accepts logical equivalents", () => {
+    const found = findPhysicalUtilities([
+      {
+        path: "a.tsx",
+        content: '<div className="ps-4 me-2 text-start border-s-2" />',
+      },
+    ]);
+    assert.deepEqual(found, []);
+  });
+
+  // @req FOUND-14
+  test("does not flag unrelated words containing the same letters", () => {
+    const found = findPhysicalUtilities([
+      { path: "a.tsx", content: "const html_parser = 1; // sample-2" },
+    ]);
+    assert.deepEqual(found, []);
+  });
+
+  // @req FOUND-14
+  test("flags raw physical CSS properties, not only Tailwind utilities", () => {
+    const found = findPhysicalUtilities([
+      { path: "a.css", content: ".x { padding-left: 4px; }" },
+      { path: "b.css", content: ".y { margin-right: 4px; }" },
+      { path: "c.css", content: ".z { text-align: left; }" },
+      { path: "d.css", content: ".w { border-right: 1px solid red; }" },
+    ]);
+    assert.equal(found.length, 4);
+  });
+
+  // @req FOUND-14
+  test("accepts raw logical CSS properties", () => {
+    const found = findPhysicalUtilities([
+      {
+        path: "a.css",
+        content: ".x { padding-inline-start: 4px; text-align: start; }",
+      },
+    ]);
+    assert.deepEqual(found, []);
+  });
+
+  // @req FOUND-14
+  test("honours an explicit opt-out comment", () => {
+    const found = findPhysicalUtilities([
+      { path: "a.tsx", content: '<div className="pl-4" /> // audit-ignore-physical' },
+    ]);
+    assert.deepEqual(found, []);
+  });
+
+  // @req FOUND-14
+  test("reports the line number", () => {
+    const found = findPhysicalUtilities([
+      { path: "a.tsx", content: 'ok\nok\n<div className="pl-4" />' },
+    ]);
+    assert.equal(found[0].line, 3);
+  });
+});
+
+describe("findServiceRoleLeaks", () => {
+  // @req FOUND-15
+  test("flags the service-role key in a client component", () => {
+    const found = findServiceRoleLeaks([
+      {
+        path: "a.tsx",
+        content: '"use client";\nconst k = process.env.SUPABASE_SERVICE_ROLE_KEY;',
+      },
+    ]);
+    assert.equal(found.length, 1);
+    assert.equal(found[0].path, "a.tsx");
+  });
+
+  // @req FOUND-15
+  test("flags a NEXT_PUBLIC service-role variable anywhere", () => {
+    const found = findServiceRoleLeaks([
+      { path: "a.ts", content: "process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY" },
+    ]);
+    assert.equal(found.length, 1);
+  });
+
+  // @req FOUND-15
+  test("allows the service-role key in a server-only module", () => {
+    const found = findServiceRoleLeaks([
+      { path: "a.ts", content: "const k = process.env.SUPABASE_SERVICE_ROLE_KEY;" },
+    ]);
+    assert.deepEqual(found, []);
+  });
+
+  // @req FOUND-15
+  test("allows a client component with no service-role reference", () => {
+    const found = findServiceRoleLeaks([
+      { path: "a.tsx", content: '"use client";\nexport default function C() {}' },
+    ]);
+    assert.deepEqual(found, []);
+  });
+});
+
+describe("renderTracker", () => {
+  // @req FOUND-16
+  test("writes a row per requirement with its proof", () => {
+    const registry = parseRegistry(REGISTRY);
+    const tags = scanTags([{ path: "a.test.ts", content: `// ${TAG_MARK} FOUND-01` }]);
+    const markdown = renderTracker(registry, tags, summarise(registry, tags));
+    assert.match(markdown, /FOUND-01/);
+    assert.match(markdown, /a\.test\.ts/);
+  });
+
+  // @req FOUND-16
+  test("shows an untested requirement as not done", () => {
+    const registry = parseRegistry(REGISTRY);
+    const markdown = renderTracker(registry, new Map(), summarise(registry, new Map()));
+    assert.match(markdown, /FOUND-02 \| M1 \| todo/);
+  });
+
+  // @req FOUND-16
+  test("states the overall completion percentage", () => {
+    const registry = parseRegistry(REGISTRY);
+    const tags = scanTags([{ path: "a.test.ts", content: `// ${TAG_MARK} FOUND-01\n// ${TAG_MARK} DB-01` }]);
+    const markdown = renderTracker(registry, tags, summarise(registry, tags));
+    assert.match(markdown, /50%/);
+  });
+
+  // @req FOUND-16
+  test("warns that the file is generated", () => {
+    const registry = parseRegistry(REGISTRY);
+    const markdown = renderTracker(registry, new Map(), summarise(registry, new Map()));
+    assert.match(markdown, /generated/i);
   });
 });

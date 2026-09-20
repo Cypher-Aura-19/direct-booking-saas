@@ -1798,7 +1798,9 @@ Expected: the `verify` job completes successfully. Paste the result into the tas
 - Consumes: the working build from Task 2
 - Produces: a live URL
 
-**This task needs the human.** Vercel login cannot be automated. Everything else here can be driven once login is done.
+**Fully automatable.** The Vercel CLI (58.9.0) is already installed and authenticated as `cypher476956-1912`. Verified at plan time with `vercel whoami`. No human step is required.
+
+The account has two scopes. Deploy into **`talha-rizwans-projects-144f6e7b`** ("Talha Rizwan's projects"), which is the CLI's current default — pass it explicitly with `--scope` rather than relying on the default, so the target cannot drift between now and when this task runs.
 
 - [ ] **Step 1: Configure the monorepo root**
 
@@ -1814,36 +1816,45 @@ Create `vercel.json` at the repository root:
 }
 ```
 
-- [ ] **Step 2: Log in (human)**
+- [ ] **Step 2: Confirm the CLI is authenticated and scoped**
 
-Ask the human to run, in their own terminal:
-
+```bash
+vercel whoami
+vercel teams ls
 ```
-! vercel login
-```
 
-Expected: a confirmed login for their account.
+Expected: `whoami` prints `cypher476956-1912`. If it instead reports that you are not logged in, stop and report BLOCKED — do not attempt to log in, since that needs a browser.
 
 - [ ] **Step 3: Link and deploy to preview**
 
 ```bash
-vercel link --yes
-vercel deploy
+vercel link --yes --scope talha-rizwans-projects-144f6e7b
+vercel deploy --scope talha-rizwans-projects-144f6e7b
 ```
 
-Expected: a preview URL. Open it and confirm the heading renders with the correct font and the orange accent.
+Expected: a preview URL. Fetch it and confirm it returns HTTP 200 and the HTML contains `Direct Booking Platform`.
+
+If the build fails on Vercel but succeeds locally, the cause is almost always the monorepo root: confirm `vercel.json`'s `installCommand` installs both the root and `web/` dependency trees.
 
 - [ ] **Step 4: Deploy to production**
 
 ```bash
-vercel deploy --prod
+vercel deploy --prod --scope talha-rizwans-projects-144f6e7b
 ```
 
 Expected: a production URL.
 
 - [ ] **Step 5: Verify the live page**
 
-Open the production URL and confirm: the heading renders, the Latin font is applied, and there is no console error. Paste the URL into the task record — this is the evidence for FOUND-18.
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" "$PROD_URL"
+curl -s "$PROD_URL" | grep -c "Direct Booking Platform"
+curl -s "$PROD_URL" | grep -o "font-geist-sans" | head -1
+```
+
+Expected: `200`; a count of at least 1 for the heading; and the font variable present in the served HTML, proving the font pipeline survived the production build.
+
+Paste the URL and all three outputs into the task record — this is the evidence for FOUND-18.
 
 - [ ] **Step 6: Write the M1 test for the deployment record**
 

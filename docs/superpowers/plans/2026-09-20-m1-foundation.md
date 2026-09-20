@@ -22,6 +22,9 @@ These apply to every task. Copied verbatim from `docs/superpowers/specs/2026-09-
 - **Every test that proves a requirement carries a `// @req <ID>` comment** immediately above it, with an ID that exists in `docs/requirements.md`.
 - **Spacing** uses Tailwind's default 4px-based scale, which already yields the spec's 4/8/12/16/24/32/48/64/96/128 steps as `1/2/3/4/6/8/12/16/24/32`. No custom spacing scale.
 
+- **This machine is shared with unrelated projects.** Never stop, restart, remove or reconfigure a Docker container, volume or network you did not create. If a port is occupied, change *our* port and report it — do not clear the obstacle. A second Supabase stack (project id `platform`) is running here and must stay running.
+- **Node's test runner needs glob arguments, not directories.** `node --test some/dir/` fails on this machine with `MODULE_NOT_FOUND` under Node 24.11.1. Always use `node --test "some/dir/**/*.test.mjs"`.
+
 **Commit after every task.** Never mark a step done without running the command and reading its output.
 
 ---
@@ -91,7 +94,7 @@ Create `package.json`:
     "build": "npm run build --prefix web",
     "lint": "npm run lint --prefix web",
     "test:web": "npm run test --prefix web",
-    "test:scripts": "node --test tests/",
+    "test:scripts": "node --test \"tests/**/*.test.mjs\"",
     "test": "npm run test:scripts && npm run test:web",
     "audit": "node scripts/audit.mjs",
     "db:start": "supabase start",
@@ -120,6 +123,25 @@ Expected: `supabase` appears in `node_modules/.bin`. Verify with `npx supabase -
 Run: `npx supabase init`
 Expected: creates `supabase/config.toml` and `supabase/.gitignore`. If it prompts about generating VS Code settings, answer `n`.
 
+- [ ] **Step 3b: Move off the default ports**
+
+This machine already runs a second, unrelated Supabase stack (project id `platform`) on the stock ports. Two stacks cannot share them, and the collision is silent and destructive: `supabase start` will fight the other project for the port rather than telling you it has a problem.
+
+In `supabase/config.toml`, shift **every** port in the `543xx` range up by 1000, into `553xx`. At the time of writing that is:
+
+| Setting | Default | Ours |
+|---|---|---|
+| `[api] port` | 54321 | 55321 |
+| `[db] port` | 54322 | 55322 |
+| `[db] shadow_port` | 54320 | 55320 |
+| `[db.pooler] port` | 54329 | 55329 |
+| `[studio] port` | 54323 | 55323 |
+| `[local_smtp] port` | 54324 | 55324 |
+
+Do not rely on that table being exhaustive. Grep the file for `port = 543` and `port = 54` and shift every live (uncommented) match, so nothing is missed if the generated config differs.
+
+**Never stop, restart or otherwise touch containers belonging to another project to free a port.** If a port is still occupied after this change, stop and report BLOCKED.
+
 - [ ] **Step 4: Write the failing test**
 
 Create `tests/supabase-config.test.mjs`:
@@ -138,14 +160,25 @@ test("local supabase config declares the api, db and studio services", () => {
   assert.match(config, /\[api\]/, "expected an [api] section");
   assert.match(config, /\[db\]/, "expected a [db] section");
   assert.match(config, /\[studio\]/, "expected a [studio] section");
-  assert.match(config, /port = 54322/, "expected the default database port");
+  assert.match(config, /port = 55322/, "expected our non-default database port");
+});
+
+// @req FOUND-04
+test("local supabase config avoids the stock ports, which another stack owns", () => {
+  const config = readFileSync(configPath, "utf8");
+  const stockPorts = config.match(/^\s*(?:shadow_)?port = 543\d\d/gm) ?? [];
+  assert.deepEqual(
+    stockPorts,
+    [],
+    `config still uses stock 543xx ports: ${stockPorts.join(", ")}`,
+  );
 });
 ```
 
 - [ ] **Step 5: Run the test**
 
 Run: `npm run test:scripts`
-Expected: PASS. If the database port differs from `54322`, read the actual value out of `supabase/config.toml` and correct the assertion to match — do not change the config to satisfy the test.
+Expected: PASS, 2 tests. If a port value differs from the table in Step 3b, correct the assertion to match the real config — do not change the config to satisfy the test.
 
 - [ ] **Step 6: Start the stack and confirm it is healthy**
 
@@ -1158,14 +1191,16 @@ Expected: PASS, 13 tests.
 `scripts/` did not exist in Task 1, so the root script only covered `tests/`. In `package.json`, change:
 
 ```json
-"test:scripts": "node --test tests/"
+"test:scripts": "node --test \"tests/**/*.test.mjs\""
 ```
 
 to:
 
 ```json
-"test:scripts": "node --test scripts/ tests/"
+"test:scripts": "node --test \"scripts/**/*.test.mjs\" \"tests/**/*.test.mjs\""
 ```
+
+Keep the glob form. A bare directory argument (`node --test scripts/`) does **not** work on this machine — Node 24.11.1 treats it as a CommonJS entry point and fails with `MODULE_NOT_FOUND`. This was confirmed by running it, not assumed.
 
 Run: `npm test`
 Expected: both the root tests and the web tests run and pass.

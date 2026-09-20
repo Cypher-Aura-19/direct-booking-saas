@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/*
+  Phase 1 is light-only by decision (D-16). Tokens are split into a :root
+  layer and a @theme inline layer so a dark theme can be added later by
+  overriding :root alone, without touching any utility name.
+*/
+
+:root {
+  /*
+    One token per colour, named for what it is rather than where it is
+    used. A token named --text-* would compile to a stuttering utility
+    (text-text-secondary), so primary text is --ink and secondary is
+    --muted.
+  */
+  --ink: #111318;
+  --muted: #6b6b72;
+  --surface: #ffffff;
+  --surface-muted: #f3f3f4;
+  --accent: #f97316;
+  --accent-contrast: #ffffff;
+  --hairline: #e6e6e8;
+
+  /* Semantic. Deliberately desaturated so they never compete with --accent. */
+  --destructive: #b4443c;
+  --warning: #8a6420;
+  --success: #3d7a54;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-hairline: var(--hairline);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  --font-sans: var(--font-geist-sans);
+  --font-urdu: var(--font-noto-nastaliq);
+}
+
+body {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/*
+  Exact attribute match, not a prefix match: Roman Urdu is lang="ur-Latn",
+  is written in Latin script, and must NOT receive the Nastaliq stack.
+  Nastaliq needs far more line-height than Latin — its descenders collide
+  at normal spacing.
+*/
+[lang="ur"] {
+  direction: rtl;
+  font-family: var(--font-urdu), serif;
+  line-height: 2.1;
+}

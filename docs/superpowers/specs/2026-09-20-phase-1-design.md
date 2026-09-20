@@ -180,11 +180,11 @@ The supplied reference (`docs/reference/inspiration-staygo-orbix.webp`) was give
 
 | Token | Value | Use |
 |---|---|---|
-| Ink | `#111318` | Dark sections, primary text |
+| Ink (`text-ink`) | `#111318` | Dark sections, primary text |
 | Surface | `#FFFFFF` | Main background |
 | Surface muted | `#F3F3F4` | Alternating sections |
 | Accent | `#F97316` | The single accent |
-| Text secondary | `#6B6B72` | Supporting text |
+| Muted (`text-muted`) | `#6B6B72` | Supporting text |
 | Hairline | `#E6E6E8` | Dividers, outlines |
 | Radius | 16px cards, 999px buttons | |
 | Spacing scale | 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96 / 128 | Section gaps live at the top of the scale |

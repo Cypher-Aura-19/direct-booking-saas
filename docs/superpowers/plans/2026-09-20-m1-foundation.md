@@ -22,6 +22,9 @@ These apply to every task. Copied verbatim from `docs/superpowers/specs/2026-09-
 - **Every test that proves a requirement carries a `// @req <ID>` comment** immediately above it, with an ID that exists in `docs/requirements.md`.
 - **Spacing** uses Tailwind's default 4px-based scale, which already yields the spec's 4/8/12/16/24/32/48/64/96/128 steps as `1/2/3/4/6/8/12/16/24/32`. No custom spacing scale.
 
+- **This machine is shared with unrelated projects.** Never stop, restart, remove or reconfigure a Docker container, volume or network you did not create. If a port is occupied, change *our* port and report it — do not clear the obstacle. A second Supabase stack (project id `platform`) is running here and must stay running.
+- **Node's test runner needs glob arguments, not directories.** `node --test some/dir/` fails on this machine with `MODULE_NOT_FOUND` under Node 24.11.1. Always use `node --test "some/dir/**/*.test.mjs"`.
+
 **Commit after every task.** Never mark a step done without running the command and reading its output.
 
 ---
@@ -91,7 +94,7 @@ Create `package.json`:
     "build": "npm run build --prefix web",
     "lint": "npm run lint --prefix web",
     "test:web": "npm run test --prefix web",
-    "test:scripts": "node --test tests/",
+    "test:scripts": "node --test \"tests/**/*.test.mjs\"",
     "test": "npm run test:scripts && npm run test:web",
     "audit": "node scripts/audit.mjs",
     "db:start": "supabase start",
@@ -107,8 +110,10 @@ Create `package.json`:
 Create `.nvmrc`:
 
 ```
-24
+24.11.1
 ```
+
+Pinned to the exact patch, not the `24` major line. `actions/setup-node` resolves a bare `24` to the newest 24.x, which would silently put CI on a different Node from local development — and dependency engine floors do differ within the 24.x line.
 
 - [ ] **Step 2: Install the Supabase CLI**
 
@@ -119,6 +124,25 @@ Expected: `supabase` appears in `node_modules/.bin`. Verify with `npx supabase -
 
 Run: `npx supabase init`
 Expected: creates `supabase/config.toml` and `supabase/.gitignore`. If it prompts about generating VS Code settings, answer `n`.
+
+- [ ] **Step 3b: Move off the default ports**
+
+This machine already runs a second, unrelated Supabase stack (project id `platform`) on the stock ports. Two stacks cannot share them, and the collision is silent and destructive: `supabase start` will fight the other project for the port rather than telling you it has a problem.
+
+In `supabase/config.toml`, shift **every** port in the `543xx` range up by 1000, into `553xx`. At the time of writing that is:
+
+| Setting | Default | Ours |
+|---|---|---|
+| `[api] port` | 54321 | 55321 |
+| `[db] port` | 54322 | 55322 |
+| `[db] shadow_port` | 54320 | 55320 |
+| `[db.pooler] port` | 54329 | 55329 |
+| `[studio] port` | 54323 | 55323 |
+| `[local_smtp] port` | 54324 | 55324 |
+
+Do not rely on that table being exhaustive. Grep the file for `port = 543` and `port = 54` and shift every live (uncommented) match, so nothing is missed if the generated config differs.
+
+**Never stop, restart or otherwise touch containers belonging to another project to free a port.** If a port is still occupied after this change, stop and report BLOCKED.
 
 - [ ] **Step 4: Write the failing test**
 
@@ -138,14 +162,25 @@ test("local supabase config declares the api, db and studio services", () => {
   assert.match(config, /\[api\]/, "expected an [api] section");
   assert.match(config, /\[db\]/, "expected a [db] section");
   assert.match(config, /\[studio\]/, "expected a [studio] section");
-  assert.match(config, /port = 54322/, "expected the default database port");
+  assert.match(config, /port = 55322/, "expected our non-default database port");
+});
+
+// @req FOUND-04
+test("local supabase config avoids the stock ports, which another stack owns", () => {
+  const config = readFileSync(configPath, "utf8");
+  const stockPorts = config.match(/^\s*(?:shadow_)?port = 543\d\d/gm) ?? [];
+  assert.deepEqual(
+    stockPorts,
+    [],
+    `config still uses stock 543xx ports: ${stockPorts.join(", ")}`,
+  );
 });
 ```
 
 - [ ] **Step 5: Run the test**
 
 Run: `npm run test:scripts`
-Expected: PASS. If the database port differs from `54322`, read the actual value out of `supabase/config.toml` and correct the assertion to match — do not change the config to satisfy the test.
+Expected: PASS, 2 tests. If a port value differs from the table in Step 3b, correct the assertion to match the real config — do not change the config to satisfy the test.
 
 - [ ] **Step 6: Start the stack and confirm it is healthy**
 
@@ -190,12 +225,17 @@ Expected: creates `web/` with `app/layout.tsx`, `app/page.tsx`, `app/globals.css
 - [ ] **Step 2: Install the test dependencies**
 
 ```bash
-npm --prefix web install -D vitest@5.0.1 @vitejs/plugin-react@6.1.1 jsdom@30.1.0 @testing-library/react@16.3.3 @testing-library/jest-dom@7.0.1
+npm --prefix web install -D vitest@5.0.1 @vitejs/plugin-react@6.1.1 jsdom@29.1.1 @testing-library/react@16.3.3 @testing-library/jest-dom@7.0.1 @types/node@^24
 ```
+
+Two of those versions are deliberate and were chosen against the obvious defaults:
+
+- **`@types/node@^24`, not the scaffold's `^20`.** Vitest 5.0.1 peer-requires `@types/node@^22.0.0 || >=24.0.0`, so the scaffolded `^20` produces a real `ERESOLVE` failure. Verified by reading Vitest's `peerDependencies`.
+- **`jsdom@29.1.1`, not 30.x.** jsdom 30 requires Node `^22.22.2 || ^24.15.0 || >=26.0.0`. This machine runs Node 24.11.1, which is below that floor and produces an `EBADENGINE` warning on every install. jsdom 29 requires only `>=24.0.0`. Nothing in this project needs a jsdom 30 feature — it is a DOM for component tests.
 
 - [ ] **Step 3: Configure Vitest**
 
-Create `web/vitest.config.ts`:
+Create `web/vitest.config.mts` — note the **`.mts`** extension. With a plain `.ts` config, Vite's native config loader treats the file as CommonJS, sees ESM syntax, and prints a deprecation warning on every single test run. `.mts` marks it as an ES module and the warning disappears. The alternative — adding `"type": "module"` to `web/package.json` — would change module resolution for the whole Next.js app, which is a far larger blast radius for the same result.
 
 ```ts
 import { defineConfig } from "vitest/config";
@@ -319,7 +359,11 @@ git commit -m "feat: scaffold Next.js app with Vitest harness"
 
 **Interfaces:**
 - Consumes: Tailwind 4 from Task 2
-- Produces: Tailwind utilities `bg-surface`, `bg-surface-muted`, `bg-accent`, `text-accent-contrast`, `text-primary`, `text-secondary`, `border-hairline`, `text-destructive`, `text-warning`, `text-success`, `rounded-card`, `rounded-pill`, `font-sans`, `font-urdu`
+- Produces: Tailwind utilities `bg-surface`, `bg-surface-muted`, `bg-accent`, `text-accent-contrast`, `text-ink`, `text-muted`, `border-hairline`, `text-destructive`, `text-warning`, `text-success`, `rounded-card`, `rounded-pill`, `font-sans`, `font-urdu`
+
+**Naming rule, and the trap it avoids.** Tailwind 4 takes the entire suffix after `--color-` as the utility name. So `--color-text-secondary` produces `text-text-secondary`, *not* `text-secondary` — any token whose name starts with `text-` stutters. Therefore the text colours are named for what they are, not for where they are used: `--ink` for primary text and `--muted` for secondary, giving the clean `text-ink` and `text-muted`.
+
+Each colour has exactly one token name. Do not add aliases.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -340,7 +384,7 @@ const BRAND_TOKENS = [
   ["--surface", "#ffffff"],
   ["--surface-muted", "#f3f3f4"],
   ["--accent", "#f97316"],
-  ["--text-secondary", "#6b6b72"],
+  ["--muted", "#6b6b72"],
   ["--hairline", "#e6e6e8"],
 ];
 
@@ -428,13 +472,18 @@ Replace the entire contents of `web/app/globals.css`:
 */
 
 :root {
+  /*
+    One token per colour, named for what it is rather than where it is
+    used. A token named --text-* would compile to a stuttering utility
+    (text-text-secondary), so primary text is --ink and secondary is
+    --muted.
+  */
   --ink: #111318;
+  --muted: #6b6b72;
   --surface: #ffffff;
   --surface-muted: #f3f3f4;
   --accent: #f97316;
   --accent-contrast: #ffffff;
-  --text-primary: #111318;
-  --text-secondary: #6b6b72;
   --hairline: #e6e6e8;
 
   /* Semantic. Deliberately desaturated so they never compete with --accent. */
@@ -445,12 +494,11 @@ Replace the entire contents of `web/app/globals.css`:
 
 @theme inline {
   --color-ink: var(--ink);
+  --color-muted: var(--muted);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
   --color-accent: var(--accent);
   --color-accent-contrast: var(--accent-contrast);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
   --color-hairline: var(--hairline);
   --color-destructive: var(--destructive);
   --color-warning: var(--warning);
@@ -465,7 +513,7 @@ Replace the entire contents of `web/app/globals.css`:
 
 body {
   background: var(--surface);
-  color: var(--text-primary);
+  color: var(--ink);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
@@ -488,9 +536,21 @@ Expected: PASS.
 
 - [ ] **Step 5: Confirm the utilities actually generate**
 
-Temporarily add `className="bg-accent text-accent-contrast rounded-pill"` to the `<h1>` in `web/app/page.tsx`, run `npm run dev --prefix web`, and confirm in the browser that the heading has an orange background and fully rounded corners. Then revert that change.
+A token can be present in the file and still fail to produce a utility, if it sits in the wrong `@theme` namespace. Asserting on the CSS source cannot catch that — only compiled output can. Tailwind 4 emits a utility solely when it appears in scanned source, so this check temporarily uses the classes, then removes them.
 
-This step exists because a token can be present in the file yet still fail to produce a utility if it sits in the wrong `@theme` namespace.
+1. Temporarily add `bg-accent text-accent-contrast rounded-pill rounded-card border-hairline text-ink text-muted` to the `<h1>` in `web/app/page.tsx`.
+2. Run `npm run build --prefix web`.
+3. Grep the compiled stylesheet:
+
+```bash
+cat web/.next/static/chunks/*.css | grep -oE "\.(bg-accent|text-accent-contrast|rounded-pill|rounded-card|border-hairline|text-ink|text-muted)\b" | sort -u
+```
+
+Expected: all seven class names appear. The path is `static/chunks/`, not `static/css/` — that is where Next 16's Turbopack build emits stylesheets. Any missing name means that token is in the wrong namespace — fix `globals.css`, do not adjust the check.
+
+4. Revert the temporary `className` change and confirm `git diff web/app/page.tsx` is empty.
+
+Paste the grep output into the task record. This is the evidence for FOUND-05.
 
 - [ ] **Step 6: Commit**
 
@@ -698,9 +758,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 Run: `npm run test --prefix web`
 Expected: PASS, all tests.
 
-- [ ] **Step 9: Verify Nastaliq renders**
+- [ ] **Step 9: Verify the Nastaliq pipeline reaches the compiled output**
 
-Temporarily add this below the paragraph in `web/app/page.tsx`:
+Whether the glyphs *look* like sloped Nastaliq rather than upright Naskh can only be judged by eye, and that check belongs to the milestone exit audit. What can be proven mechanically — and what actually breaks — is that the font is requested at the right weights and that the rule reaches the compiled stylesheet.
+
+1. Temporarily add this below the paragraph in `web/app/page.tsx`:
 
 ```tsx
 <p lang="ur" dir="rtl" className="text-2xl">
@@ -708,9 +770,37 @@ Temporarily add this below the paragraph in `web/app/page.tsx`:
 </p>
 ```
 
-Run `npm run dev --prefix web` and confirm in the browser: the text renders right-aligned, in flowing Nastaliq (sloped, connected) rather than upright Naskh, and the lines do not collide. Then revert.
+2. Run `npm run build --prefix web`.
 
-If it renders in Naskh, the font variable is not reaching the element — check that `[lang="ur"]` in `globals.css` matches exactly and that the `notoNastaliq.variable` class is on `<html>`.
+3. Confirm the Urdu face is actually requested, at the right weights and no others:
+
+```bash
+cat web/.next/static/chunks/*.css | grep -A4 "Noto Nastaliq" | grep -oE "font-weight: *[0-9]+" | sort -u
+```
+
+Expected: `400` and `700` only. **Any 300, 500 or 600 is a failure** — those weights render badly in Nastaliq and must never be requested.
+
+4. Confirm the language rule survived compilation:
+
+```bash
+cat web/.next/static/chunks/*.css | grep -oE '\[lang="ur"\][^}]*}' | head -1
+```
+
+Expected: a rule containing the Urdu font variable and a `line-height` above 1.8.
+
+5. Confirm the font files were actually emitted:
+
+```bash
+ls web/.next/static/media/ | head -20
+```
+
+Expected: at least one font file present.
+
+6. Revert the temporary markup and confirm `git diff web/app/page.tsx` is empty.
+
+Paste all four outputs into the task record. If step 3 finds no `Noto Nastaliq` at all, the font is not reaching the page — check that `notoNastaliq.variable` is on the `<html>` element and that `[lang="ur"]` in `globals.css` is an exact attribute match.
+
+**Do not claim the glyphs look correct.** You cannot see them. The visual confirmation is a human item in the milestone exit audit.
 
 - [ ] **Step 10: Commit**
 
@@ -818,8 +908,8 @@ export type ButtonVariant = "primary" | "secondary" | "ghost";
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-accent text-accent-contrast hover:opacity-90",
   secondary:
-    "bg-surface text-text-primary border border-hairline hover:bg-surface-muted",
-  ghost: "bg-transparent text-text-primary hover:bg-surface-muted",
+    "bg-surface text-ink border border-hairline hover:bg-surface-muted",
+  ghost: "bg-transparent text-ink hover:bg-surface-muted",
 };
 
 // min-h-11 is 44px: the minimum comfortable touch target on a phone.
@@ -1158,14 +1248,16 @@ Expected: PASS, 13 tests.
 `scripts/` did not exist in Task 1, so the root script only covered `tests/`. In `package.json`, change:
 
 ```json
-"test:scripts": "node --test tests/"
+"test:scripts": "node --test \"tests/**/*.test.mjs\""
 ```
 
 to:
 
 ```json
-"test:scripts": "node --test scripts/ tests/"
+"test:scripts": "node --test \"scripts/**/*.test.mjs\" \"tests/**/*.test.mjs\""
 ```
+
+Keep the glob form. A bare directory argument (`node --test scripts/`) does **not** work on this machine — Node 24.11.1 treats it as a CommonJS entry point and fails with `MODULE_NOT_FOUND`. This was confirmed by running it, not assumed.
 
 Run: `npm test`
 Expected: both the root tests and the web tests run and pass.
@@ -1328,6 +1420,54 @@ describe("findServiceRoleLeaks", () => {
     ]);
     assert.deepEqual(found, []);
   });
+
+  // @req FOUND-15
+  test("allows a server-only module that merely mentions the phrase in a comment", () => {
+    const found = findServiceRoleLeaks([
+      {
+        path: "a.ts",
+        content:
+          '// do not add "use client" here — this reads the service role key\nconst k = process.env.SUPABASE_SERVICE_ROLE_KEY;',
+      },
+    ]);
+    assert.deepEqual(found, []);
+  });
+
+  // @req FOUND-15
+  test("recognises the directive with leading blank lines and comments", () => {
+    const found = findServiceRoleLeaks([
+      {
+        path: "a.tsx",
+        content:
+          '\n// eslint-disable-next-line\n"use client";\nconst k = process.env.SUPABASE_SERVICE_ROLE_KEY;',
+      },
+    ]);
+    assert.equal(found.length, 1);
+  });
+
+  // @req FOUND-15
+  test("still detects a real leak behind a leading block comment header", () => {
+    const found = findServiceRoleLeaks([
+      {
+        path: "a.tsx",
+        content:
+          '/**\n * License header\n */\n"use client";\nconst k = process.env.SUPABASE_SERVICE_ROLE_KEY;',
+      },
+    ]);
+    assert.equal(found.length, 1);
+  });
+
+  // @req FOUND-15
+  test("still detects a real leak behind a block comment with no leading star on continuation lines", () => {
+    const found = findServiceRoleLeaks([
+      {
+        path: "a.tsx",
+        content:
+          '/*\nLicense header\nno star on this line\n*/\n"use client";\nconst k = process.env.SUPABASE_SERVICE_ROLE_KEY;',
+      },
+    ]);
+    assert.equal(found.length, 1);
+  });
 });
 
 describe("renderTracker", () => {
@@ -1420,6 +1560,32 @@ export function findPhysicalUtilities(files) {
   return violations;
 }
 
+// Skips leading whitespace and full comments — both "// ..." line comments
+// and "/* ... */" block comments, however the block is formatted
+// internally (with or without a leading "*" on continuation lines) — and
+// returns the line that follows. A per-line prefix filter alone is not
+// enough: a block comment whose continuation lines do not start with "*"
+// (a common, legitimate style) would otherwise leave one of its inner
+// lines mistaken for the file's first real statement.
+function leadingStatement(content) {
+  let i = 0;
+  for (;;) {
+    while (i < content.length && /\s/.test(content[i])) i++;
+    if (content.startsWith("//", i)) {
+      const nl = content.indexOf("\n", i);
+      i = nl === -1 ? content.length : nl + 1;
+      continue;
+    }
+    if (content.startsWith("/*", i)) {
+      const end = content.indexOf("*/", i + 2);
+      i = end === -1 ? content.length : end + 2;
+      continue;
+    }
+    break;
+  }
+  return content.slice(i).split(/\r?\n/)[0].trim();
+}
+
 export function findServiceRoleLeaks(files) {
   const leaks = [];
 
@@ -1432,9 +1598,10 @@ export function findServiceRoleLeaks(files) {
       continue;
     }
 
-    const isClient =
-      file.content.includes('"use client"') ||
-      file.content.includes("'use client'");
+    // The "use client" directive must be the first statement in the file.
+    // A whole-file substring search would misclassify a server-only file
+    // that merely mentions the phrase in a comment.
+    const isClient = /^["']use client["'];?$/.test(leadingStatement(file.content));
 
     if (isClient && file.content.includes("SERVICE_ROLE")) {
       leaks.push({
@@ -1680,7 +1847,25 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Verify design tokens compile to real utilities
+        shell: bash
+        run: |
+          MISSING=""
+          for u in '.bg-accent' '.bg-surface' '.hover\:bg-surface-muted' '.text-ink' '.text-accent-contrast' '.border-hairline' '.rounded-pill'; do
+            grep -qF "$u" web/.next/static/chunks/*.css || MISSING="$MISSING $u"
+          done
+          if [ -n "$MISSING" ]; then
+            echo "Tokens defined but not compiling to utilities:$MISSING"
+            echo "A token in the wrong @theme namespace produces no utility."
+            exit 1
+          fi
+          echo "All token utilities present in compiled CSS."
 ```
+
+**Why this step exists.** The Task 3 tests assert on the *text* of `globals.css`, and text assertions structurally cannot catch a token placed in the wrong `@theme` namespace — the token is present, correctly spelled, and produces no utility. That bug already happened once during Task 3 and was caught only by a manual grep whose evidence lives in a report nobody re-runs. This step turns that one-off check into a standing regression guard.
+
+**The check must match real usage exactly, variant included.** `bg-surface-muted` only ever appears in this codebase as `hover:bg-surface-muted` (the Button's secondary and ghost variants) — never as a bare utility. Tailwind's compiler only emits the exact class string it finds in scanned source, so requiring the bare `.bg-surface-muted` selector here would fail even on a fully correct build, since nothing ever asks Tailwind to generate that specific class. The check targets `.hover\:bg-surface-muted` (the literal, colon-escaped selector Tailwind emits for a variant) so it verifies what the product actually uses. **Do not add markup anywhere purely to satisfy this check** — if a token here never gets used, remove it from this list rather than inventing a use for it. This list is derived by reading actual component usage, not the other way around.
 
 The final tracker check matters: `npm run audit` regenerates `docs/TRACKER.md`, so if the committed copy differs from what the current tests produce, someone committed a stale tracker. CI catches that rather than letting the tracker quietly drift out of date.
 
@@ -1724,6 +1909,17 @@ test("CI runs on push and on pull requests", () => {
 test("CI fails when the committed tracker is stale", () => {
   assert.match(workflow, /git diff --exit-code docs\/TRACKER\.md/);
 });
+
+// @req FOUND-05
+test("CI proves design tokens compile to real utilities, not just that they are spelled right", () => {
+  assert.match(workflow, /static\/chunks\/\*\.css/);
+  for (const utility of ["bg-accent", "text-ink", "rounded-pill"]) {
+    assert.ok(
+      workflow.includes(utility),
+      `expected CI to check the ${utility} utility compiles`,
+    );
+  }
+});
 ```
 
 Run: `npm run test:scripts`
@@ -1763,7 +1959,9 @@ Expected: the `verify` job completes successfully. Paste the result into the tas
 - Consumes: the working build from Task 2
 - Produces: a live URL
 
-**This task needs the human.** Vercel login cannot be automated. Everything else here can be driven once login is done.
+**Fully automatable.** The Vercel CLI (58.9.0) is already installed and authenticated as `cypher476956-1912`. Verified at plan time with `vercel whoami`. No human step is required.
+
+The account has two scopes. Deploy into **`talha-rizwans-projects-144f6e7b`** ("Talha Rizwan's projects"), which is the CLI's current default — pass it explicitly with `--scope` rather than relying on the default, so the target cannot drift between now and when this task runs.
 
 - [ ] **Step 1: Configure the monorepo root**
 
@@ -1779,36 +1977,45 @@ Create `vercel.json` at the repository root:
 }
 ```
 
-- [ ] **Step 2: Log in (human)**
+- [ ] **Step 2: Confirm the CLI is authenticated and scoped**
 
-Ask the human to run, in their own terminal:
-
+```bash
+vercel whoami
+vercel teams ls
 ```
-! vercel login
-```
 
-Expected: a confirmed login for their account.
+Expected: `whoami` prints `cypher476956-1912`. If it instead reports that you are not logged in, stop and report BLOCKED — do not attempt to log in, since that needs a browser.
 
 - [ ] **Step 3: Link and deploy to preview**
 
 ```bash
-vercel link --yes
-vercel deploy
+vercel link --yes --scope talha-rizwans-projects-144f6e7b
+vercel deploy --scope talha-rizwans-projects-144f6e7b
 ```
 
-Expected: a preview URL. Open it and confirm the heading renders with the correct font and the orange accent.
+Expected: a preview URL. Fetch it and confirm it returns HTTP 200 and the HTML contains `Direct Booking Platform`.
+
+If the build fails on Vercel but succeeds locally, the cause is almost always the monorepo root: confirm `vercel.json`'s `installCommand` installs both the root and `web/` dependency trees.
 
 - [ ] **Step 4: Deploy to production**
 
 ```bash
-vercel deploy --prod
+vercel deploy --prod --scope talha-rizwans-projects-144f6e7b
 ```
 
 Expected: a production URL.
 
 - [ ] **Step 5: Verify the live page**
 
-Open the production URL and confirm: the heading renders, the Latin font is applied, and there is no console error. Paste the URL into the task record — this is the evidence for FOUND-18.
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" "$PROD_URL"
+curl -s "$PROD_URL" | grep -c "Direct Booking Platform"
+curl -s "$PROD_URL" | grep -o "font-geist-sans" | head -1
+```
+
+Expected: `200`; a count of at least 1 for the heading; and the font variable present in the served HTML, proving the font pipeline survived the production build.
+
+Paste the URL and all three outputs into the task record — this is the evidence for FOUND-18.
 
 - [ ] **Step 6: Write the M1 test for the deployment record**
 

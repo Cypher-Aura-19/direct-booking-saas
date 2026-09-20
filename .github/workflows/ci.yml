@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install web dependencies
+        run: npm ci --prefix web
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Audit requirements
+        run: npm run audit -- --milestone M1
+
+      - name: Fail if the tracker is stale
+        run: git diff --exit-code docs/TRACKER.md
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify design tokens compile to real utilities
+        shell: bash
+        run: |
+          MISSING=""
+          for u in '.bg-accent' '.bg-surface' '.hover\:bg-surface-muted' '.text-ink' '.text-accent-contrast' '.border-hairline' '.rounded-pill'; do
+            grep -qF "$u" web/.next/static/chunks/*.css || MISSING="$MISSING $u"
+          done
+          if [ -n "$MISSING" ]; then
+            echo "Tokens defined but not compiling to utilities:$MISSING"
+            echo "A token in the wrong @theme namespace produces no utility."
+            exit 1
+          fi
+          echo "All token utilities present in compiled CSS."

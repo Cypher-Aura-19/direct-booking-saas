@@ -7,13 +7,18 @@
 */
 
 :root {
+  /*
+    One token per colour, named for what it is rather than where it is
+    used. A token named --text-* would compile to a stuttering utility
+    (text-text-secondary), so primary text is --ink and secondary is
+    --muted.
+  */
   --ink: #111318;
+  --muted: #6b6b72;
   --surface: #ffffff;
   --surface-muted: #f3f3f4;
   --accent: #f97316;
   --accent-contrast: #ffffff;
-  --text-primary: #111318;
-  --text-secondary: #6b6b72;
   --hairline: #e6e6e8;
 
   /* Semantic. Deliberately desaturated so they never compete with --accent. */
@@ -24,21 +29,11 @@
 
 @theme inline {
   --color-ink: var(--ink);
+  --color-muted: var(--muted);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
   --color-accent: var(--accent);
   --color-accent-contrast: var(--accent-contrast);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
-  /*
-    Tailwind's color-utility matcher takes the whole suffix after
-    "--color-" as the utility value, so --color-text-secondary alone
-    only produces .text-text-secondary, never .text-secondary. These two
-    aliases are what actually make the `text-primary` / `text-secondary`
-    utilities from the task interface compile. See Step 5 evidence.
-  */
-  --color-primary: var(--text-primary);
-  --color-secondary: var(--text-secondary);
   --color-hairline: var(--hairline);
   --color-destructive: var(--destructive);
   --color-warning: var(--warning);
@@ -53,7 +48,7 @@
 
 body {
   background: var(--surface);
-  color: var(--text-primary);
+  color: var(--ink);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 

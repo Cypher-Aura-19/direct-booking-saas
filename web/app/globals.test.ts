@@ -22,7 +22,7 @@ const BRAND_TOKENS = [
   ["--surface", "#ffffff"],
   ["--surface-muted", "#f3f3f4"],
   ["--accent", "#f97316"],
-  ["--text-secondary", "#6b6b72"],
+  ["--muted", "#6b6b72"],
   ["--hairline", "#e6e6e8"],
 ];
 

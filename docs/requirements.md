@@ -24,7 +24,7 @@ Rules enforced by the auditor:
 | ID | Requirement |
 |---|---|
 | FOUND-01 | Repository has a root workspace that delegates to the `web/` Next.js app |
-| FOUND-02 | Next.js app builds and serves a page locally |
+| FOUND-02 | The home page renders its heading and main landmark |
 | FOUND-03 | Vitest runs and a component test passes under jsdom |
 | FOUND-04 | Local Supabase stack starts and reports healthy services |
 | FOUND-05 | Every design token in spec §8 is defined in `globals.css` |
@@ -39,7 +39,7 @@ Rules enforced by the auditor:
 | FOUND-14 | Auditor fails when a physical CSS utility (`pl-`, `mr-`, `text-left`) is used instead of its logical equivalent |
 | FOUND-15 | Auditor fails when the service-role key is referenced in client-side code |
 | FOUND-16 | Auditor regenerates `docs/TRACKER.md` with a completion percentage |
-| FOUND-17 | CI runs lint, tests and the auditor on every push |
+| FOUND-17 | CI runs lint, tests, the auditor and the production build on every push |
 | FOUND-18 | The app deploys to a live Vercel URL |
 
 ## M2 — Data model

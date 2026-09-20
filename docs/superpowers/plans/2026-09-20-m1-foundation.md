@@ -528,9 +528,21 @@ Expected: PASS.
 
 - [ ] **Step 5: Confirm the utilities actually generate**
 
-Temporarily add `className="bg-accent text-accent-contrast rounded-pill"` to the `<h1>` in `web/app/page.tsx`, run `npm run dev --prefix web`, and confirm in the browser that the heading has an orange background and fully rounded corners. Then revert that change.
+A token can be present in the file and still fail to produce a utility, if it sits in the wrong `@theme` namespace. Asserting on the CSS source cannot catch that — only compiled output can. Tailwind 4 emits a utility solely when it appears in scanned source, so this check temporarily uses the classes, then removes them.
 
-This step exists because a token can be present in the file yet still fail to produce a utility if it sits in the wrong `@theme` namespace.
+1. Temporarily add `bg-accent text-accent-contrast rounded-pill rounded-card border-hairline text-secondary` to the `<h1>` in `web/app/page.tsx`.
+2. Run `npm run build --prefix web`.
+3. Grep the compiled stylesheet:
+
+```bash
+cat web/.next/static/css/*.css | grep -oE "\.(bg-accent|text-accent-contrast|rounded-pill|rounded-card|border-hairline|text-secondary)\b" | sort -u
+```
+
+Expected: all six class names appear. Any missing name means that token is in the wrong namespace — fix `globals.css`, do not adjust the check.
+
+4. Revert the temporary `className` change and confirm `git diff web/app/page.tsx` is empty.
+
+Paste the grep output into the task record. This is the evidence for FOUND-05.
 
 - [ ] **Step 6: Commit**
 

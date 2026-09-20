@@ -298,6 +298,30 @@ describe("findServiceRoleLeaks", () => {
     ]);
     assert.deepEqual(found, []);
   });
+
+  // @req FOUND-15
+  test("allows a server-only module that merely mentions the phrase in a comment", () => {
+    const found = findServiceRoleLeaks([
+      {
+        path: "a.ts",
+        content:
+          '// do not add "use client" here — this reads the service role key\nconst k = process.env.SUPABASE_SERVICE_ROLE_KEY;',
+      },
+    ]);
+    assert.deepEqual(found, []);
+  });
+
+  // @req FOUND-15
+  test("recognises the directive with leading blank lines and comments", () => {
+    const found = findServiceRoleLeaks([
+      {
+        path: "a.tsx",
+        content:
+          '\n// eslint-disable-next-line\n"use client";\nconst k = process.env.SUPABASE_SERVICE_ROLE_KEY;',
+      },
+    ]);
+    assert.equal(found.length, 1);
+  });
 });
 
 describe("renderTracker", () => {

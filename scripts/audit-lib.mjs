@@ -148,9 +148,15 @@ export function findServiceRoleLeaks(files) {
       continue;
     }
 
-    const isClient =
-      file.content.includes('"use client"') ||
-      file.content.includes("'use client'");
+    // The "use client" directive must be the first statement in the file
+    // (skipping blank lines and comments). A whole-file substring search
+    // would misclassify a server-only file that merely mentions the phrase
+    // in a comment, e.g. "do not add 'use client' here".
+    const firstStatement = file.content
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find((line) => line !== "" && !line.startsWith("//") && !line.startsWith("*"));
+    const isClient = /^["']use client["'];?$/.test(firstStatement ?? "");
 
     if (isClient && file.content.includes("SERVICE_ROLE")) {
       leaks.push({

@@ -5,13 +5,13 @@
 A requirement is done when a passing test carries its `@req` tag.
 Status is computed, never asserted.
 
-**Overall: 20 of 200 requirements covered (10%)**
+**Overall: 22 of 200 requirements covered (11%)**
 
 ## By milestone
 
 | Milestone | Covered | Total |
 |---|---|---|
-| M1 | 16 | 18 |
+| M1 | 18 | 18 |
 | M2 | 0 | 16 |
 | M3 | 0 | 14 |
 | M4 | 0 | 15 |
@@ -29,7 +29,7 @@ Status is computed, never asserted.
 
 | ID | Milestone | Status | Proof |
 |---|---|---|---|
-| FOUND-01 | M1 | todo | — |
+| FOUND-01 | M1 | done | tests/deployment.test.mjs |
 | FOUND-02 | M1 | done | web/app/page.test.tsx |
 | FOUND-03 | M1 | done | web/app/page.test.tsx |
 | FOUND-04 | M1 | done | tests/supabase-config.test.mjs |
@@ -46,7 +46,7 @@ Status is computed, never asserted.
 | FOUND-15 | M1 | done | scripts/audit-lib.test.mjs |
 | FOUND-16 | M1 | done | scripts/audit-lib.test.mjs |
 | FOUND-17 | M1 | done | tests/ci.test.mjs |
-| FOUND-18 | M1 | todo | — |
+| FOUND-18 | M1 | done | tests/deployment.test.mjs |
 | DB-01 | M2 | todo | — |
 | DB-02 | M2 | todo | — |
 | DB-03 | M2 | todo | — |

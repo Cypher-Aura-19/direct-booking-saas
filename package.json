@@ -19,6 +19,7 @@
     "db:status": "supabase status"
   },
   "devDependencies": {
+    "next": "16.3.5",
     "supabase": "2.117.0"
   }
 }

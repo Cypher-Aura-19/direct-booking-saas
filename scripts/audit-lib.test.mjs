@@ -322,6 +322,30 @@ describe("findServiceRoleLeaks", () => {
     ]);
     assert.equal(found.length, 1);
   });
+
+  // @req FOUND-15
+  test("still detects a real leak behind a leading block comment header", () => {
+    const found = findServiceRoleLeaks([
+      {
+        path: "a.tsx",
+        content:
+          '/**\n * License header\n */\n"use client";\nconst k = process.env.SUPABASE_SERVICE_ROLE_KEY;',
+      },
+    ]);
+    assert.equal(found.length, 1);
+  });
+
+  // @req FOUND-15
+  test("still detects a real leak behind a block comment with no leading star on continuation lines", () => {
+    const found = findServiceRoleLeaks([
+      {
+        path: "a.tsx",
+        content:
+          '/*\nLicense header\nno star on this line\n*/\n"use client";\nconst k = process.env.SUPABASE_SERVICE_ROLE_KEY;',
+      },
+    ]);
+    assert.equal(found.length, 1);
+  });
 });
 
 describe("renderTracker", () => {

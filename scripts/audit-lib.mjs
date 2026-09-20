@@ -136,6 +136,32 @@ export function findPhysicalUtilities(files) {
   return violations;
 }
 
+// Skips leading whitespace and full comments — both "// ..." line comments
+// and "/* ... */" block comments, however the block is formatted
+// internally (with or without a leading "*" on continuation lines) — and
+// returns the line that follows. A per-line prefix filter alone is not
+// enough: a block comment whose continuation lines do not start with "*"
+// (a common, legitimate style) would otherwise leave one of its inner
+// lines mistaken for the file's first real statement.
+function leadingStatement(content) {
+  let i = 0;
+  for (;;) {
+    while (i < content.length && /\s/.test(content[i])) i++;
+    if (content.startsWith("//", i)) {
+      const nl = content.indexOf("\n", i);
+      i = nl === -1 ? content.length : nl + 1;
+      continue;
+    }
+    if (content.startsWith("/*", i)) {
+      const end = content.indexOf("*/", i + 2);
+      i = end === -1 ? content.length : end + 2;
+      continue;
+    }
+    break;
+  }
+  return content.slice(i).split(/\r?\n/)[0].trim();
+}
+
 export function findServiceRoleLeaks(files) {
   const leaks = [];
 
@@ -148,15 +174,11 @@ export function findServiceRoleLeaks(files) {
       continue;
     }
 
-    // The "use client" directive must be the first statement in the file
-    // (skipping blank lines and comments). A whole-file substring search
-    // would misclassify a server-only file that merely mentions the phrase
-    // in a comment, e.g. "do not add 'use client' here".
-    const firstStatement = file.content
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .find((line) => line !== "" && !line.startsWith("//") && !line.startsWith("*"));
-    const isClient = /^["']use client["'];?$/.test(firstStatement ?? "");
+    // The "use client" directive must be the first statement in the file.
+    // A whole-file substring search would misclassify a server-only file
+    // that merely mentions the phrase in a comment, e.g.
+    // "do not add 'use client' here".
+    const isClient = /^["']use client["'];?$/.test(leadingStatement(file.content));
 
     if (isClient && file.content.includes("SERVICE_ROLE")) {
       leaks.push({

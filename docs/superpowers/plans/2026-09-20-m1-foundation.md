@@ -110,8 +110,10 @@ Create `package.json`:
 Create `.nvmrc`:
 
 ```
-24
+24.11.1
 ```
+
+Pinned to the exact patch, not the `24` major line. `actions/setup-node` resolves a bare `24` to the newest 24.x, which would silently put CI on a different Node from local development — and dependency engine floors do differ within the 24.x line.
 
 - [ ] **Step 2: Install the Supabase CLI**
 
@@ -223,12 +225,17 @@ Expected: creates `web/` with `app/layout.tsx`, `app/page.tsx`, `app/globals.css
 - [ ] **Step 2: Install the test dependencies**
 
 ```bash
-npm --prefix web install -D vitest@5.0.1 @vitejs/plugin-react@6.1.1 jsdom@30.1.0 @testing-library/react@16.3.3 @testing-library/jest-dom@7.0.1
+npm --prefix web install -D vitest@5.0.1 @vitejs/plugin-react@6.1.1 jsdom@29.1.1 @testing-library/react@16.3.3 @testing-library/jest-dom@7.0.1 @types/node@^24
 ```
+
+Two of those versions are deliberate and were chosen against the obvious defaults:
+
+- **`@types/node@^24`, not the scaffold's `^20`.** Vitest 5.0.1 peer-requires `@types/node@^22.0.0 || >=24.0.0`, so the scaffolded `^20` produces a real `ERESOLVE` failure. Verified by reading Vitest's `peerDependencies`.
+- **`jsdom@29.1.1`, not 30.x.** jsdom 30 requires Node `^22.22.2 || ^24.15.0 || >=26.0.0`. This machine runs Node 24.11.1, which is below that floor and produces an `EBADENGINE` warning on every install. jsdom 29 requires only `>=24.0.0`. Nothing in this project needs a jsdom 30 feature — it is a DOM for component tests.
 
 - [ ] **Step 3: Configure Vitest**
 
-Create `web/vitest.config.ts`:
+Create `web/vitest.config.mts` — note the **`.mts`** extension. With a plain `.ts` config, Vite's native config loader treats the file as CommonJS, sees ESM syntax, and prints a deprecation warning on every single test run. `.mts` marks it as an ES module and the warning disappears. The alternative — adding `"type": "module"` to `web/package.json` — would change module resolution for the whole Next.js app, which is a far larger blast radius for the same result.
 
 ```ts
 import { defineConfig } from "vitest/config";

@@ -1772,7 +1772,25 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Verify design tokens compile to real utilities
+        shell: bash
+        run: |
+          MISSING=""
+          for u in bg-accent bg-surface bg-surface-muted text-ink text-accent-contrast border-hairline rounded-pill; do
+            grep -qE "\.$u[\s{,:]" web/.next/static/chunks/*.css || MISSING="$MISSING $u"
+          done
+          if [ -n "$MISSING" ]; then
+            echo "Tokens defined but not compiling to utilities:$MISSING"
+            echo "A token in the wrong @theme namespace produces no utility."
+            exit 1
+          fi
+          echo "All token utilities present in compiled CSS."
 ```
+
+**Why this step exists.** The Task 3 tests assert on the *text* of `globals.css`, and text assertions structurally cannot catch a token placed in the wrong `@theme` namespace — the token is present, correctly spelled, and produces no utility. That bug already happened once during Task 3 and was caught only by a manual grep whose evidence lives in a report nobody re-runs. This step turns that one-off check into a standing regression guard.
+
+It greps only utilities the application genuinely uses (the Button and the page), so it needs no artificial markup to keep it honest.
 
 The final tracker check matters: `npm run audit` regenerates `docs/TRACKER.md`, so if the committed copy differs from what the current tests produce, someone committed a stale tracker. CI catches that rather than letting the tracker quietly drift out of date.
 
@@ -1815,6 +1833,17 @@ test("CI runs on push and on pull requests", () => {
 // @req FOUND-17
 test("CI fails when the committed tracker is stale", () => {
   assert.match(workflow, /git diff --exit-code docs\/TRACKER\.md/);
+});
+
+// @req FOUND-05
+test("CI proves design tokens compile to real utilities, not just that they are spelled right", () => {
+  assert.match(workflow, /static\/chunks\/\*\.css/);
+  for (const utility of ["bg-accent", "text-ink", "rounded-pill"]) {
+    assert.ok(
+      workflow.includes(utility),
+      `expected CI to check the ${utility} utility compiles`,
+    );
+  }
 });
 ```
 

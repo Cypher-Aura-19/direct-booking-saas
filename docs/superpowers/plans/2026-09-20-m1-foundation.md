@@ -359,7 +359,11 @@ git commit -m "feat: scaffold Next.js app with Vitest harness"
 
 **Interfaces:**
 - Consumes: Tailwind 4 from Task 2
-- Produces: Tailwind utilities `bg-surface`, `bg-surface-muted`, `bg-accent`, `text-accent-contrast`, `text-primary`, `text-secondary`, `border-hairline`, `text-destructive`, `text-warning`, `text-success`, `rounded-card`, `rounded-pill`, `font-sans`, `font-urdu`
+- Produces: Tailwind utilities `bg-surface`, `bg-surface-muted`, `bg-accent`, `text-accent-contrast`, `text-ink`, `text-muted`, `border-hairline`, `text-destructive`, `text-warning`, `text-success`, `rounded-card`, `rounded-pill`, `font-sans`, `font-urdu`
+
+**Naming rule, and the trap it avoids.** Tailwind 4 takes the entire suffix after `--color-` as the utility name. So `--color-text-secondary` produces `text-text-secondary`, *not* `text-secondary` — any token whose name starts with `text-` stutters. Therefore the text colours are named for what they are, not for where they are used: `--ink` for primary text and `--muted` for secondary, giving the clean `text-ink` and `text-muted`.
+
+Each colour has exactly one token name. Do not add aliases.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -380,7 +384,7 @@ const BRAND_TOKENS = [
   ["--surface", "#ffffff"],
   ["--surface-muted", "#f3f3f4"],
   ["--accent", "#f97316"],
-  ["--text-secondary", "#6b6b72"],
+  ["--muted", "#6b6b72"],
   ["--hairline", "#e6e6e8"],
 ];
 
@@ -468,13 +472,18 @@ Replace the entire contents of `web/app/globals.css`:
 */
 
 :root {
+  /*
+    One token per colour, named for what it is rather than where it is
+    used. A token named --text-* would compile to a stuttering utility
+    (text-text-secondary), so primary text is --ink and secondary is
+    --muted.
+  */
   --ink: #111318;
+  --muted: #6b6b72;
   --surface: #ffffff;
   --surface-muted: #f3f3f4;
   --accent: #f97316;
   --accent-contrast: #ffffff;
-  --text-primary: #111318;
-  --text-secondary: #6b6b72;
   --hairline: #e6e6e8;
 
   /* Semantic. Deliberately desaturated so they never compete with --accent. */
@@ -485,12 +494,11 @@ Replace the entire contents of `web/app/globals.css`:
 
 @theme inline {
   --color-ink: var(--ink);
+  --color-muted: var(--muted);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
   --color-accent: var(--accent);
   --color-accent-contrast: var(--accent-contrast);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
   --color-hairline: var(--hairline);
   --color-destructive: var(--destructive);
   --color-warning: var(--warning);
@@ -505,7 +513,7 @@ Replace the entire contents of `web/app/globals.css`:
 
 body {
   background: var(--surface);
-  color: var(--text-primary);
+  color: var(--ink);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
@@ -530,15 +538,15 @@ Expected: PASS.
 
 A token can be present in the file and still fail to produce a utility, if it sits in the wrong `@theme` namespace. Asserting on the CSS source cannot catch that — only compiled output can. Tailwind 4 emits a utility solely when it appears in scanned source, so this check temporarily uses the classes, then removes them.
 
-1. Temporarily add `bg-accent text-accent-contrast rounded-pill rounded-card border-hairline text-secondary` to the `<h1>` in `web/app/page.tsx`.
+1. Temporarily add `bg-accent text-accent-contrast rounded-pill rounded-card border-hairline text-ink text-muted` to the `<h1>` in `web/app/page.tsx`.
 2. Run `npm run build --prefix web`.
 3. Grep the compiled stylesheet:
 
 ```bash
-cat web/.next/static/css/*.css | grep -oE "\.(bg-accent|text-accent-contrast|rounded-pill|rounded-card|border-hairline|text-secondary)\b" | sort -u
+cat web/.next/static/chunks/*.css | grep -oE "\.(bg-accent|text-accent-contrast|rounded-pill|rounded-card|border-hairline|text-ink|text-muted)\b" | sort -u
 ```
 
-Expected: all six class names appear. Any missing name means that token is in the wrong namespace — fix `globals.css`, do not adjust the check.
+Expected: all seven class names appear. The path is `static/chunks/`, not `static/css/` — that is where Next 16's Turbopack build emits stylesheets. Any missing name means that token is in the wrong namespace — fix `globals.css`, do not adjust the check.
 
 4. Revert the temporary `className` change and confirm `git diff web/app/page.tsx` is empty.
 
@@ -870,8 +878,8 @@ export type ButtonVariant = "primary" | "secondary" | "ghost";
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-accent text-accent-contrast hover:opacity-90",
   secondary:
-    "bg-surface text-text-primary border border-hairline hover:bg-surface-muted",
-  ghost: "bg-transparent text-text-primary hover:bg-surface-muted",
+    "bg-surface text-ink border border-hairline hover:bg-surface-muted",
+  ghost: "bg-transparent text-ink hover:bg-surface-muted",
 };
 
 // min-h-11 is 44px: the minimum comfortable touch target on a phone.

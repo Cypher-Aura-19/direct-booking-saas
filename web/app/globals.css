@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
+/*
+  Phase 1 is light-only by decision (D-16). Tokens are split into a :root
+  layer and a @theme inline layer so a dark theme can be added later by
+  overriding :root alone, without touching any utility name.
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #111318;
+  --surface: #ffffff;
+  --surface-muted: #f3f3f4;
+  --accent: #f97316;
+  --accent-contrast: #ffffff;
+  --text-primary: #111318;
+  --text-secondary: #6b6b72;
+  --hairline: #e6e6e8;
+
+  /* Semantic. Deliberately desaturated so they never compete with --accent. */
+  --destructive: #b4443c;
+  --warning: #8a6420;
+  --success: #3d7a54;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-ink: var(--ink);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  /*
+    Tailwind's color-utility matcher takes the whole suffix after
+    "--color-" as the utility value, so --color-text-secondary alone
+    only produces .text-text-secondary, never .text-secondary. These two
+    aliases are what actually make the `text-primary` / `text-secondary`
+    utilities from the task interface compile. See Step 5 evidence.
+  */
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-hairline: var(--hairline);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  --font-sans: var(--font-geist-sans);
+  --font-urdu: var(--font-noto-nastaliq);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/*
+  Exact attribute match, not a prefix match: Roman Urdu is lang="ur-Latn",
+  is written in Latin script, and must NOT receive the Nastaliq stack.
+  Nastaliq needs far more line-height than Latin — its descenders collide
+  at normal spacing.
+*/
+[lang="ur"] {
+  font-family: var(--font-urdu), serif;
+  line-height: 2.1;
 }

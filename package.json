@@ -11,7 +11,7 @@
     "build": "npm run build --prefix web",
     "lint": "npm run lint --prefix web",
     "test:web": "npm run test --prefix web",
-    "test:scripts": "node --test \"tests/**/*.test.mjs\"",
+    "test:scripts": "node --test \"scripts/**/*.test.mjs\" \"tests/**/*.test.mjs\"",
     "test": "npm run test:scripts && npm run test:web",
     "audit": "node scripts/audit.mjs",
     "db:start": "supabase start",

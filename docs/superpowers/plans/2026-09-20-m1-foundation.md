@@ -1852,8 +1852,8 @@ jobs:
         shell: bash
         run: |
           MISSING=""
-          for u in bg-accent bg-surface bg-surface-muted text-ink text-accent-contrast border-hairline rounded-pill; do
-            grep -qE "\.$u[\s{,:]" web/.next/static/chunks/*.css || MISSING="$MISSING $u"
+          for u in '.bg-accent' '.bg-surface' '.hover\:bg-surface-muted' '.text-ink' '.text-accent-contrast' '.border-hairline' '.rounded-pill'; do
+            grep -qF "$u" web/.next/static/chunks/*.css || MISSING="$MISSING $u"
           done
           if [ -n "$MISSING" ]; then
             echo "Tokens defined but not compiling to utilities:$MISSING"
@@ -1865,7 +1865,7 @@ jobs:
 
 **Why this step exists.** The Task 3 tests assert on the *text* of `globals.css`, and text assertions structurally cannot catch a token placed in the wrong `@theme` namespace — the token is present, correctly spelled, and produces no utility. That bug already happened once during Task 3 and was caught only by a manual grep whose evidence lives in a report nobody re-runs. This step turns that one-off check into a standing regression guard.
 
-It greps only utilities the application genuinely uses (the Button and the page), so it needs no artificial markup to keep it honest.
+**The check must match real usage exactly, variant included.** `bg-surface-muted` only ever appears in this codebase as `hover:bg-surface-muted` (the Button's secondary and ghost variants) — never as a bare utility. Tailwind's compiler only emits the exact class string it finds in scanned source, so requiring the bare `.bg-surface-muted` selector here would fail even on a fully correct build, since nothing ever asks Tailwind to generate that specific class. The check targets `.hover\:bg-surface-muted` (the literal, colon-escaped selector Tailwind emits for a variant) so it verifies what the product actually uses. **Do not add markup anywhere purely to satisfy this check** — if a token here never gets used, remove it from this list rather than inventing a use for it. This list is derived by reading actual component usage, not the other way around.
 
 The final tracker check matters: `npm run audit` regenerates `docs/TRACKER.md`, so if the committed copy differs from what the current tests produce, someone committed a stale tracker. CI catches that rather than letting the tracker quietly drift out of date.
 

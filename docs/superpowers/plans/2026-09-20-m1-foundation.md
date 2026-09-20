@@ -758,9 +758,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 Run: `npm run test --prefix web`
 Expected: PASS, all tests.
 
-- [ ] **Step 9: Verify Nastaliq renders**
+- [ ] **Step 9: Verify the Nastaliq pipeline reaches the compiled output**
 
-Temporarily add this below the paragraph in `web/app/page.tsx`:
+Whether the glyphs *look* like sloped Nastaliq rather than upright Naskh can only be judged by eye, and that check belongs to the milestone exit audit. What can be proven mechanically — and what actually breaks — is that the font is requested at the right weights and that the rule reaches the compiled stylesheet.
+
+1. Temporarily add this below the paragraph in `web/app/page.tsx`:
 
 ```tsx
 <p lang="ur" dir="rtl" className="text-2xl">
@@ -768,9 +770,37 @@ Temporarily add this below the paragraph in `web/app/page.tsx`:
 </p>
 ```
 
-Run `npm run dev --prefix web` and confirm in the browser: the text renders right-aligned, in flowing Nastaliq (sloped, connected) rather than upright Naskh, and the lines do not collide. Then revert.
+2. Run `npm run build --prefix web`.
 
-If it renders in Naskh, the font variable is not reaching the element — check that `[lang="ur"]` in `globals.css` matches exactly and that the `notoNastaliq.variable` class is on `<html>`.
+3. Confirm the Urdu face is actually requested, at the right weights and no others:
+
+```bash
+cat web/.next/static/chunks/*.css | grep -A4 "Noto Nastaliq" | grep -oE "font-weight: *[0-9]+" | sort -u
+```
+
+Expected: `400` and `700` only. **Any 300, 500 or 600 is a failure** — those weights render badly in Nastaliq and must never be requested.
+
+4. Confirm the language rule survived compilation:
+
+```bash
+cat web/.next/static/chunks/*.css | grep -oE '\[lang="ur"\][^}]*}' | head -1
+```
+
+Expected: a rule containing the Urdu font variable and a `line-height` above 1.8.
+
+5. Confirm the font files were actually emitted:
+
+```bash
+ls web/.next/static/media/ | head -20
+```
+
+Expected: at least one font file present.
+
+6. Revert the temporary markup and confirm `git diff web/app/page.tsx` is empty.
+
+Paste all four outputs into the task record. If step 3 finds no `Noto Nastaliq` at all, the font is not reaching the page — check that `notoNastaliq.variable` is on the `<html>` element and that `[lang="ur"]` in `globals.css` is an exact attribute match.
+
+**Do not claim the glyphs look correct.** You cannot see them. The visual confirmation is a human item in the milestone exit audit.
 
 - [ ] **Step 10: Commit**
 

@@ -57,6 +57,16 @@ export async function actAsAuthenticated(db, userId) {
   ]);
 }
 
+// Switches the current session to the `anon` role with a forged JWT claim,
+// exactly as PostgREST would for an unauthenticated request. Used to prove
+// public-catalogue RLS policies only expose what they should.
+export async function actAsAnon(db) {
+  await db.query("set local role anon");
+  await db.query("select set_config('request.jwt.claims', $1, true)", [
+    JSON.stringify({ role: "anon" }),
+  ]);
+}
+
 let counter = 0;
 
 // Creates a real row in auth.users via the local GoTrue admin API. Callers
@@ -95,6 +105,28 @@ export async function insertOrg(db, ownerId, overrides = {}) {
     `insert into public.organizations (owner_id, slug, name)
      values ($1, $2, $3) returning id`,
     [ownerId, org.slug, org.name],
+  );
+  return rows[0].id;
+}
+
+// Inserts a property under `organizationId`. Runs under whatever role is
+// active on `db` — pass a plain superuser connection for schema tests, or
+// call actAsAuthenticated first to exercise RLS.
+export async function insertProperty(db, organizationId, overrides = {}) {
+  const p = {
+    name: "Test Property",
+    property_type: "villa",
+    address: "Lahore",
+    base_rate_cents: 500000,
+    max_guests: 4,
+    published: false,
+    ...overrides,
+  };
+  const { rows } = await db.query(
+    `insert into public.properties
+       (organization_id, name, property_type, address, base_rate_cents, max_guests, published)
+     values ($1, $2, $3, $4, $5, $6, $7) returning id`,
+    [organizationId, p.name, p.property_type, p.address, p.base_rate_cents, p.max_guests, p.published],
   );
   return rows[0].id;
 }

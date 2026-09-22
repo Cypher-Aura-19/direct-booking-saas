@@ -25,6 +25,9 @@ jobs:
       - name: Install web dependencies
         run: npm ci --prefix web
 
+      - name: Start Supabase
+        run: npx supabase start
+
       - name: Lint
         run: npm run lint
 
@@ -32,7 +35,7 @@ jobs:
         run: npm test
 
       - name: Audit requirements
-        run: npm run audit -- --milestone M1
+        run: npm run audit -- --milestone M2
 
       - name: Fail if the tracker is stale
         run: git diff --exit-code docs/TRACKER.md
@@ -53,3 +56,7 @@ jobs:
             exit 1
           fi
           echo "All token utilities present in compiled CSS."
+
+      - name: Stop Supabase
+        if: always()
+        run: npx supabase stop

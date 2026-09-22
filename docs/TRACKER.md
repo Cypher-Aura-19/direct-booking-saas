@@ -5,14 +5,14 @@
 A requirement is done when a passing test carries its `@req` tag.
 Status is computed, never asserted.
 
-**Overall: 22 of 200 requirements covered (11%)**
+**Overall: 39 of 200 requirements covered (20%)**
 
 ## By milestone
 
 | Milestone | Covered | Total |
 |---|---|---|
 | M1 | 18 | 18 |
-| M2 | 0 | 16 |
+| M2 | 16 | 16 |
 | M3 | 0 | 14 |
 | M4 | 0 | 15 |
 | M5 | 0 | 10 |
@@ -23,7 +23,7 @@ Status is computed, never asserted.
 | M10 | 0 | 12 |
 | M11 | 0 | 21 |
 | M12 | 0 | 21 |
-| Cross-cutting | 4 | 17 |
+| Cross-cutting | 5 | 17 |
 
 ## Requirements
 
@@ -47,22 +47,22 @@ Status is computed, never asserted.
 | FOUND-16 | M1 | done | scripts/audit-lib.test.mjs |
 | FOUND-17 | M1 | done | tests/ci.test.mjs |
 | FOUND-18 | M1 | done | tests/deployment.test.mjs |
-| DB-01 | M2 | todo | — |
-| DB-02 | M2 | todo | — |
-| DB-03 | M2 | todo | — |
-| DB-04 | M2 | todo | — |
-| DB-05 | M2 | todo | — |
-| DB-06 | M2 | todo | — |
-| DB-07 | M2 | todo | — |
-| DB-08 | M2 | todo | — |
-| DB-09 | M2 | todo | — |
-| DB-10 | M2 | todo | — |
-| DB-11 | M2 | todo | — |
-| DB-12 | M2 | todo | — |
-| DB-13 | M2 | todo | — |
-| DB-14 | M2 | todo | — |
-| DB-15 | M2 | todo | — |
-| DB-16 | M2 | todo | — |
+| DB-01 | M2 | done | tests/db/organizations.test.mjs |
+| DB-02 | M2 | done | tests/db/properties.test.mjs |
+| DB-03 | M2 | done | tests/db/property-photos-and-pricing.test.mjs |
+| DB-04 | M2 | done | tests/db/property-photos-and-pricing.test.mjs |
+| DB-05 | M2 | done | tests/db/availability-blocks.test.mjs |
+| DB-06 | M2 | done | tests/db/availability-blocks.test.mjs |
+| DB-07 | M2 | done | tests/db/conversations.test.mjs |
+| DB-08 | M2 | done | tests/db/messages.test.mjs |
+| DB-09 | M2 | done | tests/db/messages.test.mjs |
+| DB-10 | M2 | done | tests/db/bookings.test.mjs |
+| DB-11 | M2 | done | tests/db/guests-and-documents.test.mjs |
+| DB-12 | M2 | done | tests/db/guests-and-documents.test.mjs |
+| DB-13 | M2 | done | tests/db/rls-sweep.test.mjs |
+| DB-14 | M2 | done | tests/db/organizations.test.mjs |
+| DB-15 | M2 | done | tests/db/properties.test.mjs |
+| DB-16 | M2 | done | tests/db/conversations.test.mjs |
 | AUTH-01 | M3 | todo | — |
 | AUTH-02 | M3 | todo | — |
 | AUTH-03 | M3 | todo | — |
@@ -213,7 +213,7 @@ Status is computed, never asserted.
 | ADMIN-05 | M12 | todo | — |
 | ADMIN-06 | M12 | todo | — |
 | SEC-01 | Cross-cutting | todo | — |
-| SEC-02 | Cross-cutting | todo | — |
+| SEC-02 | Cross-cutting | done | tests/db/organizations.test.mjs |
 | SEC-03 | Cross-cutting | todo | — |
 | SEC-04 | Cross-cutting | todo | — |
 | SEC-05 | Cross-cutting | todo | — |

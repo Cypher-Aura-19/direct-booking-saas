@@ -76,7 +76,7 @@ export async function createTestHost() {
   const admin = createClient(apiUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-  const email = `test-host-${Date.now()}-${counter++}@example.test`;
+  const email = `test-host-${crypto.randomUUID()}@example.test`;
   const { data, error } = await admin.auth.admin.createUser({
     email,
     password: "Test-password-123!",

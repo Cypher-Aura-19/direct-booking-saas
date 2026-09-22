@@ -62,3 +62,39 @@ test("guest conversation tokens are unguessable and unique", async () => {
     await host.cleanup();
   }
 });
+
+// @req DB-09
+test("a conversation cannot leave payment state except by moving to stay, closing the ai_state flip-flop", async () => {
+  const host = await createTestHost();
+  try {
+    await withDb(async (db) => {
+      const orgId = await insertOrg(db, host.userId);
+      const propertyId = await insertProperty(db, orgId);
+
+      const conv = await db.query(
+        `insert into public.conversations (property_id, ai_state) values ($1, 'payment') returning id`,
+        [propertyId],
+      );
+      const conversationId = conv.rows[0].id;
+
+      await db.query("savepoint before_backward_transition");
+      await assert.rejects(
+        () =>
+          db.query(
+            `update public.conversations set ai_state = 'enquiry' where id = $1`,
+            [conversationId],
+          ),
+        (err) => err.code === "23514",
+      );
+      await db.query("rollback to savepoint before_backward_transition");
+
+      const { rows } = await db.query(
+        `update public.conversations set ai_state = 'stay' where id = $1 returning ai_state`,
+        [conversationId],
+      );
+      assert.equal(rows[0].ai_state, "stay");
+    });
+  } finally {
+    await host.cleanup();
+  }
+});

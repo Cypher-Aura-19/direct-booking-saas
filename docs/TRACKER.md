@@ -55,7 +55,7 @@ Status is computed, never asserted.
 | DB-06 | M2 | done | tests/db/availability-blocks.test.mjs |
 | DB-07 | M2 | done | tests/db/conversations.test.mjs |
 | DB-08 | M2 | done | tests/db/messages.test.mjs |
-| DB-09 | M2 | done | tests/db/messages.test.mjs |
+| DB-09 | M2 | done | tests/db/conversations.test.mjs, tests/db/messages.test.mjs |
 | DB-10 | M2 | done | tests/db/bookings.test.mjs |
 | DB-11 | M2 | done | tests/db/guests-and-documents.test.mjs |
 | DB-12 | M2 | done | tests/db/guests-and-documents.test.mjs |

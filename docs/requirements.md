@@ -55,7 +55,7 @@ Rules enforced by the auditor:
 | DB-07 | `conversations` table with guest token, AI state, AI enabled flag and escalation reason |
 | DB-08 | `messages` table with sender of guest, ai or host |
 | DB-09 | A constraint forbids an `ai` message on a conversation in `payment` state |
-| DB-10 | `bookings` table with the status pipeline and server-computed price |
+| DB-10 | `bookings` table with the status pipeline and a price column that will be server-computed, never client-supplied, once the M10 booking flow writes it |
 | DB-11 | `guests` table scoped to an organisation |
 | DB-12 | `guest_documents` table with image reference and retention expiry |
 | DB-13 | Row-level security is enabled on every table |

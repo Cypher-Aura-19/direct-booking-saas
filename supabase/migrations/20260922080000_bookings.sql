@@ -1,3 +1,8 @@
+-- No exclusion constraint here: double-booking prevention lives on
+-- availability_blocks (20260922040000). A future milestone (M10's booking
+-- approval flow) is expected to write a matching availability_blocks row
+-- when a booking is approved — until then, two overlapping bookings rows
+-- can exist simultaneously without a DB-level error.
 create table public.bookings (
   id uuid primary key default gen_random_uuid(),
   property_id uuid not null references public.properties (id) on delete cascade,

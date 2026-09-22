@@ -5,7 +5,7 @@
 A requirement is done when a passing test carries its `@req` tag.
 Status is computed, never asserted.
 
-**Overall: 39 of 200 requirements covered (20%)**
+**Overall: 53 of 200 requirements covered (27%)**
 
 ## By milestone
 
@@ -13,7 +13,7 @@ Status is computed, never asserted.
 |---|---|---|
 | M1 | 18 | 18 |
 | M2 | 16 | 16 |
-| M3 | 0 | 14 |
+| M3 | 14 | 14 |
 | M4 | 0 | 15 |
 | M5 | 0 | 10 |
 | M6 | 0 | 10 |
@@ -63,20 +63,20 @@ Status is computed, never asserted.
 | DB-14 | M2 | done | tests/db/organizations.test.mjs |
 | DB-15 | M2 | done | tests/db/properties.test.mjs |
 | DB-16 | M2 | done | tests/db/conversations.test.mjs |
-| AUTH-01 | M3 | todo | — |
-| AUTH-02 | M3 | todo | — |
-| AUTH-03 | M3 | todo | — |
-| AUTH-04 | M3 | todo | — |
-| AUTH-05 | M3 | todo | — |
-| AUTH-06 | M3 | todo | — |
-| AUTH-07 | M3 | todo | — |
-| AUTH-08 | M3 | todo | — |
-| AUTH-09 | M3 | todo | — |
-| AUTH-10 | M3 | todo | — |
-| AUTH-11 | M3 | todo | — |
-| AUTH-12 | M3 | todo | — |
-| AUTH-13 | M3 | todo | — |
-| AUTH-14 | M3 | todo | — |
+| AUTH-01 | M3 | done | web/app/signup/page.test.tsx, web/lib/auth/actions.test.ts |
+| AUTH-02 | M3 | done | web/app/login/page.test.tsx, web/lib/auth/actions.test.ts |
+| AUTH-03 | M3 | done | web/lib/auth/actions.test.ts |
+| AUTH-04 | M3 | done | web/lib/supabase/middleware.test.ts |
+| AUTH-05 | M3 | done | web/lib/auth/confirmation.test.ts |
+| AUTH-06 | M3 | done | web/lib/auth/actions.test.ts |
+| AUTH-07 | M3 | done | web/lib/auth/dashboard-access.test.ts |
+| AUTH-08 | M3 | done | web/lib/auth/dashboard-access.test.ts |
+| AUTH-09 | M3 | done | web/app/onboarding/page.test.tsx, web/lib/organizations/actions.test.ts |
+| AUTH-10 | M3 | done | web/lib/organizations/actions.test.ts |
+| AUTH-11 | M3 | done | web/lib/organizations/actions.test.ts |
+| AUTH-12 | M3 | done | web/lib/auth/dashboard-access.test.ts, web/lib/organizations/actions.test.ts |
+| AUTH-13 | M3 | done | web/app/dashboard/page.test.tsx |
+| AUTH-14 | M3 | done | web/app/dashboard/layout.test.tsx |
 | PROP-01 | M4 | todo | — |
 | PROP-02 | M4 | todo | — |
 | PROP-03 | M4 | todo | — |

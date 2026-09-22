@@ -28,6 +28,13 @@ jobs:
       - name: Start Supabase
         run: npx supabase start
 
+      - name: Write web env vars from the local Supabase stack
+        shell: bash
+        run: |
+          STATUS=$(npx supabase status -o json)
+          echo "NEXT_PUBLIC_SUPABASE_URL=$(echo "$STATUS" | jq -r .API_URL)" >> web/.env.local
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(echo "$STATUS" | jq -r .ANON_KEY)" >> web/.env.local
+
       - name: Lint
         run: npm run lint
 
@@ -35,7 +42,7 @@ jobs:
         run: npm test
 
       - name: Audit requirements
-        run: npm run audit -- --milestone M2
+        run: npm run audit -- --milestone M3
 
       - name: Fail if the tracker is stale
         run: git diff --exit-code docs/TRACKER.md

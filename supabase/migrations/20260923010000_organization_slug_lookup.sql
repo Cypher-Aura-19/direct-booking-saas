@@ -14,4 +14,13 @@ as $$
   select exists (select 1 from public.organizations where slug = check_slug);
 $$;
 
+-- Postgres grants EXECUTE on every newly created function to PUBLIC by
+-- default. That's harmless for a `security invoker` function like
+-- owns_organization (it still only runs with the caller's own RLS-scoped
+-- privileges either way), but this function is `security definer` — the
+-- one place in this schema that runs with elevated, RLS-bypassing
+-- privilege — so leaving the implicit PUBLIC grant in place here is
+-- exactly the wrong spot to be permissive. Revoke it explicitly before
+-- granting only to the two roles that need it.
+revoke execute on function public.organization_slug_taken(text) from public;
 grant execute on function public.organization_slug_taken(text) to authenticated, anon;

@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { test, expect } from "vitest";
 import { createClient } from "@supabase/supabase-js";
-import { signUpHost } from "./actions";
-import { supabaseEnv, supabaseAdmin } from "../../tests/helpers";
+import { signUpHost, signInHost, signOutHost } from "./actions";
+import { supabaseEnv, supabaseAdmin, createTestHost } from "../../tests/helpers";
 
 // @req AUTH-01
 test("a host can sign up with email, password and name", async () => {
@@ -29,4 +29,50 @@ test("a host can sign up with email, password and name", async () => {
   expect(created!.email_confirmed_at).toBeFalsy();
 
   await admin.auth.admin.deleteUser(created!.id);
+});
+
+// @req AUTH-02
+test("a host can log in with the correct password", async () => {
+  const { apiUrl, anonKey } = supabaseEnv();
+  const host = await createTestHost();
+  try {
+    const supabase = createClient(apiUrl, anonKey);
+    const { error } = await signInHost(supabase, { email: host.email, password: host.password });
+    expect(error).toBeNull();
+
+    const { data } = await supabase.auth.getUser();
+    expect(data.user?.id).toBe(host.userId);
+  } finally {
+    await host.cleanup();
+  }
+});
+
+// @req AUTH-02
+test("a host cannot log in with the wrong password", async () => {
+  const { apiUrl, anonKey } = supabaseEnv();
+  const host = await createTestHost();
+  try {
+    const supabase = createClient(apiUrl, anonKey);
+    const { error } = await signInHost(supabase, { email: host.email, password: "wrong-password" });
+    expect(error).not.toBeNull();
+  } finally {
+    await host.cleanup();
+  }
+});
+
+// @req AUTH-03
+test("a host can log out, ending the session", async () => {
+  const { apiUrl, anonKey } = supabaseEnv();
+  const host = await createTestHost();
+  try {
+    const supabase = createClient(apiUrl, anonKey);
+    await signInHost(supabase, { email: host.email, password: host.password });
+    const { error } = await signOutHost(supabase);
+    expect(error).toBeNull();
+
+    const { data } = await supabase.auth.getUser();
+    expect(data.user).toBeNull();
+  } finally {
+    await host.cleanup();
+  }
 });

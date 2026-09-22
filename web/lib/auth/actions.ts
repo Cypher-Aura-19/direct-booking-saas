@@ -14,3 +14,16 @@ export async function signUpHost(
   });
   return { error: error?.message ?? null };
 }
+
+export async function signInHost(
+  supabase: SupabaseClient,
+  { email, password }: { email: string; password: string },
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  return { error: error?.message ?? null };
+}
+
+export async function signOutHost(supabase: SupabaseClient): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.signOut();
+  return { error: error?.message ?? null };
+}

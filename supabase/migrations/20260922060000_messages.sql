@@ -30,9 +30,14 @@ create policy "messages_all_own" on public.messages
   with check (public.owns_conversation(conversation_id));
 
 -- Enforces the Phase 1 core design decision that the AI can never speak
--- while a conversation is in payment state. A BEFORE INSERT trigger fires
--- for every role including service_role, unlike an RLS policy — this is
--- what makes the block non-overridable by the AI backend code M7 adds.
+-- while a conversation is in payment state. A BEFORE INSERT OR UPDATE
+-- trigger fires for every role including service_role, unlike an RLS
+-- policy — this is what makes the block non-overridable by the AI backend
+-- code M7 adds. It also has to cover UPDATE, not just INSERT: `messages_
+-- all_own` is a `for all` policy, so without the UPDATE path any host who
+-- owns the conversation could otherwise run
+-- `update public.messages set sender = 'ai' where id = ...` on an existing
+-- row during payment state and bypass the shield entirely.
 create function public.forbid_ai_message_during_payment()
 returns trigger
 language plpgsql
@@ -52,6 +57,6 @@ end;
 $$;
 
 create trigger messages_forbid_ai_during_payment
-  before insert on public.messages
+  before insert or update on public.messages
   for each row
   execute function public.forbid_ai_message_during_payment();

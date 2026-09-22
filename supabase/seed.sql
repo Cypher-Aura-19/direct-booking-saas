@@ -1,0 +1,2 @@
+-- Intentionally empty. Phase 1 has no fixture data that belongs in every
+-- environment; test data is created and torn down by the test suite itself.

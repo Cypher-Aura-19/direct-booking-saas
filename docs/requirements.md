@@ -79,7 +79,7 @@ Rules enforced by the auditor:
 | AUTH-10 | The onboarding slug field rejects a slug already in use |
 | AUTH-11 | The onboarding slug field rejects reserved words that would collide with app routes |
 | AUTH-12 | A host who completes onboarding reaches the dashboard and stays there on re-login |
-| AUTH-13 | The dashboard home lists waiting booking requests, escalated chats, unread messages and today's arrivals and departures |
+| AUTH-13 | The dashboard home lists waiting booking requests, escalated chats, unread messages (deferred: no read-tracking column exists until M9) and today's arrivals and departures |
 | AUTH-14 | Dashboard navigation renders as a sidebar on desktop and a bottom tab bar on mobile |
 
 ## M4 — Properties and knowledge base

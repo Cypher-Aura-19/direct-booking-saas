@@ -9,6 +9,7 @@ import {
   createOrganization,
 } from "./actions";
 import { supabaseEnv, createTestHost } from "../../tests/helpers";
+import { resolveDashboardAccess } from "../auth/dashboard-access";
 
 test("isValidSlugFormat accepts lowercase letters, digits and hyphens", () => {
   expect(isValidSlugFormat("sunset-villas-lahore")).toBe(true);
@@ -97,5 +98,39 @@ test("the slug field rejects a slug already in use, even for a host who doesn't 
   } finally {
     await hostA.cleanup();
     await hostB.cleanup();
+  }
+});
+
+// @req AUTH-12
+test("a host who completes onboarding still resolves to 'allow' after logging out and back in", async () => {
+  const { apiUrl, anonKey } = supabaseEnv();
+  const host = await createTestHost();
+  try {
+    const supabase = createClient(apiUrl, anonKey);
+    await supabase.auth.signInWithPassword({ email: host.email, password: host.password });
+
+    const slug = `stays-onboarded-${crypto.randomUUID().slice(0, 8)}`;
+    const { error } = await createOrganization(supabase, {
+      ownerId: host.userId,
+      name: "Stays Onboarded Villas",
+      slug,
+      city: "Lahore",
+      phone: "0300-1234567",
+    });
+    expect(error).toBeNull();
+
+    await supabase.auth.signOut();
+    await supabase.auth.signInWithPassword({ email: host.email, password: host.password });
+
+    const { data: organization } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("owner_id", host.userId)
+      .maybeSingle();
+
+    const { data: userData } = await supabase.auth.getUser();
+    expect(resolveDashboardAccess({ user: userData.user, organization })).toBe("allow");
+  } finally {
+    await host.cleanup();
   }
 });

@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { requestPasswordReset } from "@/lib/auth/actions";
 
@@ -9,7 +10,10 @@ export async function forgotPasswordAction(
 ): Promise<{ error: string | null; sent: boolean }> {
   const email = String(formData.get("email") ?? "");
   const supabase = await createClient();
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://127.0.0.1:3000";
+  const headersList = await headers();
+  const host = headersList.get("host");
+  const protocol = headersList.get("x-forwarded-proto") ?? "http";
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? `${protocol}://${host}`;
 
   const { error } = await requestPasswordReset(supabase, {
     email,

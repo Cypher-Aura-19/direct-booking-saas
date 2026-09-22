@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 type Row = Record<string, unknown>;
@@ -66,32 +67,42 @@ export function DashboardHome({
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) redirect("/login");
 
   const { data: organization } = await supabase
     .from("organizations")
     .select("id")
-    .eq("owner_id", userData.user!.id)
-    .single();
+    .eq("owner_id", userData.user.id)
+    .maybeSingle();
+  if (!organization) redirect("/onboarding");
 
   const { data: properties } = await supabase
     .from("properties")
     .select("id")
-    .eq("organization_id", organization!.id);
+    .eq("organization_id", organization.id);
   const propertyIds = properties?.map((p) => p.id) ?? [];
 
-  // bookings/conversations/messages have no application-level producers
-  // until M9-M10 — every list is genuinely empty in M3, not stubbed.
-  const [{ data: pendingBookings }, { data: escalatedConversations }] = await Promise.all([
-    supabase.from("bookings").select("id").eq("status", "requested").in("property_id", propertyIds),
-    supabase.from("conversations").select("id").eq("escalated", true).in("property_id", propertyIds),
-  ]);
+  // messages has no read-tracking column until M9 — unreadMessages is
+  // genuinely unexpressible in M3, not stubbed.
+  const today = new Date().toISOString().slice(0, 10);
+  const [{ data: pendingBookings }, { data: escalatedConversations }, { data: todaysArrivalsAndDepartures }] =
+    await Promise.all([
+      supabase.from("bookings").select("id").eq("status", "requested").in("property_id", propertyIds),
+      supabase.from("conversations").select("id").eq("escalated", true).in("property_id", propertyIds),
+      supabase
+        .from("bookings")
+        .select("id")
+        .in("status", ["approved", "staying"])
+        .in("property_id", propertyIds)
+        .or(`start_date.eq.${today},end_date.eq.${today}`),
+    ]);
 
   return (
     <DashboardHome
       pendingBookings={pendingBookings ?? []}
       escalatedConversations={escalatedConversations ?? []}
       unreadMessages={[]}
-      todaysArrivalsAndDepartures={[]}
+      todaysArrivalsAndDepartures={todaysArrivalsAndDepartures ?? []}
     />
   );
 }

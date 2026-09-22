@@ -2,7 +2,7 @@
 import { test, expect } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 import { signUpHost, signInHost, signOutHost, requestPasswordReset, updatePassword } from "./actions";
-import { supabaseEnv, supabaseAdmin, createTestHost, pollMailpitFor } from "../../tests/helpers";
+import { supabaseEnv, createTestHost, pollMailpitFor } from "../../tests/helpers";
 
 // @req AUTH-01
 test("a host can sign up with email, password and name", async () => {

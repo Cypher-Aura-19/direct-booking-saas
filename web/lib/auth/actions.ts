@@ -27,3 +27,19 @@ export async function signOutHost(supabase: SupabaseClient): Promise<{ error: st
   const { error } = await supabase.auth.signOut();
   return { error: error?.message ?? null };
 }
+
+export async function requestPasswordReset(
+  supabase: SupabaseClient,
+  { email, redirectTo }: { email: string; redirectTo: string },
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+  return { error: error?.message ?? null };
+}
+
+export async function updatePassword(
+  supabase: SupabaseClient,
+  { password }: { password: string },
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.updateUser({ password });
+  return { error: error?.message ?? null };
+}

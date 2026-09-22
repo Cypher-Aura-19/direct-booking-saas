@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { test, expect } from "vitest";
 import { createClient } from "@supabase/supabase-js";
-import { signUpHost, signInHost, signOutHost } from "./actions";
-import { supabaseEnv, supabaseAdmin, createTestHost } from "../../tests/helpers";
+import { signUpHost, signInHost, signOutHost, requestPasswordReset, updatePassword } from "./actions";
+import { supabaseEnv, supabaseAdmin, createTestHost, pollMailpitFor } from "../../tests/helpers";
 
 // @req AUTH-01
 test("a host can sign up with email, password and name", async () => {
@@ -72,6 +72,54 @@ test("a host can log out, ending the session", async () => {
 
     const { data } = await supabase.auth.getUser();
     expect(data.user).toBeNull();
+  } finally {
+    await host.cleanup();
+  }
+});
+
+// @req AUTH-06
+test("a host can request a password reset and a real email is sent", async () => {
+  const { apiUrl, anonKey } = supabaseEnv();
+  const host = await createTestHost();
+  try {
+    const supabase = createClient(apiUrl, anonKey);
+    const { error } = await requestPasswordReset(supabase, {
+      email: host.email,
+      redirectTo: "http://127.0.0.1:3000/auth/callback?next=/reset-password",
+    });
+    expect(error).toBeNull();
+
+    const mail = await pollMailpitFor(host.email);
+    expect(mail.subject.toLowerCase()).toMatch(/reset|recovery|password/);
+  } finally {
+    await host.cleanup();
+  }
+});
+
+// @req AUTH-06
+test("a host can set a new password and then log in with it", async () => {
+  const { apiUrl, anonKey } = supabaseEnv();
+  const host = await createTestHost();
+  try {
+    const supabase = createClient(apiUrl, anonKey);
+    await signInHost(supabase, { email: host.email, password: host.password });
+
+    const newPassword = "New-password-456!";
+    const { error } = await updatePassword(supabase, { password: newPassword });
+    expect(error).toBeNull();
+
+    await signOutHost(supabase);
+    const { error: oldPasswordError } = await signInHost(supabase, {
+      email: host.email,
+      password: host.password,
+    });
+    expect(oldPasswordError).not.toBeNull();
+
+    const { error: newPasswordError } = await signInHost(supabase, {
+      email: host.email,
+      password: newPassword,
+    });
+    expect(newPasswordError).toBeNull();
   } finally {
     await host.cleanup();
   }

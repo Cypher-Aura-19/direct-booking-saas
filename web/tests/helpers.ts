@@ -48,6 +48,13 @@ export async function createTestHost(overrides: { emailConfirm?: boolean } = {})
   };
 }
 
+export function supabaseAdmin() {
+  const { apiUrl, serviceRoleKey } = supabaseEnv();
+  return createClient(apiUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
 type MailpitMessage = { ID: string; To: Array<{ Address: string }>; Subject: string };
 
 // Polls Mailpit (the local stack's email-testing service) for the most
@@ -76,8 +83,17 @@ export async function pollMailpitFor(
 
 // Extracts the first http(s) URL from an email body, regardless of the
 // exact Supabase email template wording — robust to template changes.
+//
+// The HTML body Supabase's default templates render encodes `&` as `&amp;`
+// inside href attributes (standard HTML escaping). A GoTrue confirmation
+// link has multiple query params (token, type, redirect_to) joined by `&`,
+// so pulling the raw match out of HTML leaves literal "&amp;" in the URL —
+// `&type=signup` becomes `&amp;type=signup`, which parses as a query param
+// named "amp;type" instead of "type". GoTrue then can't tell what the link
+// is for and silently fails to confirm the user. Decoding the entity here
+// (rather than in every caller) keeps callers free to pass mail.html.
 export function firstLinkIn(text: string): string {
   const match = text.match(/https?:\/\/[^\s"<>]+/);
   if (!match) throw new Error(`no link found in: ${text}`);
-  return match[0];
+  return match[0].replace(/&amp;/g, "&");
 }

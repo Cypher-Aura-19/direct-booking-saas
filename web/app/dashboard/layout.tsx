@@ -1,0 +1,71 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { resolveDashboardAccess } from "@/lib/auth/dashboard-access";
+
+const NAV_ITEMS = [
+  { href: "/dashboard", label: "Home" },
+  { href: "/dashboard/inbox", label: "Inbox" },
+  { href: "/dashboard/calendar", label: "Calendar" },
+  { href: "/dashboard/settings/account", label: "More" },
+];
+
+export function DashboardNav() {
+  return (
+    <>
+      <nav
+        data-testid="dashboard-sidebar"
+        className="hidden md:flex md:w-56 md:flex-col md:gap-1 md:border-e md:border-hairline md:p-4"
+      >
+        {NAV_ITEMS.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className="rounded-card px-4 py-2 text-sm text-ink hover:bg-surface-muted"
+          >
+            {item.label}
+          </a>
+        ))}
+      </nav>
+      <nav
+        data-testid="dashboard-tabbar"
+        className="fixed inset-x-0 bottom-0 flex justify-around border-t border-hairline bg-surface py-2 md:hidden"
+      >
+        {NAV_ITEMS.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className="flex min-h-11 min-w-11 items-center justify-center px-3 text-xs text-ink"
+          >
+            {item.label}
+          </a>
+        ))}
+      </nav>
+    </>
+  );
+}
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+
+  let organization: { id: string } | null = null;
+  if (userData.user) {
+    const { data } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("owner_id", userData.user.id)
+      .maybeSingle();
+    organization = data;
+  }
+
+  const access = resolveDashboardAccess({ user: userData.user, organization });
+  if (access === "login") redirect("/login");
+  if (access === "onboarding") redirect("/onboarding");
+
+  return (
+    <div className="flex min-h-dvh">
+      <DashboardNav />
+      <main className="flex-1 p-6 pb-20 md:pb-6">{children}</main>
+    </div>
+  );
+}

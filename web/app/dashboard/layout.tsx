@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { resolveDashboardAccess } from "@/lib/auth/dashboard-access";
+import { getCurrentOrganization } from "@/lib/organizations/settings";
 
 const SIDEBAR_ITEMS = [
   { href: "/dashboard", label: "Home" },
@@ -58,15 +59,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
 
-  let organization: { id: string } | null = null;
-  if (userData.user) {
-    const { data } = await supabase
-      .from("organizations")
-      .select("id")
-      .eq("owner_id", userData.user.id)
-      .maybeSingle();
-    organization = data;
-  }
+  // getCurrentOrganization throws on a real database error instead of
+  // returning null, so an outage surfaces as an error page (dashboard/
+  // error.tsx) rather than silently redirecting a real host to /onboarding.
+  const organization: { id: string } | null = userData.user
+    ? await getCurrentOrganization(supabase, userData.user.id)
+    : null;
 
   const access = resolveDashboardAccess({ user: userData.user, organization });
   if (access === "login") redirect("/login");

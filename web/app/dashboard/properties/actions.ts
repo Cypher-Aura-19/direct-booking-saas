@@ -60,7 +60,11 @@ export async function updatePropertyAction(
 
 export async function setPublishedAction(propertyId: string, published: boolean): Promise<void> {
   const { supabase } = await dashboardContext();
-  await setPropertyPublished(supabase, propertyId, published);
+  const { error } = await setPropertyPublished(supabase, propertyId, published);
+  // The toggle is a plain <form action>, with no state to render an error
+  // into; throwing hands it to Next's error boundary instead of pretending
+  // the property changed visibility.
+  if (error) throw new Error(error);
   refreshProperties();
 }
 

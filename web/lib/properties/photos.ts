@@ -55,11 +55,14 @@ export async function uploadPropertyPhoto(
 }
 
 export async function listPropertyPhotos(supabase: SupabaseClient, propertyId: string): Promise<PropertyPhoto[]> {
+  // Concurrent uploads can land the same position; created_at breaks the
+  // tie deterministically until the next reorder normalizes positions.
   const { data, error } = await supabase
     .from("property_photos")
     .select(PHOTO_COLUMNS)
     .eq("property_id", propertyId)
-    .order("position", { ascending: true });
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
   if (error) {
     if (error.code === "22P02") return [];
     throw error;
@@ -76,7 +79,8 @@ export async function signedPhotoUrls(
   const { data, error } = await supabase.storage
     .from(PHOTO_BUCKET)
     .createSignedUrls(photos.map((p) => p.storage_path), expiresInSeconds);
-  if (error || !data) return {};
+  if (error) throw error;
+  if (!data) return {};
   const byPath = new Map(data.map((entry) => [entry.path, entry.signedUrl]));
   const urls: Record<string, string> = {};
   for (const photo of photos) {
@@ -113,6 +117,16 @@ export async function deletePropertyPhoto(supabase: SupabaseClient, photoId: str
   if (readError && readError.code !== "22P02") return { error: readError.message };
   if (!photo) return { error: "Photo not found." };
 
+  // Promote before deleting anything: nothing has happened yet, so an error
+  // here is truthful and the caller can retry with the photo still intact.
+  if (photo.is_cover) {
+    const next = (await listPropertyPhotos(supabase, photo.property_id)).find((p) => p.id !== photoId);
+    if (next) {
+      const { error } = await setCoverPhoto(supabase, next.id);
+      if (error) return { error };
+    }
+  }
+
   const { error } = await supabase.from("property_photos").delete().eq("id", photoId);
   if (error) return { error: error.message };
 
@@ -120,9 +134,5 @@ export async function deletePropertyPhoto(supabase: SupabaseClient, photoId: str
   // a leftover row pointing at a missing object is a broken image.
   await supabase.storage.from(PHOTO_BUCKET).remove([photo.storage_path]);
 
-  if (photo.is_cover) {
-    const [next] = await listPropertyPhotos(supabase, photo.property_id);
-    if (next) return setCoverPhoto(supabase, next.id);
-  }
   return { error: null };
 }

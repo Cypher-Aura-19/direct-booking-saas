@@ -139,6 +139,17 @@ test("a host can delete a photo, which removes the stored file too", async () =>
 });
 
 // @req PROP-07
+test("deleting the only photo of a property succeeds and leaves an empty list", async () => {
+  const fixture = await hostWithPhotos(1);
+  try {
+    expect((await deletePropertyPhoto(fixture.host.supabase, fixture.ids[0])).error).toBeNull();
+    expect(await listPropertyPhotos(fixture.host.supabase, fixture.propertyId)).toEqual([]);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+// @req PROP-07
 // @req PROP-08
 test("deleting the cover photo promotes the next photo to cover", async () => {
   const fixture = await hostWithPhotos(3);

@@ -132,8 +132,12 @@ export async function getProperty(supabase: SupabaseClient, propertyId: string):
     .select(`${SUMMARY_COLUMNS}, address`)
     .eq("id", propertyId)
     .maybeSingle();
-  // An id that isn't a uuid (a mistyped URL) is a 22P02, not a crash.
-  if (error) return null;
+  // An id that isn't a uuid (a mistyped URL) is a 22P02: treat it as not
+  // found. Anything else is a real failure and must not look like a 404.
+  if (error) {
+    if (error.code === "22P02") return null;
+    throw error;
+  }
   return data;
 }
 

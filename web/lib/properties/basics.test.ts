@@ -70,6 +70,15 @@ test("a host can create a property with name, type, address, base rate and max g
   }
 });
 
+test("getProperty returns null for a malformed id instead of throwing", async () => {
+  const host = await createTestHostWithOrg();
+  try {
+    expect(await getProperty(host.supabase, "not-a-uuid")).toBeNull();
+  } finally {
+    await host.cleanup();
+  }
+});
+
 test("a second property with the same name gets a different slug", async () => {
   const host = await createTestHostWithOrg();
   try {

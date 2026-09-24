@@ -73,3 +73,12 @@ test("a host cannot edit another organisation's settings", async () => {
     await intruder.cleanup();
   }
 });
+
+test("getCurrentOrganization treats a malformed owner id as no organisation", async () => {
+  const host = await createTestHostWithOrg();
+  try {
+    expect(await getCurrentOrganization(host.supabase, "not-a-uuid")).toBeNull();
+  } finally {
+    await host.cleanup();
+  }
+});

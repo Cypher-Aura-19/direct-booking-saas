@@ -12,7 +12,10 @@ export async function getCurrentOrganization(
     .select("id, name, slug, profile")
     .eq("owner_id", ownerId)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {
+    if (error.code === "22P02") return null;
+    throw error;
+  }
   if (!data) return null;
   return { id: data.id, name: data.name, slug: data.slug, headline: data.profile?.headline ?? "" };
 }
@@ -21,7 +24,7 @@ export async function updateOrganizationSettings(
   supabase: SupabaseClient,
   { organizationId, name, slug, headline }: { organizationId: string; name: string; slug: string; headline: string },
 ): Promise<{ error: string | null }> {
-  if (!name.trim() || name.length > 80) return { error: "Business name is required (up to 80 characters)." };
+  if (!name.trim() || name.trim().length > 80) return { error: "Business name is required (up to 80 characters)." };
   if (!isValidSlugFormat(slug)) return { error: "Slug must be 3-40 lowercase letters, digits and hyphens." };
   if (isReservedSlug(slug)) return { error: "That slug is reserved. Please choose another." };
   if (headline.length > 120) return { error: "The headline can be up to 120 characters." };

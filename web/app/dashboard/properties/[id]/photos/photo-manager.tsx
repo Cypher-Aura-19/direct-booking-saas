@@ -31,12 +31,14 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
     startTransition(async () => {
       // Browser → Storage directly, with the host's own session.
       const supabase = createClient();
+      const failures: string[] = [];
       for (const file of selected) {
         const { error } = await uploadPropertyPhoto(supabase, { propertyId, file });
-        if (error) {
-          setError(`${file.name}: ${error}`);
-          break;
-        }
+        if (error) failures.push(`${file.name}: ${error}`);
+      }
+      if (failures.length > 0) {
+        const uploaded = selected.length - failures.length;
+        setError(`${uploaded} of ${selected.length} uploaded. Not uploaded — ${failures.join("; ")}`);
       }
       router.refresh();
     });
@@ -66,8 +68,16 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
         />
       </label>
 
-      {pending && <p className="text-sm text-muted">Working…</p>}
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {pending && (
+        <p className="text-sm text-muted" aria-live="polite">
+          Working…
+        </p>
+      )}
+      {error && (
+        <p className="text-sm text-destructive" aria-live="polite">
+          {error}
+        </p>
+      )}
 
       {photos.length === 0 ? (
         <p className="text-muted">No photos yet. Guests decide in seconds — lead with the view or the best room.</p>
@@ -85,9 +95,15 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
               }}
               className="flex flex-col gap-2"
             >
-              {/* Private bucket, short-lived signed URL: next/image's optimiser would cache it past expiry. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={photo.url} alt={`Photo ${index + 1}`} className="aspect-[4/3] w-full rounded-card object-cover" />
+              {photo.url ? (
+                // Private bucket, short-lived signed URL: next/image's optimiser would cache it past expiry.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photo.url} alt={`Photo ${index + 1}`} className="aspect-[4/3] w-full rounded-card object-cover" />
+              ) : (
+                <div className="flex aspect-[4/3] w-full items-center justify-center rounded-card bg-surface-muted">
+                  <span className="text-sm text-muted">Preview unavailable</span>
+                </div>
+              )}
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 {photo.is_cover ? (
                   <span className="px-3 text-success">Cover</span>

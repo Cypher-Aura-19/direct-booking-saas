@@ -2,7 +2,7 @@
 import { test, expect, afterAll } from "vitest";
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest } from "next/server";
-import { updateSession } from "./middleware";
+import { updateSession, isProtectedPath } from "./middleware";
 import { supabaseEnv, createTestHost } from "../../tests/helpers";
 
 const host = await createTestHost();
@@ -55,6 +55,8 @@ test("middleware refreshes the session and forwards the updated cookies", async 
   });
 
   const response = await updateSession(request);
+  // A signed-in request to /dashboard must pass through, not bounce to login.
+  expect(response.headers.get("location")).toBeNull();
   const responseCookies = response.cookies.getAll();
 
   expect(responseCookies.length).toBeGreaterThan(0);
@@ -65,4 +67,28 @@ test("middleware does not throw for an anonymous request with no session", async
   const request = new NextRequest("http://localhost/");
   const response = await updateSession(request);
   expect(response).toBeDefined();
+});
+
+test("isProtectedPath covers the dashboard tree and onboarding only", () => {
+  expect(isProtectedPath("/dashboard")).toBe(true);
+  expect(isProtectedPath("/dashboard/properties/abc/photos")).toBe(true);
+  expect(isProtectedPath("/onboarding")).toBe(true);
+  expect(isProtectedPath("/")).toBe(false);
+  expect(isProtectedPath("/login")).toBe(false);
+  expect(isProtectedPath("/dashboardx")).toBe(false);
+  expect(isProtectedPath("/s/sunset-stays")).toBe(false);
+});
+
+// @req AUTH-07
+test("middleware redirects a signed-out request for any dashboard route to /login", async () => {
+  const response = await updateSession(new NextRequest("http://localhost/dashboard/properties/abc/photos"));
+  expect(response.status).toBe(307);
+  expect(new URL(response.headers.get("location")!).pathname).toBe("/login");
+});
+
+test("middleware lets signed-out requests for public routes through", async () => {
+  for (const path of ["/", "/login", "/signup"]) {
+    const response = await updateSession(new NextRequest(`http://localhost${path}`));
+    expect(response.headers.get("location")).toBeNull();
+  }
 });

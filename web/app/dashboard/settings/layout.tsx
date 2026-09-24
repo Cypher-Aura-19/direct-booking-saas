@@ -12,10 +12,9 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
           but not for equivalent links elsewhere in this codebase. */}
       <a
         href="/dashboard/properties"
-        className="flex min-h-11 items-center justify-between rounded-card border border-hairline px-4 text-sm md:hidden"
+        className="flex min-h-11 items-center rounded-card border border-hairline px-4 text-sm md:hidden"
       >
         Properties
-        <span aria-hidden className="rtl:-scale-x-100">→</span>
       </a>
       <nav className="flex gap-2 border-b border-hairline">
         {SETTINGS_LINKS.map((link) => (

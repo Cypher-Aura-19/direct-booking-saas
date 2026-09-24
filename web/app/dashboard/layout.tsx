@@ -2,11 +2,21 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { resolveDashboardAccess } from "@/lib/auth/dashboard-access";
 
-const NAV_ITEMS = [
+const SIDEBAR_ITEMS = [
   { href: "/dashboard", label: "Home" },
   { href: "/dashboard/inbox", label: "Inbox" },
   { href: "/dashboard/calendar", label: "Calendar" },
-  { href: "/dashboard/settings/account", label: "More" },
+  { href: "/dashboard/properties", label: "Properties" },
+  { href: "/dashboard/settings", label: "Settings" },
+];
+
+// Spec §9: exactly four tabs on mobile. "More" is the settings area, which
+// also links to Properties on small screens (settings/layout.tsx).
+const TAB_ITEMS = [
+  { href: "/dashboard", label: "Home" },
+  { href: "/dashboard/inbox", label: "Inbox" },
+  { href: "/dashboard/calendar", label: "Calendar" },
+  { href: "/dashboard/settings", label: "More" },
 ];
 
 export function DashboardNav() {
@@ -16,7 +26,7 @@ export function DashboardNav() {
         data-testid="dashboard-sidebar"
         className="hidden md:flex md:w-56 md:flex-col md:gap-1 md:border-e md:border-hairline md:p-4"
       >
-        {NAV_ITEMS.map((item) => (
+        {SIDEBAR_ITEMS.map((item) => (
           <a
             key={item.href}
             href={item.href}
@@ -30,7 +40,7 @@ export function DashboardNav() {
         data-testid="dashboard-tabbar"
         className="fixed inset-x-0 bottom-0 flex justify-around border-t border-hairline bg-surface py-2 md:hidden"
       >
-        {NAV_ITEMS.map((item) => (
+        {TAB_ITEMS.map((item) => (
           <a
             key={item.href}
             href={item.href}

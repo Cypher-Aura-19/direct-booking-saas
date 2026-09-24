@@ -80,7 +80,7 @@ Status is computed, never asserted.
 | PROP-01 | M4 | done | web/lib/properties/basics.test.ts |
 | PROP-02 | M4 | done | web/lib/properties/basics.test.ts |
 | PROP-03 | M4 | done | web/lib/properties/basics.test.ts |
-| PROP-04 | M4 | done | web/lib/properties/basics.test.ts |
+| PROP-04 | M4 | done | web/lib/properties/basics.test.ts, web/lib/properties/photos.test.ts |
 | PROP-05 | M4 | done | web/lib/properties/photos.test.ts, web/lib/properties/survives-logout.test.ts |
 | PROP-06 | M4 | done | web/lib/properties/photos.test.ts |
 | PROP-07 | M4 | done | web/lib/properties/photos.test.ts |

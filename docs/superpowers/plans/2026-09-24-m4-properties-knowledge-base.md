@@ -20,6 +20,7 @@ Copied or derived from `docs/superpowers/specs/2026-09-20-phase-1-design.md`, th
 - **No business logic inside a `"use server"` function, page or layout.** Extract it to `web/lib/**`; the wrapper only builds the client, calls the function, and handles redirect/revalidate.
 - **Anon-facing reads of `properties` must use an explicit column list, never `select *`** — anon has column-level grants only (see `supabase/migrations/20260922090000_properties_restrict_anon_columns.sql`). Any new `properties` column that anon should read needs its own `grant select (col) … to anon`; any it should not read (knowledge base!) must not be granted.
 - **Every new SQL function gets `revoke execute … from public` followed by an explicit `grant … to authenticated`.** `security definer` is not used in this milestone at all; if a task seems to need it, stop and ask.
+- **Read functions never turn a database error into "not found".** Only a genuinely missing row (or a malformed id, Postgres `22P02`) yields `null`/`[]`; any other error is thrown, so an outage or an RLS/grant regression surfaces as an error page and a log line instead of a silent 404. (Decided 2026-09-25 after the Task 3 review.)
 - **Money is stored as integer paisa in `*_cents` columns** (Rs 1 = 100). The UI takes and shows whole rupees.
 - **Cross-organisation tests assert the failure** (an error, `null`, or an empty list) **and then re-read as the owner to prove nothing changed.** A test that only exercises the happy path does not prove PROP-14.
 - **This machine is shared with unrelated projects.** Only touch Docker containers named `*_airbnb_like_system`. Never stop, restart or reconfigure anything else.
@@ -955,8 +956,12 @@ export async function getProperty(supabase: SupabaseClient, propertyId: string):
     .select(`${SUMMARY_COLUMNS}, address`)
     .eq("id", propertyId)
     .maybeSingle();
-  // An id that isn't a uuid (a mistyped URL) is a 22P02, not a crash.
-  if (error) return null;
+  // An id that isn't a uuid (a mistyped URL) is a 22P02: treat it as not
+  // found. Anything else is a real failure and must not look like a 404.
+  if (error) {
+    if (error.code === "22P02") return null;
+    throw error;
+  }
   return data;
 }
 
@@ -1199,7 +1204,11 @@ export async function getKnowledgeBase(supabase: SupabaseClient, propertyId: str
     .select("knowledge_base")
     .eq("id", propertyId)
     .maybeSingle();
-  if (error || !data) return null;
+  if (error) {
+    if (error.code === "22P02") return null;
+    throw error;
+  }
+  if (!data) return null;
   return data.knowledge_base as KnowledgeBase;
 }
 
@@ -1532,7 +1541,10 @@ export async function listPropertyPhotos(supabase: SupabaseClient, propertyId: s
     .select(PHOTO_COLUMNS)
     .eq("property_id", propertyId)
     .order("position", { ascending: true });
-  if (error) return [];
+  if (error) {
+    if (error.code === "22P02") return [];
+    throw error;
+  }
   return data;
 }
 
@@ -1574,11 +1586,12 @@ export async function setCoverPhoto(supabase: SupabaseClient, photoId: string): 
 }
 
 export async function deletePropertyPhoto(supabase: SupabaseClient, photoId: string): Promise<{ error: string | null }> {
-  const { data: photo } = await supabase
+  const { data: photo, error: readError } = await supabase
     .from("property_photos")
     .select("id, property_id, storage_path, is_cover")
     .eq("id", photoId)
     .maybeSingle();
+  if (readError && readError.code !== "22P02") return { error: readError.message };
   if (!photo) return { error: "Photo not found." };
 
   const { error } = await supabase.from("property_photos").delete().eq("id", photoId);
@@ -1720,11 +1733,12 @@ export async function getCurrentOrganization(
   supabase: SupabaseClient,
   ownerId: string,
 ): Promise<OrganizationSettings | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("organizations")
     .select("id, name, slug, profile")
     .eq("owner_id", ownerId)
     .maybeSingle();
+  if (error) throw error;
   if (!data) return null;
   return { id: data.id, name: data.name, slug: data.slug, headline: data.profile?.headline ?? "" };
 }
@@ -1739,11 +1753,12 @@ export async function updateOrganizationSettings(
   if (headline.length > 120) return { error: "The headline can be up to 120 characters." };
 
   // profile also holds onboarding's city and phone; merge, don't replace.
-  const { data: current } = await supabase
+  const { data: current, error: readError } = await supabase
     .from("organizations")
     .select("profile")
     .eq("id", organizationId)
     .maybeSingle();
+  if (readError && readError.code !== "22P02") return { error: readError.message };
   if (!current) return { error: "Organisation not found." };
 
   const { error } = await supabase

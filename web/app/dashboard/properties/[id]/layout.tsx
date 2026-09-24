@@ -27,7 +27,10 @@ export default async function PropertyLayout({
             recurses into subdirectories via the pages-router parser, so this exact literal href is flagged
             here (two levels under app/) but not for the identical link in DashboardNav one level up; kept as
             <a> to match every other internal link in this codebase (see AGENTS.md / brief step 5). */}
-        <a href="/dashboard/properties" className="text-sm text-muted hover:text-ink">
+        <a
+          href="/dashboard/properties"
+          className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+        >
           Properties
         </a>
         <h1 className="text-2xl font-medium tracking-tight">{property.name}</h1>

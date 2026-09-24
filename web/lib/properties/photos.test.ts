@@ -12,7 +12,7 @@ import {
   setCoverPhoto,
   deletePropertyPhoto,
 } from "./photos";
-import { createTestHostWithOrg, supabaseAdmin } from "../../tests/helpers";
+import { anonClient, createTestHostWithOrg, supabaseAdmin } from "../../tests/helpers";
 
 // A real 1x1 PNG, so the bytes are a valid image, not just a labelled blob.
 const PNG = Buffer.from(
@@ -111,8 +111,8 @@ test("a host can reorder photos, and a partial or foreign ordering is rejected",
     expect((await reorderPropertyPhotos(fixture.host.supabase, { propertyId: fixture.propertyId, orderedIds: [c, a, b] })).error).toBeNull();
     expect((await listPropertyPhotos(fixture.host.supabase, fixture.propertyId)).map((p) => p.id)).toEqual([c, a, b]);
 
-    expect((await reorderPropertyPhotos(fixture.host.supabase, { propertyId: fixture.propertyId, orderedIds: [c, a] })).error).not.toBeNull();
-    expect((await reorderPropertyPhotos(fixture.host.supabase, { propertyId: fixture.propertyId, orderedIds: [c, a, a] })).error).not.toBeNull();
+    expect((await reorderPropertyPhotos(fixture.host.supabase, { propertyId: fixture.propertyId, orderedIds: [c, a] })).error).toMatch(/out of date/);
+    expect((await reorderPropertyPhotos(fixture.host.supabase, { propertyId: fixture.propertyId, orderedIds: [c, a, a] })).error).toMatch(/out of date/);
     expect((await listPropertyPhotos(fixture.host.supabase, fixture.propertyId)).map((p) => p.id)).toEqual([c, a, b]);
   } finally {
     await fixture.cleanup();
@@ -190,6 +190,11 @@ test("a host cannot see, add to, reorder, re-cover or delete another organisatio
     const { data: objects } = await intruder.supabase.storage.from(PHOTO_BUCKET).list(propertyId);
     expect(objects ?? []).toEqual([]);
 
+    const ownerPath = (await listPropertyPhotos(fixture.host.supabase, propertyId))[0].storage_path;
+    await intruder.supabase.storage.from(PHOTO_BUCKET).remove([ownerPath]);
+    const { error: downloadError } = await fixture.host.supabase.storage.from(PHOTO_BUCKET).download(ownerPath);
+    expect(downloadError).toBeNull();
+
     const ownerView = await listPropertyPhotos(fixture.host.supabase, propertyId);
     expect(ownerView.map((p) => [p.id, p.is_cover])).toEqual([
       [ids[0], true],
@@ -198,5 +203,22 @@ test("a host cannot see, add to, reorder, re-cover or delete another organisatio
   } finally {
     await fixture.cleanup();
     await intruder.cleanup();
+  }
+});
+
+// @req PROP-04
+test("an anon client cannot list or sign a draft property's photos", async () => {
+  const fixture = await hostWithPhotos(1);
+  try {
+    const anon = anonClient();
+    const { data, error } = await anon.from("property_photos").select("id").eq("property_id", fixture.propertyId);
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+
+    const [photo] = await listPropertyPhotos(fixture.host.supabase, fixture.propertyId);
+    const { error: signError } = await anon.storage.from(PHOTO_BUCKET).createSignedUrl(photo.storage_path, 60);
+    expect(signError).not.toBeNull();
+  } finally {
+    await fixture.cleanup();
   }
 });

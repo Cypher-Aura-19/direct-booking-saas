@@ -21,10 +21,15 @@ test("a property with photos and a filled knowledge base survives a logout", asy
       basics: { name: "Lake Hut", property_type: "cabin", address: "Attabad", base_rate_cents: 800_000, max_guests: 3 },
     }));
     for (let i = 0; i < 2; i++) {
-      await uploadPropertyPhoto(host.supabase, { propertyId: propertyId!, file: new Blob([PNG], { type: "image/png" }) });
+      const { error } = await uploadPropertyPhoto(host.supabase, {
+        propertyId: propertyId!,
+        file: new Blob([PNG], { type: "image/png" }),
+      });
+      expect(error).toBeNull();
     }
     const kb = { wifi_password: "lake-4821", check_in_time: "14:00", directions: "Boat from the jetty." };
-    await updateKnowledgeBase(host.supabase, propertyId!, kb);
+    const { error: kbError } = await updateKnowledgeBase(host.supabase, propertyId!, kb);
+    expect(kbError).toBeNull();
 
     await host.supabase.auth.signOut();
     const fresh = await signedInClient(host);

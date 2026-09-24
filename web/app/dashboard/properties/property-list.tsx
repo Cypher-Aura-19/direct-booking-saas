@@ -21,7 +21,10 @@ export function PropertyList({
       {properties.map((property) => (
         <li key={property.id} className="flex flex-wrap items-center justify-between gap-4 py-4">
           <div className="flex flex-col gap-1">
-            <a href={`/dashboard/properties/${property.id}`} className="font-medium text-ink hover:underline">
+            <a
+              href={`/dashboard/properties/${property.id}`}
+              className="inline-flex min-h-11 items-center font-medium text-ink hover:underline"
+            >
               {property.name}
             </a>
             <span className="text-sm text-muted">

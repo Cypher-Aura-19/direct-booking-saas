@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
 
@@ -96,4 +96,38 @@ export function firstLinkIn(text: string): string {
   const match = text.match(/https?:\/\/[^\s"<>]+/);
   if (!match) throw new Error(`no link found in: ${text}`);
   return match[0].replace(/&amp;/g, "&");
+}
+
+export async function signedInClient(host: { email: string; password: string }): Promise<SupabaseClient> {
+  const { apiUrl, anonKey } = supabaseEnv();
+  const client = createClient(apiUrl, anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { error } = await client.auth.signInWithPassword({ email: host.email, password: host.password });
+  if (error) throw error;
+  return client;
+}
+
+export function anonClient(): SupabaseClient {
+  const { apiUrl, anonKey } = supabaseEnv();
+  return createClient(apiUrl, anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
+}
+
+// A signed-in host who has already been through onboarding. Callers must
+// call cleanup(); deleting the user cascades to the organisation and
+// everything under it.
+export async function createTestHostWithOrg() {
+  const host = await createTestHost();
+  const supabase = await signedInClient(host);
+  const slug = `test-org-${crypto.randomUUID().slice(0, 8)}`;
+  const { data, error } = await supabase
+    .from("organizations")
+    .insert({ owner_id: host.userId, name: "Test Org", slug })
+    .select("id, slug")
+    .single();
+  if (error) {
+    await host.cleanup();
+    throw error;
+  }
+  return { ...host, supabase, organizationId: data.id as string, organizationSlug: data.slug as string };
 }

@@ -134,3 +134,69 @@ test("the property-photos bucket is private and accepts only images up to 10 MiB
     assert.deepEqual([...rows[0].allowed_mime_types].sort(), ["image/jpeg", "image/png", "image/webp"]);
   });
 });
+
+// Supabase's pg_default_acl for schema public grants EXECUTE to anon,
+// authenticated and service_role by name on every new function, so
+// `revoke ... from public` alone does not remove anon's grant (migration
+// 20260925010000). anon must be revoked explicitly on every one of these.
+test("anon cannot execute the photo-management functions; authenticated still can", async () => {
+  await withDb(async (db) => {
+    const functions = [
+      "public.reorder_property_photos(uuid, uuid[])",
+      "public.set_property_cover(uuid)",
+      "public.owns_property_object(text)",
+    ];
+    for (const signature of functions) {
+      const anon = await db.query("select has_function_privilege('anon', $1, 'execute') as allowed", [signature]);
+      assert.equal(anon.rows[0].allowed, false, `anon should not be able to execute ${signature}`);
+      const authenticated = await db.query(
+        "select has_function_privilege('authenticated', $1, 'execute') as allowed",
+        [signature],
+      );
+      assert.equal(authenticated.rows[0].allowed, true, `authenticated should be able to execute ${signature}`);
+    }
+  });
+});
+
+test("no role can execute the slug trigger function directly", async () => {
+  await withDb(async (db) => {
+    for (const role of ["anon", "authenticated"]) {
+      const { rows } = await db.query(
+        "select has_function_privilege($1, 'public.properties_default_slug()', 'execute') as allowed",
+        [role],
+      );
+      assert.equal(rows[0].allowed, false, `${role} should not be able to execute properties_default_slug directly`);
+    }
+  });
+});
+
+test("a photo's storage_path must start with its own property's id", async () => {
+  const hostA = await createTestHost();
+  const hostB = await createTestHost();
+  try {
+    await withDb(async (db) => {
+      const orgA = await insertOrg(db, hostA.userId);
+      const orgB = await insertOrg(db, hostB.userId);
+      const propertyA = await insertProperty(db, orgA);
+      const propertyB = await insertProperty(db, orgB);
+
+      await expectPgError(db, "23514", () =>
+        db.query(
+          `insert into public.property_photos (property_id, storage_path, position, is_cover)
+           values ($1, $2, 0, true)`,
+          [propertyA, `${propertyB}/evil.jpg`],
+        ),
+      );
+
+      const { rows } = await db.query(
+        `insert into public.property_photos (property_id, storage_path, position, is_cover)
+         values ($1, $2, 0, true) returning id`,
+        [propertyA, `${propertyA}/ok.jpg`],
+      );
+      assert.equal(rows.length, 1);
+    });
+  } finally {
+    await hostA.cleanup();
+    await hostB.cleanup();
+  }
+});

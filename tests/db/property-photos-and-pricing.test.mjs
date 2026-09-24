@@ -12,8 +12,8 @@ test("property_photos table stores explicit ordering and a cover flag", async ()
 
       const { rows } = await db.query(
         `insert into public.property_photos (property_id, storage_path, position, is_cover)
-         values ($1, 'photos/a.jpg', 0, true) returning position, is_cover`,
-        [propertyId],
+         values ($1, $2, 0, true) returning position, is_cover`,
+        [propertyId, `${propertyId}/a.jpg`],
       );
       assert.equal(rows[0].position, 0);
       assert.equal(rows[0].is_cover, true);

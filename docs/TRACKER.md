@@ -5,7 +5,7 @@
 A requirement is done when a passing test carries its `@req` tag.
 Status is computed, never asserted.
 
-**Overall: 53 of 200 requirements covered (27%)**
+**Overall: 68 of 200 requirements covered (34%)**
 
 ## By milestone
 
@@ -14,7 +14,7 @@ Status is computed, never asserted.
 | M1 | 18 | 18 |
 | M2 | 16 | 16 |
 | M3 | 14 | 14 |
-| M4 | 0 | 15 |
+| M4 | 15 | 15 |
 | M5 | 0 | 10 |
 | M6 | 0 | 10 |
 | M7 | 0 | 18 |
@@ -69,7 +69,7 @@ Status is computed, never asserted.
 | AUTH-04 | M3 | done | web/lib/supabase/middleware.test.ts |
 | AUTH-05 | M3 | done | web/lib/auth/confirmation.test.ts |
 | AUTH-06 | M3 | done | web/lib/auth/actions.test.ts |
-| AUTH-07 | M3 | done | web/lib/auth/dashboard-access.test.ts |
+| AUTH-07 | M3 | done | web/lib/auth/dashboard-access.test.ts, web/lib/supabase/middleware.test.ts |
 | AUTH-08 | M3 | done | web/lib/auth/dashboard-access.test.ts |
 | AUTH-09 | M3 | done | web/app/onboarding/page.test.tsx, web/lib/organizations/actions.test.ts |
 | AUTH-10 | M3 | done | web/lib/organizations/actions.test.ts |
@@ -77,21 +77,21 @@ Status is computed, never asserted.
 | AUTH-12 | M3 | done | web/lib/auth/dashboard-access.test.ts, web/lib/organizations/actions.test.ts |
 | AUTH-13 | M3 | done | web/app/dashboard/page.test.tsx |
 | AUTH-14 | M3 | done | web/app/dashboard/layout.test.tsx |
-| PROP-01 | M4 | todo | — |
-| PROP-02 | M4 | todo | — |
-| PROP-03 | M4 | todo | — |
-| PROP-04 | M4 | todo | — |
-| PROP-05 | M4 | todo | — |
-| PROP-06 | M4 | todo | — |
-| PROP-07 | M4 | todo | — |
-| PROP-08 | M4 | todo | — |
-| PROP-09 | M4 | todo | — |
-| PROP-10 | M4 | todo | — |
-| PROP-11 | M4 | todo | — |
-| PROP-12 | M4 | todo | — |
-| PROP-13 | M4 | todo | — |
-| PROP-14 | M4 | todo | — |
-| PROP-15 | M4 | todo | — |
+| PROP-01 | M4 | done | web/lib/properties/basics.test.ts |
+| PROP-02 | M4 | done | web/lib/properties/basics.test.ts |
+| PROP-03 | M4 | done | web/lib/properties/basics.test.ts |
+| PROP-04 | M4 | done | web/lib/properties/basics.test.ts |
+| PROP-05 | M4 | done | web/lib/properties/photos.test.ts, web/lib/properties/survives-logout.test.ts |
+| PROP-06 | M4 | done | web/lib/properties/photos.test.ts |
+| PROP-07 | M4 | done | web/lib/properties/photos.test.ts |
+| PROP-08 | M4 | done | web/lib/properties/photos.test.ts |
+| PROP-09 | M4 | done | web/lib/properties/knowledge-base.test.ts, web/lib/properties/survives-logout.test.ts |
+| PROP-10 | M4 | done | web/lib/properties/knowledge-base.test.ts |
+| PROP-11 | M4 | done | web/lib/properties/knowledge-base.test.ts |
+| PROP-12 | M4 | done | web/lib/properties/knowledge-base.test.ts |
+| PROP-13 | M4 | done | web/lib/organizations/settings.test.ts |
+| PROP-14 | M4 | done | web/lib/organizations/settings.test.ts, web/lib/properties/basics.test.ts, web/lib/properties/knowledge-base.test.ts, web/lib/properties/photos.test.ts |
+| PROP-15 | M4 | done | web/app/dashboard/properties/property-list.test.tsx, web/lib/properties/basics.test.ts |
 | PUB-01 | M5 | todo | — |
 | PUB-02 | M5 | todo | — |
 | PUB-03 | M5 | todo | — |

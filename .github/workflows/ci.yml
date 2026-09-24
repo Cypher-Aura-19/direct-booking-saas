@@ -42,7 +42,7 @@ jobs:
         run: npm test
 
       - name: Audit requirements
-        run: npm run audit -- --milestone M3
+        run: npm run audit -- --milestone M4
 
       - name: Fail if the tracker is stale
         run: git diff --exit-code docs/TRACKER.md

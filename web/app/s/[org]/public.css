@@ -39,6 +39,34 @@
 .public-footer { display: flex; flex-direction: column; gap: 12px; padding-block: 28px 36px; border-block-start: 1px solid var(--hairline); font-size: 13px; color: var(--muted); }
 .public-footer-brand { display: inline-flex; align-items: center; gap: 8px; min-block-size: 44px; color: var(--muted); }
 
+.property-top { padding-block: 16px 12px; }
+.property-back { display: inline-flex; align-items: center; gap: 6px; min-block-size: 44px; font-size: 14px; color: var(--muted); }
+.property-back:hover { color: var(--ink); }
+
+.gallery-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
+.gallery-track::-webkit-scrollbar { display: none; }
+.gallery-item { flex: 0 0 88%; scroll-snap-align: start; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 16px; background: var(--surface-muted); }
+.gallery-item img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+.gallery-empty { display: grid; place-items: center; gap: 8px; aspect-ratio: 16 / 9; border-radius: 16px; background: var(--surface-muted); color: var(--muted); font-size: 14px; }
+
+.property-layout { display: flex; flex-direction: column; gap: 28px; padding-block: 28px 120px; }
+.property-heading { display: flex; flex-direction: column; gap: 10px; }
+.property-facts { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; color: var(--muted); }
+.property-section { padding-block-start: 28px; margin-block-start: 28px; border-block-start: 1px solid var(--hairline); }
+.property-section-title { font-size: 19px; font-weight: 500; margin-block-end: 14px; }
+.property-description { display: flex; flex-direction: column; gap: 14px; font-size: 16px; line-height: 1.7; color: var(--ink); max-inline-size: 68ch; }
+.amenity-list { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.amenity-list li { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.amenity-list svg { color: var(--accent); flex-shrink: 0; }
+
+.booking-panel { display: none; }
+.booking-price { font-size: 15px; color: var(--muted); }
+.booking-price strong { font-size: 26px; font-weight: 600; color: var(--ink); letter-spacing: -.01em; }
+.booking-note { font-size: 14px; line-height: 1.6; color: var(--muted); }
+
+.booking-bar { position: fixed; inset-inline: 0; inset-block-end: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px max(12px, env(safe-area-inset-bottom)); border-block-start: 1px solid var(--hairline); background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(12px); font-size: 14px; color: var(--muted); }
+.booking-bar strong { font-size: 18px; color: var(--ink); }
+
 @media (min-width: 640px) {
   .public-wrap { width: min(1180px, 100% - 64px); }
   .public-display { font-size: 56px; }
@@ -47,9 +75,20 @@
   .host-card { grid-template-columns: auto 1fr auto; padding: 28px; }
   .host-actions { grid-column: auto; flex-direction: row; }
   .public-footer { flex-direction: row; justify-content: space-between; align-items: center; }
+  .gallery-track { margin-inline: 0; padding-inline: 0; }
+  .gallery-item { flex-basis: 60%; }
+  .amenity-list { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (min-width: 1024px) {
   .public-display { font-size: 72px; }
   .property-grid { grid-template-columns: repeat(3, 1fr); }
+  .gallery-track { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: repeat(2, 1fr); gap: 10px; overflow: visible; block-size: 460px; }
+  .gallery-item { aspect-ratio: auto; }
+  .gallery-item:first-child { grid-row: 1 / span 2; }
+  .gallery-item:nth-child(n + 6) { display: none; }
+  .property-layout { flex-direction: row; align-items: flex-start; gap: 64px; padding-block: 40px 72px; }
+  .property-main { flex: 1; min-inline-size: 0; }
+  .booking-panel { display: flex; flex-direction: column; gap: 14px; position: sticky; inset-block-start: 24px; inline-size: 340px; flex-shrink: 0; padding: 24px; border: 1px solid var(--hairline); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow-sheet); }
+  .booking-bar { display: none; }
 }

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { IconArrowUpRight, IconEye } from "@/components/ui/icons";
 import { Sheet, SheetHeader } from "@/components/ui/page-header";
 import { dashboardContext } from "../../_lib/context";
-import { getProperty, publicPropertyPath } from "@/lib/properties/basics";
+import { getProperty, publicPropertyUrl } from "@/lib/properties/basics";
 import { getListing } from "@/lib/properties/listing";
 import { BasicsForm } from "../basics-form";
 import { ListingForm } from "../listing-form";
@@ -14,7 +14,7 @@ export default async function PropertyBasicsPage({ params }: { params: Promise<{
   const { supabase, organization } = await dashboardContext();
   const property = await getProperty(supabase, id);
   if (!property) notFound();
-  const publicPath = publicPropertyPath(organization.slug, property.slug);
+  const publicPath = publicPropertyUrl(organization.slug, property.slug);
   const listing = (await getListing(supabase, id)) ?? { description: "", amenities: [] };
 
   return (

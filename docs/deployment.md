@@ -11,9 +11,14 @@ Set for Production, Preview and Development:
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://vhzplaphuaydfwtvryla.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the project's legacy `anon` key (`supabase projects api-keys --project-ref vhzplaphuaydfwtvryla`) |
+| `STAY_HOST` | server-only, e.g. `stay.qayam.pk`. Requests to this host are rewritten onto `/s/*`. |
+| `NEXT_PUBLIC_STAY_ORIGIN` | e.g. `https://stay.qayam.pk`, used to build public links shown to hosts. |
 
 Without them the session-refresh middleware throws on every request and Vercel
 answers every route with `500 MIDDLEWARE_INVOCATION_FAILED`.
+
+Leave `STAY_HOST` and `NEXT_PUBLIC_STAY_ORIGIN` unset until the domain exists;
+everything works under `/s/` without them.
 
 ## Every milestone that adds migrations
 

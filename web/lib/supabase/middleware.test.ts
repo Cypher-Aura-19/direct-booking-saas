@@ -1,8 +1,8 @@
 // @vitest-environment node
-import { test, expect, afterAll } from "vitest";
+import { test, it, expect, afterAll } from "vitest";
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest } from "next/server";
-import { updateSession, isProtectedPath } from "./middleware";
+import { updateSession, isProtectedPath, stayRewritePath, isPublicPath } from "./middleware";
 import { supabaseEnv, createTestHost } from "../../tests/helpers";
 
 const host = await createTestHost();
@@ -91,4 +91,39 @@ test("middleware lets signed-out requests for public routes through", async () =
     const response = await updateSession(new NextRequest(`http://localhost${path}`));
     expect(response.headers.get("location")).toBeNull();
   }
+});
+
+// @req PUB-05
+it("requests to the stay host are rewritten onto /s/*", () => {
+  expect(stayRewritePath("stay.example.pk", "/altit", "stay.example.pk")).toBe("/s/altit");
+  expect(stayRewritePath("stay.example.pk", "/altit/river-hut", "stay.example.pk")).toBe("/s/altit/river-hut");
+  expect(stayRewritePath("stay.example.pk:3000", "/altit", "stay.example.pk")).toBe("/s/altit");
+  // Links rendered as /s/... must not be doubled on the stay host.
+  expect(stayRewritePath("stay.example.pk", "/s/altit", "stay.example.pk")).toBeNull();
+  // The app's own host, and an unconfigured stay host, are left alone.
+  expect(stayRewritePath("app.example.pk", "/altit", "stay.example.pk")).toBeNull();
+  expect(stayRewritePath("stay.example.pk", "/altit", undefined)).toBeNull();
+});
+
+// @req PUB-05
+it("the middleware rewrites a stay-host request to the /s/ route", async () => {
+  const previous = process.env.STAY_HOST;
+  process.env.STAY_HOST = "stay.example.pk";
+  try {
+    const request = new NextRequest("https://stay.example.pk/altit/river-hut");
+    const response = await updateSession(request);
+    expect(response.headers.get("x-middleware-rewrite")).toBe("https://stay.example.pk/s/altit/river-hut");
+  } finally {
+    if (previous === undefined) delete process.env.STAY_HOST;
+    else process.env.STAY_HOST = previous;
+  }
+});
+
+// @req PUB-04
+it("public pages never require a session", async () => {
+  expect(isPublicPath("/s/altit")).toBe(true);
+  expect(isProtectedPath("/s/altit/river-hut")).toBe(false);
+  const response = await updateSession(new NextRequest("http://localhost:3000/s/altit"));
+  expect(response.status).toBe(200);
+  expect(response.headers.get("location")).toBeNull();
 });

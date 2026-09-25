@@ -5,7 +5,7 @@ import Link from "next/link";
 import { IconArrowUpRight, IconBuilding, IconPlus } from "@/components/ui/icons";
 import { Sheet } from "@/components/ui/page-header";
 import { Stamp } from "@/components/ui/stamp";
-import { PROPERTY_TYPES, formatRupees, publicPropertyPath, type PropertySummary } from "@/lib/properties/basics";
+import { PROPERTY_TYPES, formatRupees, publicPropertyUrl, type PropertySummary } from "@/lib/properties/basics";
 
 function typeLabel(value: string) {
   return PROPERTY_TYPES.find((type) => type.value === value)?.label ?? value;
@@ -87,7 +87,7 @@ export function PropertyList({
               )}
               {property.published ? (
                 <a
-                  href={publicPropertyPath(organizationSlug, property.slug)}
+                  href={publicPropertyUrl(organizationSlug, property.slug)}
                   className="inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-lg px-2 text-sm font-medium text-accent hover:bg-accent-soft"
                 >
                   View public page

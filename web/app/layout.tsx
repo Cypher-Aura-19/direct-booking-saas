@@ -12,6 +12,7 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 const display = Libre_Caslon_Display({ variable: "--font-display", subsets: ["latin"], weight: "400" });
@@ -25,6 +26,7 @@ const notoNastaliq = Noto_Nastaliq_Urdu({
   variable: "--font-noto-nastaliq",
   subsets: ["arabic"],
   weight: ["400", "700"],
+  preload: false,
 });
 
 export const metadata: Metadata = {

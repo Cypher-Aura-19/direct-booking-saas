@@ -5,7 +5,7 @@
 A requirement is done when a passing test carries its `@req` tag.
 Status is computed, never asserted.
 
-**Overall: 68 of 200 requirements covered (34%)**
+**Overall: 78 of 200 requirements covered (39%)**
 
 ## By milestone
 
@@ -15,7 +15,7 @@ Status is computed, never asserted.
 | M2 | 16 | 16 |
 | M3 | 14 | 14 |
 | M4 | 15 | 15 |
-| M5 | 0 | 10 |
+| M5 | 10 | 10 |
 | M6 | 0 | 10 |
 | M7 | 0 | 18 |
 | M8 | 0 | 15 |
@@ -90,18 +90,18 @@ Status is computed, never asserted.
 | PROP-11 | M4 | done | web/lib/properties/knowledge-base.test.ts |
 | PROP-12 | M4 | done | web/lib/properties/knowledge-base.test.ts |
 | PROP-13 | M4 | done | web/lib/organizations/settings.test.ts |
-| PROP-14 | M4 | done | web/lib/organizations/settings.test.ts, web/lib/properties/basics.test.ts, web/lib/properties/knowledge-base.test.ts, web/lib/properties/photos.test.ts |
+| PROP-14 | M4 | done | web/lib/organizations/settings.test.ts, web/lib/properties/basics.test.ts, web/lib/properties/knowledge-base.test.ts, web/lib/properties/listing.test.ts, web/lib/properties/photos.test.ts |
 | PROP-15 | M4 | done | web/app/dashboard/properties/property-list.test.tsx, web/lib/properties/basics.test.ts |
-| PUB-01 | M5 | todo | — |
-| PUB-02 | M5 | todo | — |
-| PUB-03 | M5 | todo | — |
-| PUB-04 | M5 | todo | — |
-| PUB-05 | M5 | todo | — |
-| PUB-06 | M5 | todo | — |
-| PUB-07 | M5 | todo | — |
-| PUB-08 | M5 | todo | — |
-| PUB-09 | M5 | todo | — |
-| PUB-10 | M5 | todo | — |
+| PUB-01 | M5 | done | web/app/s/[org]/catalogue-view.test.tsx, web/lib/public/catalogue.test.ts |
+| PUB-02 | M5 | done | web/app/s/[org]/[property]/property-view.test.tsx, web/lib/properties/listing.test.ts, web/lib/public/catalogue.test.ts |
+| PUB-03 | M5 | done | web/app/s/[org]/catalogue-view.test.tsx, web/app/s/[org]/[property]/property-view.test.tsx, web/lib/public/catalogue.test.ts |
+| PUB-04 | M5 | done | web/lib/public/catalogue.test.ts, web/lib/supabase/middleware.test.ts |
+| PUB-05 | M5 | done | web/lib/properties/basics.test.ts, web/lib/supabase/middleware.test.ts |
+| PUB-06 | M5 | done | web/lib/public/catalogue.test.ts |
+| PUB-07 | M5 | done | web/lib/properties/photo-variants.test.ts, web/lib/properties/photos.test.ts, web/lib/public/catalogue.test.ts |
+| PUB-08 | M5 | done | web/app/s/[org]/public-css.test.ts |
+| PUB-09 | M5 | done | web/app/s/routes.test.ts |
+| PUB-10 | M5 | done | web/app/s/[org]/catalogue-view.test.tsx |
 | CAL-01 | M6 | todo | — |
 | CAL-02 | M6 | todo | — |
 | CAL-03 | M6 | todo | — |

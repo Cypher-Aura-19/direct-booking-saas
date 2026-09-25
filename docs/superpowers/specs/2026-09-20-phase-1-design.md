@@ -46,6 +46,7 @@ Every decision made during design, with its reasoning. Referenced by ID elsewher
 | D-18 | Chat embedded in the property page, not a floating bubble | Bubbles are read as ads and ignored. Opens with tappable starter questions, since guided-choice-first converts better than an empty cursor |
 | D-19 | No public cross-host search page | Building one would quietly turn the product into the marketplace it says it is not |
 | D-20 | Settings split across seven routes rather than one tabbed page | One job per page; easier to build, test and link to |
+| D-21 | Photos are resized to 480/960/1600px WebP in the host's browser at upload; no Supabase image transformation | Transformation is a Pro-plan feature; resizing at upload costs nothing to run and serves phones a small image. Decided 2026-09-25 |
 
 ## 3. Scope
 

@@ -112,7 +112,7 @@ Rules enforced by the auditor:
 | PUB-04 | Public pages require no login |
 | PUB-05 | The `stay.` subdomain rewrites onto `/s/*` |
 | PUB-06 | A request for an unknown organisation slug returns a written not-found page |
-| PUB-07 | Images are served through Supabase Storage transformation at an appropriate size |
+| PUB-07 | Images are served as pre-sized variants (480/960/1600px WebP, generated at upload) chosen by the browser for the viewport |
 | PUB-08 | Public pages are laid out mobile-first |
 | PUB-09 | There is no route that lists or searches properties across organisations |
 | PUB-10 | An organisation with nothing published renders a written empty state, not a blank page |

@@ -167,7 +167,7 @@ body {
 .hero-copy h1 { font-size: clamp(64px, 6.8vw, 100px); margin: 20px 0 22px; max-width: 760px; }
 .hero-description { max-width: 390px; font-size: 16px; line-height: 1.7; color: #edf3e5; margin-bottom: 28px; }
 .hero-cta { min-height: 50px; }
-.hero-location { position: absolute; right: max(48px, calc((100vw - 1280px) / 2)); bottom: 65px; font-size: 13px; line-height: 1.8; }
+.hero-location { position: absolute; inset-inline-end: max(48px, calc((100vw - 1280px) / 2)); bottom: 65px; font-size: 13px; line-height: 1.8; }
 .hero-location span { color: #e4ecdc; }
 .intro-section { display: grid; grid-template-columns: 1.5fr 1fr; gap: 100px; padding-block: 106px; align-items: center; }
 .marketing h2 { font-size: clamp(42px, 4.5vw, 66px); }
@@ -201,7 +201,7 @@ body {
 .landing-footer { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 30px; border-top: 1px solid var(--hairline); }
 .landing-footer p { color: var(--muted); font-size: 13px; }
 .landing-footer > a:last-child { display: flex; align-items: center; gap: 14px; font-size: 13px; min-height: 44px; }
-.skip-link { position: absolute; left: 24px; top: -100px; z-index: 30; background: var(--surface); padding: 12px 20px; }
+.skip-link { position: absolute; inset-inline-start: 24px; top: -100px; z-index: 30; background: var(--surface); padding: 12px 20px; }
 .skip-link:focus { top: 12px; }
 .auth-layout { display: grid; grid-template-columns: 1fr 1fr; min-height: 100dvh; background: var(--surface); padding: 16px; gap: 16px; }
 .auth-main { display: flex; flex-direction: column; padding: 24px 40px; }
@@ -228,7 +228,7 @@ body {
 @media (max-width: 767px) {
  .section-wrap { width: calc(100% - 40px); }
  .landing-header { top: 14px; width: calc(100% - 28px); gap: 12px; padding: 10px 12px; min-height: 64px; }
- .landing-nav { margin-left: auto; }
+ .landing-nav { margin-inline-start: auto; }
  .landing-nav a:not(:last-child) { display: none; }
  .landing-header .nav-cta { padding-inline: 16px; font-size: 12px; }
  .landing-header .nav-cta svg { display: none; }

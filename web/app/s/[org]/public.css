@@ -1,0 +1,55 @@
+/* Public guest pages. Mobile-first (PUB-08): base rules are the phone layout;
+   min-width queries only ever widen. Logical properties only (A11Y-02). */
+.public-shell { background: var(--surface); color: var(--ink); min-height: 100dvh; display: flex; flex-direction: column; }
+.public-main { flex: 1; }
+.public-wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
+.public-section { margin-block: 40px 56px; }
+.public-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
+.public-display { font-family: var(--font-display), Georgia, serif; font-weight: 400; letter-spacing: -.035em; line-height: 1.04; font-size: 40px; text-wrap: balance; }
+
+.catalogue-hero { padding-block: 48px 28px; display: flex; flex-direction: column; gap: 12px; }
+.catalogue-headline { font-size: 17px; line-height: 1.6; color: var(--muted); max-inline-size: 52ch; }
+
+.property-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+.property-card { display: flex; flex-direction: column; gap: 14px; border-radius: 16px; color: inherit; text-decoration: none; }
+.property-card-media { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 16px; background: var(--surface-muted); }
+.property-card-media img { inline-size: 100%; block-size: 100%; object-fit: cover; transition: transform 400ms cubic-bezier(.16, 1, .3, 1); }
+.property-card:hover .property-card-media img { transform: scale(1.03); }
+.property-card-placeholder { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
+.property-card-body { display: flex; flex-direction: column; gap: 4px; padding-inline: 2px; }
+.property-card-name { font-size: 17px; font-weight: 500; }
+.property-card-meta { font-size: 14px; color: var(--muted); }
+.property-card-price { font-size: 15px; color: var(--muted); margin-block-start: 4px; }
+.property-card-price strong { color: var(--ink); font-weight: 600; }
+
+.public-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 28px 22px; border: 1px solid var(--hairline); border-radius: 16px; background: var(--surface-muted); color: var(--muted); line-height: 1.6; }
+.public-empty svg { color: var(--accent); }
+.public-empty-title { font-size: 18px; font-weight: 500; color: var(--ink); }
+
+.host-card { display: grid; grid-template-columns: auto 1fr; gap: 16px 18px; align-items: center; padding: 22px; border: 1px solid var(--hairline); border-radius: 16px; background: var(--surface-muted); }
+.host-avatar { display: grid; place-items: center; inline-size: 56px; block-size: 56px; border-radius: 999px; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-display), Georgia, serif; font-size: 24px; }
+.host-body { display: flex; flex-direction: column; gap: 4px; min-inline-size: 0; }
+.host-name { font-family: var(--font-display), Georgia, serif; font-weight: 400; font-size: 24px; letter-spacing: -.02em; }
+.host-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 14px; color: var(--muted); }
+.host-actions { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px; }
+
+.public-not-found { padding-block: 72px; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; max-inline-size: 640px; color: var(--muted); line-height: 1.6; }
+.public-not-found .public-display { color: var(--ink); }
+
+.public-footer { display: flex; flex-direction: column; gap: 12px; padding-block: 28px 36px; border-block-start: 1px solid var(--hairline); font-size: 13px; color: var(--muted); }
+.public-footer-brand { display: inline-flex; align-items: center; gap: 8px; min-block-size: 44px; color: var(--muted); }
+
+@media (min-width: 640px) {
+  .public-wrap { width: min(1180px, 100% - 64px); }
+  .public-display { font-size: 56px; }
+  .catalogue-hero { padding-block: 72px 40px; }
+  .property-grid { grid-template-columns: repeat(2, 1fr); gap: 28px; }
+  .host-card { grid-template-columns: auto 1fr auto; padding: 28px; }
+  .host-actions { grid-column: auto; flex-direction: row; }
+  .public-footer { flex-direction: row; justify-content: space-between; align-items: center; }
+}
+
+@media (min-width: 1024px) {
+  .public-display { font-size: 72px; }
+  .property-grid { grid-template-columns: repeat(3, 1fr); }
+}

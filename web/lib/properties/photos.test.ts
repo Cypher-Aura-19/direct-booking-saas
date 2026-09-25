@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { test, expect } from "vitest";
+import { test, it, expect } from "vitest";
 import { createProperty, type PropertyBasics } from "./basics";
 import { moveItem } from "./photo-order";
 import {
@@ -12,6 +12,7 @@ import {
   setCoverPhoto,
   deletePropertyPhoto,
 } from "./photos";
+import { PHOTO_WIDTHS, variantPath } from "./photo-variants";
 import { anonClient, createTestHostWithOrg, supabaseAdmin } from "../../tests/helpers";
 
 // A real 1x1 PNG, so the bytes are a valid image, not just a labelled blob.
@@ -20,6 +21,7 @@ const PNG = Buffer.from(
   "base64",
 );
 const png = () => new Blob([PNG], { type: "image/png" });
+const tinyWebp = () => new Blob([new Uint8Array([1, 2, 3])], { type: "image/webp" });
 
 const BASICS: PropertyBasics = {
   name: "Photo Villa",
@@ -220,5 +222,45 @@ test("an anon client cannot list or sign a draft property's photos", async () =>
     expect(signError).not.toBeNull();
   } finally {
     await fixture.cleanup();
+  }
+});
+
+// @req PUB-07
+it("uploading with variants stores each resized copy and marks the photo", async () => {
+  const host = await createTestHostWithOrg();
+  const { propertyId } = await createProperty(host.supabase, { organizationId: host.organizationId, basics: BASICS });
+  try {
+    const { error, photo } = await uploadPropertyPhoto(host.supabase, {
+      propertyId: propertyId!,
+      file: png(),
+      variants: PHOTO_WIDTHS.map((width) => ({ width, blob: tinyWebp() })),
+    });
+    expect(error).toBeNull();
+    expect(photo!.has_variants).toBe(true);
+    const { data } = await host.supabase.storage.from(PHOTO_BUCKET).list(propertyId!);
+    const names = (data ?? []).map((o) => `${propertyId}/${o.name}`);
+    for (const width of PHOTO_WIDTHS) expect(names).toContain(variantPath(photo!.storage_path, width));
+  } finally {
+    await removeObjects(propertyId!);
+    await host.cleanup();
+  }
+});
+
+// @req PUB-07
+it("deleting a photo removes its variants too", async () => {
+  const host = await createTestHostWithOrg();
+  const { propertyId } = await createProperty(host.supabase, { organizationId: host.organizationId, basics: BASICS });
+  try {
+    const { photo } = await uploadPropertyPhoto(host.supabase, {
+      propertyId: propertyId!,
+      file: png(),
+      variants: PHOTO_WIDTHS.map((width) => ({ width, blob: tinyWebp() })),
+    });
+    expect(await deletePropertyPhoto(host.supabase, photo!.id)).toEqual({ error: null });
+    const { data } = await host.supabase.storage.from(PHOTO_BUCKET).list(propertyId!);
+    expect(data ?? []).toHaveLength(0);
+  } finally {
+    await removeObjects(propertyId!);
+    await host.cleanup();
   }
 });

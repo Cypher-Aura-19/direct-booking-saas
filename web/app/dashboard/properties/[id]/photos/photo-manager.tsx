@@ -8,6 +8,7 @@ import { Stamp } from "@/components/ui/stamp";
 import { createClient } from "@/lib/supabase/client";
 import { moveItem } from "@/lib/properties/photo-order";
 import { ALLOWED_PHOTO_TYPES, uploadPropertyPhoto, type PropertyPhoto } from "@/lib/properties/photos";
+import { makePhotoVariants, type PhotoVariant } from "@/lib/properties/photo-variants";
 import { deletePhotoAction, reorderPhotosAction, setCoverPhotoAction } from "../../actions";
 
 type PhotoWithUrl = PropertyPhoto & { url: string };
@@ -35,7 +36,13 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
       const supabase = createClient();
       const failures: string[] = [];
       for (const file of selected) {
-        const { error } = await uploadPropertyPhoto(supabase, { propertyId, file });
+        let variants: PhotoVariant[] = [];
+        try {
+          variants = await makePhotoVariants(file);
+        } catch {
+          variants = [];
+        }
+        const { error } = await uploadPropertyPhoto(supabase, { propertyId, file, variants });
         if (error) failures.push(`${file.name}: ${error}`);
       }
       if (failures.length > 0) {

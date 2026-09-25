@@ -267,6 +267,10 @@ alter table public.properties
 
 grant select (description, amenities) on public.properties to anon;
 
+-- address was granted to anon in 20260922090000; it must never be public
+-- (M5 Global Constraints). Added during Task 1 implementation.
+revoke select (address) on public.properties from anon;
+
 -- Photos uploaded from M5 on carry 480/960/1600px WebP variants stored beside
 -- the original (<property_id>/<uuid>.w480.webp etc.). Older photos don't.
 alter table public.property_photos add column has_variants boolean not null default false;

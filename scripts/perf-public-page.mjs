@@ -9,9 +9,23 @@ const require = createRequire(import.meta.url);
 const globalRoot = execSync("npm root -g", { encoding: "utf8" }).trim();
 const { chromium } = require(`${globalRoot}/playwright`);
 
-const url = process.argv[2];
-if (!url) {
-  console.error("usage: node scripts/perf-public-page.mjs <public page url>");
+// The spec's budget ("render within three seconds on a throttled slow-3G
+// profile") is network throttling; CPU throttling is this script's own
+// addition, to approximate a low-end phone. --cpu lets that factor be
+// measured separately from network. Default 4 matches Lighthouse's mobile
+// preset; --cpu 1 measures network throttling alone (no extra slowdown).
+let url;
+let cpuRate = 4;
+const rawArgs = process.argv.slice(2);
+for (let i = 0; i < rawArgs.length; i++) {
+  if (rawArgs[i] === "--cpu") {
+    cpuRate = Number(rawArgs[++i]);
+  } else if (!url) {
+    url = rawArgs[i];
+  }
+}
+if (!url || !Number.isFinite(cpuRate) || cpuRate <= 0) {
+  console.error("usage: node scripts/perf-public-page.mjs <public page url> [--cpu <rate>]");
   process.exit(2);
 }
 
@@ -56,7 +70,7 @@ await cdp.send("Network.enable");
 await cdp.send("Network.clearBrowserCache");
 await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
 await cdp.send("Network.emulateNetworkConditions", SLOW_3G);
-await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+await cdp.send("Emulation.setCPUThrottlingRate", { rate: cpuRate });
 
 await page.goto(url, { waitUntil: "load", timeout: 60_000 });
 const timing = await page.evaluate(() => {
@@ -69,7 +83,7 @@ const timing = await page.evaluate(() => {
 });
 await browser.close();
 
-console.log(`FCP ${timing.fcp} ms · LCP ${timing.lcp || "n/a"} ms · load ${timing.load} ms (budget ${BUDGET_MS} ms, render = FCP)`);
+console.log(`FCP ${timing.fcp} ms · LCP ${timing.lcp || "n/a"} ms · load ${timing.load} ms (budget ${BUDGET_MS} ms, render = FCP, cpu throttle ${cpuRate}x)`);
 if (timing.fcp > BUDGET_MS) {
   console.error("Over budget: the page does not render within 3 s on slow 3G.");
   process.exit(1);

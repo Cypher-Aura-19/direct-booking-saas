@@ -6,6 +6,7 @@ import "./globals.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  preload: false,
 });
 
 // Register figures: counts, dates, rates and slugs. Never used for prose.

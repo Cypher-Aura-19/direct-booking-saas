@@ -1,6 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
 import { expect, it } from "vitest";
+import { PRODUCT_NAME } from "@/lib/brand";
 import { CatalogueView } from "./catalogue-view";
+import PublicLayout from "./layout";
 
 const organization = {
   id: "o1", slug: "altit", name: "Altit Heights", headline: "Four cabins above the river",
@@ -32,4 +34,9 @@ it("an organisation with nothing published gets a written empty state", () => {
   render(<CatalogueView organization={organization} properties={[]} />);
   expect(screen.getByText(/no places are open for booking yet/i)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /whatsapp/i })).toBeInTheDocument();
+});
+
+it("the public footer names the product as plain text, not the Urdu-seal wordmark", () => {
+  render(<PublicLayout>{null}</PublicLayout>);
+  expect(screen.getByText(PRODUCT_NAME)).toBeInTheDocument();
 });

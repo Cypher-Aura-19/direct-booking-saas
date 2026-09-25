@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { test, expect } from "vitest";
+import { test, it, expect } from "vitest";
 import {
   parsePropertyBasics,
   slugifyPropertyName,
@@ -10,6 +10,8 @@ import {
   updatePropertyBasics,
   setPropertyPublished,
   publicPropertyPath,
+  publicCatalogueUrl,
+  publicPropertyUrl,
   type PropertyBasics,
 } from "./basics";
 import { anonClient, createTestHostWithOrg } from "../../tests/helpers";
@@ -52,6 +54,22 @@ test("slugifyPropertyName produces URL-safe slugs and gives up cleanly on non-La
 
 test("formatRupees shows whole rupees with thousands separators", () => {
   expect(formatRupees(1_500_000)).toBe("Rs 15,000");
+});
+
+// @req PUB-05
+it("public URLs use the stay origin when configured and /s/ otherwise", () => {
+  const previous = process.env.NEXT_PUBLIC_STAY_ORIGIN;
+  try {
+    delete process.env.NEXT_PUBLIC_STAY_ORIGIN;
+    expect(publicPropertyUrl("altit", "river-hut")).toBe("/s/altit/river-hut");
+    expect(publicCatalogueUrl("altit")).toBe("/s/altit");
+    process.env.NEXT_PUBLIC_STAY_ORIGIN = "https://stay.example.pk/";
+    expect(publicPropertyUrl("altit", "river-hut")).toBe("https://stay.example.pk/altit/river-hut");
+    expect(publicCatalogueUrl("altit")).toBe("https://stay.example.pk/altit");
+  } finally {
+    if (previous === undefined) delete process.env.NEXT_PUBLIC_STAY_ORIGIN;
+    else process.env.NEXT_PUBLIC_STAY_ORIGIN = previous;
+  }
 });
 
 // @req PROP-01

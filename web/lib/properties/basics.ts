@@ -88,6 +88,24 @@ export function publicPropertyPath(organizationSlug: string, propertySlug: strin
   return `/s/${organizationSlug}/${propertySlug}`;
 }
 
+// D-14: public pages live on the stay. subdomain when NEXT_PUBLIC_STAY_ORIGIN
+// is configured (e.g. https://stay.qayam.pk). Without it, e.g. locally or
+// before the domain exists, the same pages are served under /s/ on the main origin.
+function stayOrigin(): string | null {
+  const origin = process.env.NEXT_PUBLIC_STAY_ORIGIN?.replace(/\/+$/, "");
+  return origin ? origin : null;
+}
+
+export function publicCatalogueUrl(organizationSlug: string): string {
+  const origin = stayOrigin();
+  return origin ? `${origin}/${organizationSlug}` : `/s/${organizationSlug}`;
+}
+
+export function publicPropertyUrl(organizationSlug: string, propertySlug: string): string {
+  const origin = stayOrigin();
+  return origin ? `${origin}/${organizationSlug}/${propertySlug}` : publicPropertyPath(organizationSlug, propertySlug);
+}
+
 export async function createProperty(
   supabase: SupabaseClient,
   { organizationId, basics }: { organizationId: string; basics: PropertyBasics },

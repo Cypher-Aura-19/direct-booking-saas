@@ -2,9 +2,13 @@
 
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
 import { INPUT_CLASSES } from "@/components/ui/input";
+import { Notice } from "@/components/ui/notice";
 import { PROPERTY_TYPES, type Property } from "@/lib/properties/basics";
 import type { FormState } from "./actions";
+
+const SELECT_CLASSES = `${INPUT_CLASSES} appearance-none bg-[url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235d6474' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")] bg-[length:1.1rem] bg-[position:right_0.9rem_center] bg-no-repeat pe-10 rtl:bg-[position:left_0.9rem_center]`;
 
 export function BasicsForm({
   action,
@@ -18,31 +22,43 @@ export function BasicsForm({
   const [state, formAction, pending] = useActionState(action, { error: null, success: false });
 
   return (
-    <form action={formAction} className="flex max-w-md flex-col gap-4">
-      <label className="flex flex-col gap-1 text-sm">
-        Name
-        <input name="name" required maxLength={80} defaultValue={property?.name} className={INPUT_CLASSES} />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Type
-        <select name="propertyType" required defaultValue={property?.property_type ?? ""} className={INPUT_CLASSES}>
-          <option value="" disabled>
-            Choose…
-          </option>
-          {PROPERTY_TYPES.map((type) => (
-            <option key={type.value} value={type.value}>
-              {type.label}
+    <form action={formAction} className="flex max-w-2xl flex-col gap-5">
+      <div className="grid gap-5 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <Field label="Name">
+          <input
+            name="name"
+            required
+            maxLength={80}
+            defaultValue={property?.name}
+            placeholder="River Hut"
+            className={INPUT_CLASSES}
+          />
+        </Field>
+        <Field label="Type">
+          <select name="propertyType" required defaultValue={property?.property_type ?? ""} className={SELECT_CLASSES}>
+            <option value="" disabled>
+              Choose…
             </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Address
-        <input name="address" required maxLength={200} defaultValue={property?.address} className={INPUT_CLASSES} />
-      </label>
-      <div className="grid grid-cols-2 gap-4">
-        <label className="flex flex-col gap-1 text-sm">
-          Nightly rate (Rs)
+            {PROPERTY_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </div>
+      <Field label="Address">
+        <input
+          name="address"
+          required
+          maxLength={200}
+          defaultValue={property?.address}
+          placeholder="Near Baltit Fort, Karimabad, Hunza"
+          className={INPUT_CLASSES}
+        />
+      </Field>
+      <div className="grid grid-cols-2 gap-5">
+        <Field label="Nightly rate (Rs)">
           <input
             name="baseRate"
             type="number"
@@ -51,11 +67,11 @@ export function BasicsForm({
             step={1}
             required
             defaultValue={property ? property.base_rate_cents / 100 : undefined}
-            className={INPUT_CLASSES}
+            placeholder="15000"
+            className={`${INPUT_CLASSES} font-mono`}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Max guests
+        </Field>
+        <Field label="Max guests">
           <input
             name="maxGuests"
             type="number"
@@ -64,15 +80,18 @@ export function BasicsForm({
             max={50}
             required
             defaultValue={property?.max_guests}
-            className={INPUT_CLASSES}
+            placeholder="4"
+            className={`${INPUT_CLASSES} font-mono`}
           />
-        </label>
+        </Field>
       </div>
-      {state.error && <p className="text-sm text-destructive">{state.error}</p>}
-      {state.success && <p className="text-sm text-success">Saved.</p>}
-      <Button type="submit" disabled={pending}>
-        {pending ? "Saving…" : submitLabel}
-      </Button>
+      {state.error && <Notice tone="error">{state.error}</Notice>}
+      {state.success && <Notice tone="success">Saved.</Notice>}
+      <div className="pt-1">
+        <Button type="submit" disabled={pending}>
+          {pending ? "Saving…" : submitLabel}
+        </Button>
+      </div>
     </form>
   );
 }

@@ -14,7 +14,7 @@ describe("Button", () => {
   // @req FOUND-11
   it("defaults to the primary variant", () => {
     render(<Button>Save</Button>);
-    expect(screen.getByRole("button")).toHaveClass("bg-accent");
+    expect(screen.getByRole("button")).toHaveClass("bg-action");
   });
 
   // @req FOUND-11
@@ -22,7 +22,7 @@ describe("Button", () => {
     render(<Button variant="secondary">Cancel</Button>);
     const button = screen.getByRole("button");
     expect(button).toHaveClass("border-hairline");
-    expect(button).not.toHaveClass("bg-accent");
+    expect(button).not.toHaveClass("bg-action");
   });
 
   // @req FOUND-11

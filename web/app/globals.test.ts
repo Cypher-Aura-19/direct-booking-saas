@@ -18,12 +18,12 @@ const css = readFileSync(
 );
 
 const BRAND_TOKENS = [
-  ["--ink", "#111318"],
-  ["--surface", "#ffffff"],
-  ["--surface-muted", "#f3f3f4"],
-  ["--accent", "#f97316"],
-  ["--muted", "#6b6b72"],
-  ["--hairline", "#e6e6e8"],
+  ["--ink", "#18251f"],
+  ["--surface", "#fcfdf8"],
+  ["--surface-muted", "#f3f6ed"],
+  ["--accent", "#365b28"],
+  ["--muted", "#616a61"],
+  ["--hairline", "#dce2d5"],
 ];
 
 const SEMANTIC_TOKENS = ["--destructive", "--warning", "--success"];
@@ -49,7 +49,7 @@ describe("design tokens", () => {
   // @req FOUND-06
   it("keeps every semantic colour distinct from the brand accent", () => {
     const accent = css.match(/--accent: (#[0-9a-f]{6})/)?.[1];
-    expect(accent).toBe("#f97316");
+    expect(accent).toBe("#365b28");
     for (const name of SEMANTIC_TOKENS) {
       const value = css.match(new RegExp(`${name}: (#[0-9a-f]{6})`))?.[1];
       expect(value).toBeDefined();

@@ -168,7 +168,7 @@ The supplied reference (`docs/reference/inspiration-staygo-orbix.webp`) was give
 
 ### Principles
 
-1. **One accent colour.** A single warm orange for primary actions and active states. Nothing else is coloured. Photography carries all remaining colour.
+1. **One accent colour.** Stamp-pad violet for primary actions and active states. Book-cloth green carries the sidebar and dark panels. Photography carries all remaining colour. *(Revised 2026-09-25: the original warm orange was replaced at the user's request; see "Visual world" below.)*
 2. **Medium weight, never heavy.** Headings at 500. Large and calm, not loud.
 3. **Space is the main tool.** Generous vertical rhythm between sections, few elements per screen. Emptiness is the design, not an absence of design.
 4. **Hierarchy from typography**, not from boxes, borders and icon soup.
@@ -180,17 +180,20 @@ The supplied reference (`docs/reference/inspiration-staygo-orbix.webp`) was give
 
 | Token | Value | Use |
 |---|---|---|
-| Ink (`text-ink`) | `#111318` | Dark sections, primary text |
-| Surface | `#FFFFFF` | Main background |
-| Surface muted | `#F3F3F4` | Alternating sections |
-| Accent | `#F97316` | The single accent |
-| Muted (`text-muted`) | `#6B6B72` | Supporting text |
-| Hairline | `#E6E6E8` | Dividers, outlines |
-| Radius | 16px cards, 999px buttons | |
+| Ink (`text-ink`) | `#141824` | Primary text, blue-black |
+| Surface | `#FFFFFF` | Sheets, forms, main content |
+| Surface muted | `#F4F6FA` | App background, alternating sections |
+| Accent | `#5B34C7` | The single accent: stamp-pad violet |
+| Muted (`text-muted`) | `#5D6474` | Supporting text |
+| Hairline | `#E2E6EE` | Dividers, outlines |
+| Cloth | `#0F3D2E` | Book-cloth green: sidebar, dark panels |
+| Radius | 16px cards, 12px fields, 999px buttons | |
 | Spacing scale | 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96 / 128 | Section gaps live at the top of the scale |
-| Type | One geometric sans, weights 400 / 500 / 700 | |
+| Type | Geist for UI; Geist Mono for register figures (dates, slugs, times) only | |
 
-**Semantic colours are separate from brand orange** — red destructive, amber warning, green success, all deliberately desaturated. Otherwise "needs attention" and "click here" look identical in the dashboard.
+**Visual world (2026-09-25): "The Guest Register".** The product is named **Qayam** (قیام, "a stay"). The host app is styled as the register book every guesthouse keeps: bottle-green book cloth, cool white paper (never cream), blue-black ink, and violet stamp-pad ink. Statuses (Published, Draft, Needs you, Escalated) are double-ringed rubber stamps. The one authored motion is the stamp pressing down when a state changes. Durable details live in `DESIGN.md` at the repository root.
+
+**Semantic colours are separate from the brand violet** — red destructive, amber warning, green success, all deliberately desaturated. Otherwise "needs attention" and "click here" look identical in the dashboard.
 
 ### Two visual languages
 

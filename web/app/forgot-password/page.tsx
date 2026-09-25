@@ -1,8 +1,22 @@
 "use client";
 
 import { useActionState } from "react";
+import { AuthMessage, AuthShell, SCENES } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { INPUT_CLASSES } from "@/components/ui/input";
+import { Notice } from "@/components/ui/notice";
+import { IconMail } from "@/components/ui/icons";
 import { forgotPasswordAction } from "./actions";
+
+const BACK_TO_LOGIN = (
+  <>
+    Remembered it?{" "}
+    <a href="/login" className="font-medium text-accent underline-offset-4 hover:underline">
+      Back to log in
+    </a>
+  </>
+);
 
 export default function ForgotPasswordPage() {
   const [state, formAction, pending] = useActionState(forgotPasswordAction, {
@@ -12,31 +26,30 @@ export default function ForgotPasswordPage() {
 
   if (state.sent) {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 px-6 text-center">
-        <h1 className="text-2xl font-medium tracking-tight">Check your email</h1>
-        <p className="text-muted">If that address has an account, a reset link is on its way.</p>
-      </main>
+      <AuthShell title="Check your email" scene={SCENES.valley} footer={BACK_TO_LOGIN}>
+        <AuthMessage icon={<IconMail className="size-6" />} title="Reset link on its way">
+          If that address has an account, a reset link is on its way.
+        </AuthMessage>
+      </AuthShell>
     );
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 px-6">
-      <h1 className="text-3xl font-medium tracking-tight">Reset your password</h1>
-      <form action={formAction} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm">
-          Email
-          <input
-            name="email"
-            type="email"
-            required
-            className="rounded-card border border-hairline bg-surface px-4 py-2 text-ink"
-          />
-        </label>
-        {state.error && <p className="text-sm text-destructive">{state.error}</p>}
-        <Button type="submit" disabled={pending}>
+    <AuthShell
+      title="Reset your password"
+      lede="Enter the email you signed up with and we'll send you a link to set a new password."
+      scene={SCENES.valley}
+      footer={BACK_TO_LOGIN}
+    >
+      <form action={formAction} className="flex flex-col gap-5">
+        <Field label="Email">
+          <input name="email" type="email" autoComplete="email" required className={INPUT_CLASSES} />
+        </Field>
+        {state.error && <Notice tone="error">{state.error}</Notice>}
+        <Button type="submit" disabled={pending} className="w-full">
           {pending ? "Sending…" : "Send reset link"}
         </Button>
       </form>
-    </main>
+    </AuthShell>
   );
 }

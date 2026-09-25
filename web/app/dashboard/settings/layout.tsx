@@ -1,3 +1,6 @@
+import { IconArrowRight, IconBuilding } from "@/components/ui/icons";
+import { SubNav } from "@/components/ui/sub-nav";
+
 const SETTINGS_LINKS = [
   { href: "/dashboard/settings", label: "Organisation" },
   { href: "/dashboard/settings/account", label: "Account" },
@@ -12,17 +15,18 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
           but not for equivalent links elsewhere in this codebase. */}
       <a
         href="/dashboard/properties"
-        className="flex min-h-11 items-center rounded-card border border-hairline px-4 text-sm md:hidden"
+        className="flex min-h-16 items-center gap-4 rounded-card border border-hairline bg-surface px-4 shadow-[var(--shadow-sheet)] md:hidden"
       >
-        Properties
+        <span className="grid size-10 place-items-center rounded-xl bg-cloth/[0.07] text-cloth">
+          <IconBuilding className="size-5" />
+        </span>
+        <span className="flex flex-1 flex-col">
+          <span className="text-[15px] font-medium text-ink">Properties</span>
+          <span className="text-sm text-muted">Photos, rates and knowledge base</span>
+        </span>
+        <IconArrowRight className="size-4 text-muted" />
       </a>
-      <nav className="flex gap-2 border-b border-hairline">
-        {SETTINGS_LINKS.map((link) => (
-          <a key={link.href} href={link.href} className="flex min-h-11 items-center px-3 text-sm text-ink hover:bg-surface-muted">
-            {link.label}
-          </a>
-        ))}
-      </nav>
+      <SubNav items={SETTINGS_LINKS} />
       {children}
     </div>
   );

@@ -1,42 +1,53 @@
 "use client";
 
 import { useActionState } from "react";
+import { AuthShell, SCENES } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { INPUT_CLASSES } from "@/components/ui/input";
+import { Notice } from "@/components/ui/notice";
+import { PasswordInput } from "@/components/ui/password-input";
+import { IconArrowRight } from "@/components/ui/icons";
+import { PRODUCT_NAME } from "@/lib/brand";
 import { loginAction } from "./actions";
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(loginAction, { error: null });
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 px-6">
-      <h1 className="text-3xl font-medium tracking-tight">Log in</h1>
-      <form action={formAction} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm">
-          Email
-          <input
-            name="email"
-            type="email"
-            required
-            className="rounded-card border border-hairline bg-surface px-4 py-2 text-ink"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Password
-          <input
-            name="password"
-            type="password"
-            required
-            className="rounded-card border border-hairline bg-surface px-4 py-2 text-ink"
-          />
-        </label>
-        {state.error && <p className="text-sm text-destructive">{state.error}</p>}
-        <Button type="submit" disabled={pending}>
-          {pending ? "Logging in…" : "Log in"}
-        </Button>
-        <a href="/forgot-password" className="text-sm text-muted underline">
-          Forgot password?
+    <AuthShell
+      title="Welcome back"
+      lede="Log in to see what needs you today: booking requests, guest chats and arrivals."
+      scene={SCENES.guesthouse}
+      aside={{ stamp: "Direct booking", line: "Your guests book with you. Nobody takes a cut in between." }}
+      footer={
+        <>
+          New to {PRODUCT_NAME}?{" "}
+          <a href="/signup" className="font-medium text-accent underline-offset-4 hover:underline">
+            Create an account
+          </a>
+        </>
+      }
+    >
+      <form action={formAction} className="flex flex-col gap-5">
+        <Field label="Email">
+          <input name="email" type="email" autoComplete="email" required className={INPUT_CLASSES} />
+        </Field>
+        <Field label="Password">
+          <PasswordInput name="password" autoComplete="current-password" required />
+        </Field>
+        <a
+          href="/forgot-password"
+          className="-mt-2 inline-flex min-h-11 w-fit items-center text-sm text-accent underline-offset-4 hover:underline"
+        >
+          Forgot your password?
         </a>
+        {state.error && <Notice tone="error">{state.error}</Notice>}
+        <Button type="submit" disabled={pending} className="w-full">
+          {pending ? "Logging in…" : "Log in"}
+          {!pending && <IconArrowRight />}
+        </Button>
       </form>
-    </main>
+    </AuthShell>
   );
 }

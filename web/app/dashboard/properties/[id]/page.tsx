@@ -4,8 +4,10 @@ import { IconArrowUpRight, IconEye } from "@/components/ui/icons";
 import { Sheet, SheetHeader } from "@/components/ui/page-header";
 import { dashboardContext } from "../../_lib/context";
 import { getProperty, publicPropertyPath } from "@/lib/properties/basics";
+import { getListing } from "@/lib/properties/listing";
 import { BasicsForm } from "../basics-form";
-import { setPublishedAction, updatePropertyAction } from "../actions";
+import { ListingForm } from "../listing-form";
+import { setPublishedAction, updateListingAction, updatePropertyAction } from "../actions";
 
 export default async function PropertyBasicsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -13,6 +15,7 @@ export default async function PropertyBasicsPage({ params }: { params: Promise<{
   const property = await getProperty(supabase, id);
   if (!property) notFound();
   const publicPath = publicPropertyPath(organization.slug, property.slug);
+  const listing = (await getListing(supabase, id)) ?? { description: "", amenities: [] };
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,6 +61,13 @@ export default async function PropertyBasicsPage({ params }: { params: Promise<{
         <SheetHeader title="Basics" description="What guests see first: the name, the kind of place, the rate and the size." />
         <div className="p-5 sm:p-6">
           <BasicsForm action={updatePropertyAction.bind(null, id)} property={property} submitLabel="Save changes" />
+        </div>
+      </Sheet>
+
+      <Sheet>
+        <SheetHeader title="Guest-facing details" description="Shown on your public page." />
+        <div className="p-5 sm:p-6">
+          <ListingForm action={updateListingAction.bind(null, id)} listing={listing} />
         </div>
       </Sheet>
     </div>

@@ -10,6 +10,7 @@ import {
   updatePropertyBasics,
 } from "@/lib/properties/basics";
 import { parseKnowledgeBase, updateKnowledgeBase } from "@/lib/properties/knowledge-base";
+import { parseListing, updateListing } from "@/lib/properties/listing";
 import { deletePropertyPhoto, reorderPropertyPhotos, setCoverPhoto } from "@/lib/properties/photos";
 
 export type FormState = { error: string | null; success: boolean };
@@ -79,6 +80,19 @@ export async function updateKnowledgeBaseAction(
   const { error } = await updateKnowledgeBase(supabase, propertyId, parsed.value);
   if (error) return { error, success: false };
   refreshProperties();
+  return { error: null, success: true };
+}
+
+export async function updateListingAction(propertyId: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = parseListing({
+    description: String(formData.get("description") ?? ""),
+    amenities: formData.getAll("amenities").map(String),
+  });
+  if ("error" in parsed) return { error: parsed.error, success: false };
+  const { supabase } = await dashboardContext();
+  const { error } = await updateListing(supabase, propertyId, parsed.listing);
+  if (error) return { error, success: false };
+  revalidatePath(`/dashboard/properties/${propertyId}`);
   return { error: null, success: true };
 }
 

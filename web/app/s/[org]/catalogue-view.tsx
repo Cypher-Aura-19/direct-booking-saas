@@ -39,7 +39,6 @@ export function CatalogueView({ organization, properties }: { organization: Publ
                         sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
                         alt=""
                         loading={index < 2 ? "eager" : "lazy"}
-                        fetchPriority={index === 0 ? "high" : "auto"}
                         decoding="async"
                       />
                     ) : (

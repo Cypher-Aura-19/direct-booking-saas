@@ -34,7 +34,7 @@ export function PropertyView({ organization, property }: { organization: PublicO
                   sizes={index === 0 ? "(min-width: 1024px) 60vw, 92vw" : "(min-width: 1024px) 30vw, 92vw"}
                   alt={`${property.name}, photo ${index + 1} of ${property.photos.length}`}
                   loading={index === 0 ? "eager" : "lazy"}
-                  fetchPriority={index === 0 ? "high" : "auto"}
+                  fetchPriority={index === 0 ? undefined : "low"}
                   decoding="async"
                 />
               </figure>

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
   preload: false,
 });
 
-const display = Libre_Caslon_Display({ variable: "--font-display", subsets: ["latin"], weight: "400" });
+const display = Libre_Caslon_Display({ variable: "--font-display", subsets: ["latin"], weight: "400", preload: false });
 
 /*
   Weights 300, 500 and 600 render badly in Nastaliq — the script's

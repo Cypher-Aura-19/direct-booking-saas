@@ -20,21 +20,52 @@ const SLOW_3G = { offline: false, latency: 400, downloadThroughput: (400 * 1024)
 const BUDGET_MS = 3000;
 
 const browser = await chromium.launch({ channel: "chrome" });
+
+// Warm the server in its own, throwaway context (first dev-mode compile is
+// not what a guest pays). This must not share a context — and so not a
+// cache or keep-alive sockets — with the throttled measurement below, or
+// the measurement gets an optimistic reused connection instead of a cold
+// slow-3G load.
+const warmContext = await browser.newContext();
+const warmPage = await warmContext.newPage();
+await warmPage.goto(url, { waitUntil: "load" });
+await warmContext.close();
+
 const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true });
 const page = await context.newPage();
-// Warm the server (first dev-mode compile is not what a guest pays).
-await page.goto(url, { waitUntil: "load" });
+// largest-contentful-paint entries are not retained for a later
+// performance.getEntriesByType() call once the type has stopped being
+// observed — they must be captured live via a buffered PerformanceObserver,
+// registered before the throttled navigation via an init script so it is
+// running from the very first byte of the document.
+await page.addInitScript(() => {
+  window.__lcp = 0;
+  try {
+    new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      const last = entries[entries.length - 1];
+      if (last) window.__lcp = last.startTime;
+    }).observe({ type: "largest-contentful-paint", buffered: true });
+  } catch {
+    // LCP unsupported in this browser; __lcp stays 0 and is reported as n/a.
+  }
+});
+
 const cdp = await context.newCDPSession(page);
 await cdp.send("Network.enable");
 await cdp.send("Network.clearBrowserCache");
+await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
 await cdp.send("Network.emulateNetworkConditions", SLOW_3G);
 await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
 
 await page.goto(url, { waitUntil: "load", timeout: 60_000 });
 const timing = await page.evaluate(() => {
   const nav = performance.getEntriesByType("navigation")[0];
-  const lcp = performance.getEntriesByType("largest-contentful-paint").at(-1);
-  return { load: Math.round(nav.loadEventEnd), fcp: Math.round(performance.getEntriesByName("first-contentful-paint")[0]?.startTime ?? 0), lcp: Math.round(lcp?.startTime ?? 0) };
+  return {
+    load: Math.round(nav.loadEventEnd),
+    fcp: Math.round(performance.getEntriesByName("first-contentful-paint")[0]?.startTime ?? 0),
+    lcp: Math.round(window.__lcp ?? 0),
+  };
 });
 await browser.close();
 

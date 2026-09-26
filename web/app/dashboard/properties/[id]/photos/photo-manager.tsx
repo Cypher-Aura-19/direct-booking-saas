@@ -9,13 +9,16 @@ import { createClient } from "@/lib/supabase/client";
 import { moveItem } from "@/lib/properties/photo-order";
 import { ALLOWED_PHOTO_TYPES, uploadPropertyPhoto, type PropertyPhoto } from "@/lib/properties/photos";
 import { makePhotoVariants, type PhotoVariant } from "@/lib/properties/photo-variants";
-import { deletePhotoAction, reorderPhotosAction, setCoverPhotoAction } from "../../actions";
+import { deletePhotoAction, refreshPhotosAction, reorderPhotosAction, setCoverPhotoAction } from "../../actions";
 
 type PhotoWithUrl = PropertyPhoto & { url: string };
+
+const VARIANTS_FAILED_NOTICE = "This browser couldn't prepare this photo for your public page. Try uploading it from Chrome.";
 
 export function PhotoManager({ propertyId, photos }: { propertyId: string; photos: PhotoWithUrl[] }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
@@ -31,16 +34,23 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
     if (!files || files.length === 0) return;
     const selected = Array.from(files);
     setError(null);
+    setNotice(null);
     startTransition(async () => {
       // Browser → Storage directly, with the host's own session.
       const supabase = createClient();
       const failures: string[] = [];
+      let variantsFailed = false;
       for (const file of selected) {
         let variants: PhotoVariant[] = [];
         try {
           variants = await makePhotoVariants(file);
         } catch {
+          // Falls back to an upload without variants (e.g. Safari's canvas
+          // encoding a "webp" toBlob() call as PNG instead) — see
+          // photo-variants.ts. Such a photo won't appear on the public page
+          // (public.catalogue only serves variants), so tell the host why.
           variants = [];
+          variantsFailed = true;
         }
         const { error } = await uploadPropertyPhoto(supabase, { propertyId, file, variants });
         if (error) failures.push(`${file.name}: ${error}`);
@@ -49,6 +59,8 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
         const uploaded = selected.length - failures.length;
         setError(`${uploaded} of ${selected.length} uploaded. Not uploaded — ${failures.join("; ")}`);
       }
+      if (variantsFailed) setNotice(VARIANTS_FAILED_NOTICE);
+      await refreshPhotosAction();
       router.refresh();
     });
   }
@@ -102,6 +114,11 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
       {error && (
         <p className="rounded-[var(--radius-field)] bg-destructive/[0.07] px-3.5 py-3 text-sm text-destructive" aria-live="polite">
           {error}
+        </p>
+      )}
+      {notice && (
+        <p className="rounded-[var(--radius-field)] bg-surface-muted px-3.5 py-3 text-sm text-muted" aria-live="polite">
+          {notice}
         </p>
       )}
 

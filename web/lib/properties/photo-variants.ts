@@ -31,6 +31,11 @@ export async function makePhotoVariants(file: Blob): Promise<PhotoVariant[]> {
       context.drawImage(bitmap, 0, 0, size.width, size.height);
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", WEBP_QUALITY));
       if (!blob) throw new Error("This browser cannot resize photos.");
+      // Safari has been known to ignore the requested type and hand back a
+      // PNG blob instead. Callers (photo-manager.tsx) fall back to an
+      // upload without variants when this throws, and such a photo won't
+      // appear on the public page (catalogue.ts only serves .webp variants).
+      if (blob.type !== "image/webp") throw new Error("This browser encoded the photo as something other than webp.");
       variants.push({ width, blob });
     }
     return variants;

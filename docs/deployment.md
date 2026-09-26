@@ -13,6 +13,9 @@ Set for Production, Preview and Development:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the project's legacy `anon` key (`supabase projects api-keys --project-ref vhzplaphuaydfwtvryla`) |
 | `STAY_HOST` | server-only, e.g. `stay.qayam.pk`. Requests to this host are rewritten onto `/s/*`. |
 | `NEXT_PUBLIC_STAY_ORIGIN` | e.g. `https://stay.qayam.pk`, used to build public links shown to hosts. |
+| `SUPABASE_SERVICE_ROLE_KEY` | server only, never `NEXT_PUBLIC_`; bypasses RLS (`supabase projects api-keys --project-ref vhzplaphuaydfwtvryla`) |
+| `GEMINI_API_KEY` | server only, used by the guest-chat AI orchestrator |
+| `GEMINI_MODEL` | optional, defaults to `gemini-2.5-flash` |
 
 Without them the session-refresh middleware throws on every request and Vercel
 answers every route with `500 MIDDLEWARE_INVOCATION_FAILED`.

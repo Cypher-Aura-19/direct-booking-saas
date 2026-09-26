@@ -10,6 +10,13 @@ import {
   updatePropertyBasics,
 } from "@/lib/properties/basics";
 import { createBlock, deleteBlock, parseBlockInput } from "@/lib/availability/blocks";
+import {
+  createSeasonalRule,
+  deleteSeasonalRule,
+  parseSeasonalRule,
+  parseStaySettings,
+  updateStaySettings,
+} from "@/lib/availability/pricing";
 import { localToday } from "@/lib/dashboard/analytics";
 import { parseKnowledgeBase, updateKnowledgeBase } from "@/lib/properties/knowledge-base";
 import { parseListing, updateListing } from "@/lib/properties/listing";
@@ -157,6 +164,47 @@ export async function deleteBlockAction(propertyId: string, blockId: string): Pr
   if (!result.error) {
     revalidatePath(`/dashboard/properties/${propertyId}/calendar`);
     revalidatePath("/dashboard/calendar");
+    revalidatePublicPages(organization.slug);
+  }
+  return result;
+}
+
+export async function updateStaySettingsAction(propertyId: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = parseStaySettings({
+    minimumStay: String(formData.get("minimumStay") ?? ""),
+    advancePercent: String(formData.get("advancePercent") ?? ""),
+  });
+  if ("error" in parsed) return { error: parsed.error, success: false };
+  const { supabase, organization } = await dashboardContext();
+  const { error } = await updateStaySettings(supabase, propertyId, parsed.settings);
+  if (error) return { error, success: false };
+  revalidatePath(`/dashboard/properties/${propertyId}/pricing`);
+  revalidatePublicPages(organization.slug);
+  return { error: null, success: true };
+}
+
+export async function createSeasonalRuleAction(propertyId: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = parseSeasonalRule({
+    firstNight: String(formData.get("firstNight") ?? ""),
+    lastNight: String(formData.get("lastNight") ?? ""),
+    rate: String(formData.get("rate") ?? ""),
+    minimumStay: String(formData.get("minimumStay") ?? ""),
+    today: localToday(),
+  });
+  if ("error" in parsed) return { error: parsed.error, success: false };
+  const { supabase, organization } = await dashboardContext();
+  const { error } = await createSeasonalRule(supabase, propertyId, parsed.rule);
+  if (error) return { error, success: false };
+  revalidatePath(`/dashboard/properties/${propertyId}/pricing`);
+  revalidatePublicPages(organization.slug);
+  return { error: null, success: true };
+}
+
+export async function deleteSeasonalRuleAction(propertyId: string, ruleId: string): Promise<{ error: string | null }> {
+  const { supabase, organization } = await dashboardContext();
+  const result = await deleteSeasonalRule(supabase, ruleId);
+  if (!result.error) {
+    revalidatePath(`/dashboard/properties/${propertyId}/pricing`);
     revalidatePublicPages(organization.slug);
   }
   return result;

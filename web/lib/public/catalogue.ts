@@ -9,8 +9,10 @@ export type PublicPropertySummary = { id: string; slug: string; name: string; pr
 export type PublicProperty = PublicPropertySummary & { description: string; amenities: Amenity[]; photos: PublicPhoto[] };
 
 // Must outlive the page cache (revalidate = 3600 on the public routes), or a
-// cached page would point at expired image URLs.
-export const SIGNED_URL_SECONDS = 86_400;
+// cached page would point at expired image URLs. Kept as short as that
+// allows (2h, not 24h): a signed URL for a since-unpublished photo keeps
+// working until it expires, so shorter is safer.
+export const SIGNED_URL_SECONDS = 7_200;
 
 // Explicit column lists only: anon has column-level grants (20260922090000,
 // 20260926010000), so `*` fails with 42501.
@@ -40,26 +42,26 @@ export async function getPublicOrganization(supabase: SupabaseClient, slug: stri
   };
 }
 
-// One signing round trip for every image on the page.
+// One signing round trip for every image on the page. Originals are never
+// signed or served here: an original can carry EXIF GPS (the exact address
+// the 2026-09-25 decision already revoked from properties.address), and
+// anon's storage policy (20260926020000) only grants read on the resized
+// .w480/960/1600.webp variants anyway. A photo without variants — an older
+// upload, or one whose browser couldn't produce webp (photo-variants.ts) —
+// is simply skipped; callers fall back to their placeholder state.
 async function toPublicPhotos(supabase: SupabaseClient, rows: PhotoRow[]): Promise<Map<string, PublicPhoto>> {
   const result = new Map<string, PublicPhoto>();
-  if (rows.length === 0) return result;
-  const paths = rows.flatMap((row) =>
-    row.has_variants ? PHOTO_WIDTHS.map((w) => variantPath(row.storage_path, w)) : [row.storage_path],
-  );
+  const withVariants = rows.filter((row) => row.has_variants);
+  if (withVariants.length === 0) return result;
+  const paths = withVariants.flatMap((row) => PHOTO_WIDTHS.map((w) => variantPath(row.storage_path, w)));
   const { data, error } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(paths, SIGNED_URL_SECONDS);
   if (error) throw error;
   const urls = new Map((data ?? []).filter((d) => d.signedUrl).map((d) => [d.path, d.signedUrl]));
-  for (const row of rows) {
-    if (row.has_variants) {
-      const entries = PHOTO_WIDTHS.map((w) => [w, urls.get(variantPath(row.storage_path, w))] as const).filter(([, url]) => url);
-      if (entries.length === 0) continue;
-      const middle = entries.find(([w]) => w === 960) ?? entries[entries.length - 1];
-      result.set(row.id, { id: row.id, src: middle[1]!, srcSet: entries.map(([w, url]) => `${url} ${w}w`).join(", ") });
-    } else {
-      const url = urls.get(row.storage_path);
-      if (url) result.set(row.id, { id: row.id, src: url, srcSet: "" });
-    }
+  for (const row of withVariants) {
+    const entries = PHOTO_WIDTHS.map((w) => [w, urls.get(variantPath(row.storage_path, w))] as const).filter(([, url]) => url);
+    if (entries.length === 0) continue;
+    const middle = entries.find(([w]) => w === 960) ?? entries[entries.length - 1];
+    result.set(row.id, { id: row.id, src: middle[1]!, srcSet: entries.map(([w, url]) => `${url} ${w}w`).join(", ") });
   }
   return result;
 }

@@ -93,10 +93,13 @@ test("anon sees photo rows and storage objects of published properties only", as
         );
       }
       await db.query("reset role");
+      // Named as a variant (20260926020000 restricts anon's object policy to
+      // .w480/960/1600.webp names); the original-vs-variant distinction
+      // itself is covered separately below.
       for (const propertyId of [published, draft]) {
         await db.query(
           "insert into storage.objects (bucket_id, name, owner) values ('property-photos', $1, $2)",
-          [`${propertyId}/a.jpg`, host.userId],
+          [`${propertyId}/a.w960.webp`, host.userId],
         );
       }
       await actAsAnon(db);
@@ -104,12 +107,38 @@ test("anon sees photo rows and storage objects of published properties only", as
       assert.deepEqual(rows.rows.map((r) => r.property_id), [published]);
       const objects = await db.query(
         "select name from storage.objects where bucket_id = 'property-photos' and name = any($1)",
-        [[`${published}/a.jpg`, `${draft}/a.jpg`]],
+        [[`${published}/a.w960.webp`, `${draft}/a.w960.webp`]],
       );
-      assert.deepEqual(objects.rows.map((r) => r.name), [`${published}/a.jpg`]);
+      assert.deepEqual(objects.rows.map((r) => r.name), [`${published}/a.w960.webp`]);
       await expectPgError(db, "42501", () =>
         db.query("insert into public.property_photos (property_id, storage_path, position) values ($1, $2, 1)", [published, `${published}/b.jpg`]),
       );
+    });
+  } finally {
+    await host.cleanup();
+  }
+});
+
+test("anon can read a photo's resized variant object but never its original", async () => {
+  const host = await createTestHost();
+  try {
+    await withDb(async (db) => {
+      await actAsAuthenticated(db, host.userId);
+      const orgId = await insertOrg(db, host.userId);
+      const published = await insertProperty(db, orgId, { published: true });
+      await db.query("reset role");
+      const original = `${published}/a.jpg`;
+      const variant = `${published}/a.w960.webp`;
+      await db.query(
+        "insert into storage.objects (bucket_id, name, owner) values ('property-photos', $1, $3), ('property-photos', $2, $3)",
+        [original, variant, host.userId],
+      );
+      await actAsAnon(db);
+      const objects = await db.query(
+        "select name from storage.objects where bucket_id = 'property-photos' and name = any($1) order by name",
+        [[original, variant]],
+      );
+      assert.deepEqual(objects.rows.map((r) => r.name), [variant]);
     });
   } finally {
     await host.cleanup();

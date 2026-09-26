@@ -89,6 +89,19 @@ it("photos with variants are served as a width-described srcset of signed URLs",
   expect(response.status).toBe(200);
 });
 
+// @req PUB-07
+it("a photo uploaded without variants is skipped on the public page", async () => {
+  const { host, publishedId } = await hostWithCatalogue();
+  // No `variants` argument: this photo never gets .w480/960/1600.webp
+  // siblings, so it must not show up publicly even though its row is
+  // published (has_variants defaults to false — 20260926010000).
+  await uploadPropertyPhoto(host.supabase, { propertyId: publishedId, file: image() });
+  const slug = (await listPublishedProperties(anonClient(), host.organizationId))[0].slug;
+  const property = await getPublishedProperty(anonClient(), host.organizationId, slug);
+  expect(property!.photos).toHaveLength(1);
+  expect(property!.photos.every((p) => p.srcSet)).toBe(true);
+});
+
 it("a draft property is not readable by slug, even with the right organisation", async () => {
   const { host, draftId } = await hostWithCatalogue();
   const { data } = await host.supabase.from("properties").select("slug").eq("id", draftId).single();

@@ -5,7 +5,7 @@
 A requirement is done when a passing test carries its `@req` tag.
 Status is computed, never asserted.
 
-**Overall: 78 of 200 requirements covered (39%)**
+**Overall: 88 of 200 requirements covered (44%)**
 
 ## By milestone
 
@@ -16,7 +16,7 @@ Status is computed, never asserted.
 | M3 | 14 | 14 |
 | M4 | 15 | 15 |
 | M5 | 10 | 10 |
-| M6 | 0 | 10 |
+| M6 | 10 | 10 |
 | M7 | 0 | 18 |
 | M8 | 0 | 15 |
 | M9 | 0 | 13 |
@@ -90,7 +90,7 @@ Status is computed, never asserted.
 | PROP-11 | M4 | done | web/lib/properties/knowledge-base.test.ts |
 | PROP-12 | M4 | done | web/lib/properties/knowledge-base.test.ts |
 | PROP-13 | M4 | done | web/lib/organizations/settings.test.ts |
-| PROP-14 | M4 | done | web/lib/organizations/settings.test.ts, web/lib/properties/basics.test.ts, web/lib/properties/knowledge-base.test.ts, web/lib/properties/listing.test.ts, web/lib/properties/photos.test.ts |
+| PROP-14 | M4 | done | web/lib/availability/blocks.test.ts, web/lib/availability/pricing.test.ts, web/lib/organizations/settings.test.ts, web/lib/properties/basics.test.ts, web/lib/properties/knowledge-base.test.ts, web/lib/properties/listing.test.ts, web/lib/properties/photos.test.ts |
 | PROP-15 | M4 | done | web/app/dashboard/properties/property-list.test.tsx, web/lib/properties/basics.test.ts |
 | PUB-01 | M5 | done | web/app/s/[org]/catalogue-view.test.tsx, web/lib/public/catalogue.test.ts |
 | PUB-02 | M5 | done | web/app/s/[org]/[property]/property-view.test.tsx, web/lib/properties/listing.test.ts, web/lib/public/catalogue.test.ts |
@@ -102,16 +102,16 @@ Status is computed, never asserted.
 | PUB-08 | M5 | done | web/app/s/[org]/public-css.test.ts |
 | PUB-09 | M5 | done | web/app/s/routes.test.ts |
 | PUB-10 | M5 | done | web/app/s/[org]/catalogue-view.test.tsx |
-| CAL-01 | M6 | todo | — |
-| CAL-02 | M6 | todo | — |
-| CAL-03 | M6 | todo | — |
-| CAL-04 | M6 | todo | — |
-| CAL-05 | M6 | todo | — |
-| CAL-06 | M6 | todo | — |
-| CAL-07 | M6 | todo | — |
-| CAL-08 | M6 | todo | — |
-| CAL-09 | M6 | todo | — |
-| CAL-10 | M6 | todo | — |
+| CAL-01 | M6 | done | web/lib/availability/blocks.test.ts |
+| CAL-02 | M6 | done | web/lib/availability/blocks.test.ts |
+| CAL-03 | M6 | done | web/app/dashboard/calendar/timeline.test.tsx, web/lib/availability/calendar.test.ts |
+| CAL-04 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/lib/availability/pricing.test.ts |
+| CAL-05 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/lib/availability/pricing.test.ts, web/lib/availability/quote.test.ts |
+| CAL-06 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/lib/availability/pricing.test.ts |
+| CAL-07 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/app/s/[org]/[property]/property-view.test.tsx, web/app/s/[org]/[property]/stay-picker.test.tsx, web/lib/public/catalogue.test.ts |
+| CAL-08 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/app/s/[org]/[property]/stay-picker.test.tsx, web/lib/availability/quote.test.ts, web/lib/public/catalogue.test.ts |
+| CAL-09 | M6 | done | web/app/s/[org]/[property]/stay-picker.test.tsx, web/lib/availability/quote.test.ts |
+| CAL-10 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/lib/availability/blocks.test.ts, web/lib/availability/pricing.test.ts |
 | AI-01 | M7 | todo | — |
 | AI-02 | M7 | todo | — |
 | AI-03 | M7 | todo | — |

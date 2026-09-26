@@ -26,5 +26,11 @@ describe("dates", () => {
   it("finds month boundaries", () => {
     expect(monthStart("2026-10-17")).toBe("2026-10-01");
     expect(daysInMonth("2028-02-01")).toBe(29);
+    expect(daysInMonth("2026-12-10")).toBe(31);
+    expect(daysInMonth("2027-02-01")).toBe(28);
+  });
+  it("validates leap-day dates strictly", () => {
+    expect(isIsoDate("2026-02-29")).toBe(false);
+    expect(isIsoDate("2024-02-29")).toBe(true);
   });
 });

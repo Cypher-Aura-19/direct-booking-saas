@@ -15,6 +15,8 @@ async function expectPgError(db, code, fn) {
   }
 }
 
+// @req CAL-05
+// @req CAL-06
 test("properties carry a minimum stay (1-60) and an advance percentage (0-100)", async () => {
   const host = await createTestHost();
   try {
@@ -32,6 +34,8 @@ test("properties carry a minimum stay (1-60) and an advance percentage (0-100)",
   }
 });
 
+// @req CAL-04
+// @req CAL-10
 test("seasonal rules reject overlaps, non-positive rates and bad minimum stays", async () => {
   const host = await createTestHost();
   try {
@@ -55,6 +59,8 @@ test("seasonal rules reject overlaps, non-positive rates and bad minimum stays",
   }
 });
 
+// @req CAL-07
+// @req CAL-08
 test("anon reads block dates and seasonal rates of published properties only, never the block reason", async () => {
   const host = await createTestHost();
   try {

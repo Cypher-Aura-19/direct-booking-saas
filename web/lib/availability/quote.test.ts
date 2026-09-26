@@ -26,6 +26,23 @@ describe("quoteStay", () => {
     expect(quoteStay("2026-12-24", "2026-12-26", input)).toEqual({ ok: false, reason: "minimum_stay", minimumStay: 3 });
   });
 
+  // @req CAL-09
+  it("prices a stay spanning two adjacent seasonal rules by each rule's own rate", () => {
+    const adjacent: QuoteInput = {
+      baseRateCents: 1_000_000,
+      minimumStay: 1,
+      today: "2026-10-01",
+      rules: [
+        { start: "2027-01-10", end: "2027-01-12", rateCents: 2_000_000, minimumStay: 1 },
+        { start: "2027-01-12", end: "2027-01-14", rateCents: 3_000_000, minimumStay: 1 },
+      ],
+      blocks: [],
+    };
+    const q = quoteStay("2027-01-09", "2027-01-14", adjacent);
+    expect(q).toMatchObject({ ok: true, nights: 5, totalCents: 1_000_000 + 2 * 2_000_000 + 2 * 3_000_000 });
+    if (q.ok) expect(q.breakdown.map((n) => n.rateCents)).toEqual([1_000_000, 2_000_000, 2_000_000, 3_000_000, 3_000_000]);
+  });
+
   // @req CAL-08
   it("refuses a stay that includes a blocked night, but allows checking out on one", () => {
     expect(quoteStay("2026-10-09", "2026-10-11", input)).toMatchObject({ ok: false, reason: "unavailable" });

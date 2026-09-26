@@ -5,7 +5,7 @@
 A requirement is done when a passing test carries its `@req` tag.
 Status is computed, never asserted.
 
-**Overall: 88 of 200 requirements covered (44%)**
+**Overall: 109 of 200 requirements covered (55%)**
 
 ## By milestone
 
@@ -17,13 +17,13 @@ Status is computed, never asserted.
 | M4 | 15 | 15 |
 | M5 | 10 | 10 |
 | M6 | 10 | 10 |
-| M7 | 0 | 18 |
+| M7 | 18 | 18 |
 | M8 | 0 | 15 |
 | M9 | 0 | 13 |
 | M10 | 0 | 12 |
 | M11 | 0 | 21 |
 | M12 | 0 | 21 |
-| Cross-cutting | 5 | 17 |
+| Cross-cutting | 8 | 17 |
 
 ## Requirements
 
@@ -112,24 +112,24 @@ Status is computed, never asserted.
 | CAL-08 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/app/s/[org]/[property]/stay-picker.test.tsx, web/components/calendar/month-grid.test.tsx, web/lib/availability/quote.test.ts, web/lib/public/catalogue.test.ts |
 | CAL-09 | M6 | done | web/app/s/[org]/[property]/stay-picker.test.tsx, web/lib/availability/quote.test.ts |
 | CAL-10 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/lib/availability/blocks.test.ts, web/lib/availability/pricing.test.ts |
-| AI-01 | M7 | todo | — |
-| AI-02 | M7 | todo | — |
-| AI-03 | M7 | todo | — |
-| AI-04 | M7 | todo | — |
-| AI-05 | M7 | todo | — |
-| AI-06 | M7 | todo | — |
-| AI-07 | M7 | todo | — |
-| AI-08 | M7 | todo | — |
-| AI-09 | M7 | todo | — |
-| AI-10 | M7 | todo | — |
-| AI-11 | M7 | todo | — |
-| AI-12 | M7 | todo | — |
-| AI-13 | M7 | todo | — |
-| AI-14 | M7 | todo | — |
-| AI-15 | M7 | todo | — |
-| AI-16 | M7 | todo | — |
-| AI-17 | M7 | todo | — |
-| AI-18 | M7 | todo | — |
+| AI-01 | M7 | done | web/lib/chat/conversations.test.ts |
+| AI-02 | M7 | done | web/lib/chat/conversations.test.ts |
+| AI-03 | M7 | done | web/app/s/[org]/[property]/chat/chat-panel.test.tsx |
+| AI-04 | M7 | done | web/app/s/[org]/[property]/chat/chat-panel.test.tsx, web/app/s/[org]/[property]/property-view.test.tsx |
+| AI-05 | M7 | done | web/app/s/[org]/[property]/chat/chat-panel.test.tsx |
+| AI-06 | M7 | done | web/lib/chat/agent.test.ts, web/lib/chat/context.test.ts |
+| AI-07 | M7 | done | web/lib/chat/agent.test.ts, web/lib/chat/context.test.ts |
+| AI-08 | M7 | done | web/lib/chat/context.test.ts, web/lib/chat/language.test.ts |
+| AI-09 | M7 | done | web/lib/chat/context.test.ts, web/lib/chat/language.test.ts |
+| AI-10 | M7 | done | web/lib/chat/context.test.ts, web/lib/chat/language.test.ts |
+| AI-11 | M7 | done | web/lib/chat/agent.test.ts, web/lib/chat/tools.test.ts |
+| AI-12 | M7 | done | web/lib/chat/agent.test.ts, web/lib/chat/tools.test.ts |
+| AI-13 | M7 | done | web/lib/chat/agent.test.ts |
+| AI-14 | M7 | done | web/lib/chat/agent.test.ts, web/lib/chat/language.test.ts |
+| AI-15 | M7 | done | web/lib/chat/agent.test.ts |
+| AI-16 | M7 | done | web/lib/chat/agent.test.ts, web/lib/chat/language.test.ts |
+| AI-17 | M7 | done | web/lib/supabase/service.test.ts |
+| AI-18 | M7 | done | web/app/s/[org]/[property]/chat/chat-panel.test.tsx |
 | AIC-01 | M8 | todo | — |
 | AIC-02 | M8 | todo | — |
 | AIC-03 | M8 | todo | — |
@@ -217,9 +217,9 @@ Status is computed, never asserted.
 | SEC-03 | Cross-cutting | todo | — |
 | SEC-04 | Cross-cutting | todo | — |
 | SEC-05 | Cross-cutting | todo | — |
-| SEC-06 | Cross-cutting | todo | — |
-| SEC-07 | Cross-cutting | todo | — |
-| SEC-08 | Cross-cutting | todo | — |
+| SEC-06 | Cross-cutting | done | tests/db/m7-guest-chat.test.mjs, web/lib/chat/conversations.test.ts |
+| SEC-07 | Cross-cutting | done | tests/db/m7-guest-chat.test.mjs, web/lib/chat/conversations.test.ts |
+| SEC-08 | Cross-cutting | done | web/lib/chat/agent.test.ts |
 | PERF-01 | Cross-cutting | todo | — |
 | PERF-02 | Cross-cutting | todo | — |
 | PERF-03 | Cross-cutting | todo | — |

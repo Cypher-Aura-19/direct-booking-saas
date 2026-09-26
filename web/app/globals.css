@@ -254,3 +254,19 @@ body {
  .auth-form-wrap { padding-block: 48px; }
  .auth-title { font-size: 48px; }
 }
+
+/* Month grid (host calendar + public stay picker). */
+.month-grid { display: flex; flex-direction: column; gap: 10px; }
+.month-grid-title { font-size: 15px; font-weight: 600; color: var(--ink); }
+.month-grid-weekdays, .month-grid-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.month-grid-weekdays span { text-align: center; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.month-grid-cell { display: block; }
+.month-grid-day { display: grid; place-items: center; inline-size: 100%; min-block-size: 44px; border-radius: 10px; font-size: 14px; color: var(--ink); background: transparent; border: 1px solid transparent; }
+button.month-grid-day { cursor: pointer; transition: background 150ms, border-color 150ms; }
+button.month-grid-day:hover { border-color: var(--accent); }
+.month-grid-cell[data-state="past"] .month-grid-day { color: color-mix(in srgb, var(--muted) 55%, transparent); }
+.month-grid-cell[data-state="blocked"] .month-grid-day,
+.month-grid-cell[data-state="booked"] .month-grid-day { color: var(--muted); background: var(--surface-muted); text-decoration: line-through; }
+.month-grid-cell[data-state="booked"] .month-grid-day { background: var(--accent-soft); text-decoration: none; color: var(--accent); font-weight: 600; }
+.month-grid-cell[data-state="in-range"] .month-grid-day { background: var(--accent-soft); }
+.month-grid-cell[data-state="selected"] .month-grid-day { background: var(--accent); color: var(--accent-contrast); font-weight: 600; }

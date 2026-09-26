@@ -20,6 +20,8 @@ export default async function PropertyLayout({
   const tabs = [
     { href: `/dashboard/properties/${id}`, label: "Basics" },
     { href: `/dashboard/properties/${id}/photos`, label: "Photos" },
+    { href: `/dashboard/properties/${id}/calendar`, label: "Calendar" },
+    { href: `/dashboard/properties/${id}/pricing`, label: "Pricing" },
     { href: `/dashboard/properties/${id}/knowledge`, label: "Knowledge base" },
   ];
 

@@ -175,3 +175,24 @@
 .topbar-actions > span { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .metric-card > strong { overflow-wrap:anywhere; white-space:normal; }
 @media(max-width:767px) { .filter-right select { max-width:48%; } }
+/* Calendar timeline */
+.calendar-timeline-wrap { overflow-x: auto; }
+.calendar-timeline { display: flex; flex-direction: column; min-inline-size: fit-content; }
+.calendar-row { display: flex; border-block-end: 1px solid var(--hairline); }
+.calendar-row:last-child { border-block-end: 0; }
+.calendar-row-header { position: sticky; inset-block-start: 0; z-index: 2; background: var(--surface); }
+.calendar-cell-sticky { position: sticky; inset-inline-start: 0; z-index: 1; min-inline-size: 160px; max-inline-size: 160px; flex-shrink: 0; display: flex; align-items: center; padding-inline: 16px; font-size: 12px; font-weight: 500; color: var(--ink); background: var(--surface); border-inline-end: 1px solid var(--hairline); }
+.calendar-cell-corner { min-block-size: 52px; }
+.calendar-cell-property { min-block-size: 52px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calendar-track { position: relative; display: grid; min-block-size: 52px; }
+.calendar-track-header { min-block-size: 52px; }
+.calendar-daycell { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-inline-size: 44px; min-block-size: 44px; border-inline-end: 1px solid var(--hairline); font-size: 10px; color: var(--muted); }
+.calendar-daycell-header { font-weight: 500; }
+.calendar-daycell-header strong { font-size: 12px; font-weight: 600; color: var(--ink); }
+.calendar-daycell.is-today { background: var(--accent-soft); }
+.calendar-bar { grid-row: 1; align-self: center; min-block-size: 30px; margin-block: 4px; display: flex; align-items: center; padding-inline: 8px; border-radius: 6px; font-size: 10px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.calendar-bar-blocked { background: var(--surface-muted); border: 1px solid var(--hairline); color: var(--muted); }
+.calendar-bar-booking { background: var(--accent); color: var(--accent-contrast); }
+.calendar-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 48px 24px; text-align: center; color: var(--muted); font-size: 13px; }
+.calendar-empty a { color: var(--accent); font-weight: 500; min-block-size: 44px; display: inline-flex; align-items: center; }
+@media (max-width: 767px) { .calendar-cell-sticky { min-inline-size: 128px; max-inline-size: 128px; padding-inline: 12px; } }

@@ -9,7 +9,7 @@ const ITEMS = [
   { href: '/dashboard', label: 'Home', Icon: IconHome },
   { href: '/dashboard/properties', label: 'Properties', Icon: IconBuilding },
   { href: '/dashboard/inbox', label: 'Inbox', Icon: IconInbox, upcoming: true },
-  { href: '/dashboard/calendar', label: 'Calendar', Icon: IconCalendar, upcoming: true },
+  { href: '/dashboard/calendar', label: 'Calendar', Icon: IconCalendar },
   { href: '/dashboard/settings', label: 'Settings', Icon: IconSettings },
 ];
 export function DashboardNav({ organizationName, userEmail }: { organizationName?: string; userEmail?: string }) {
@@ -31,7 +31,7 @@ export function DashboardNav({ organizationName, userEmail }: { organizationName
       <div className="sidebar-tip sidebar-label"><span className="text-accent"><IconBuilding /></span><strong>A place worth sharing.</strong><p>Bring your next property into your workspace.</p><Link href="/dashboard/properties/new">Add property <IconPlus className="size-4" /></Link></div>
       <Link href="/dashboard/settings/account" className="sidebar-account" aria-label="Account settings" title={userEmail || 'Account settings'}><span className="account-avatar">{(userEmail || 'H').charAt(0).toUpperCase()}</span><span className="sidebar-label"><strong>Your account</strong><small>{userEmail || 'Manage your profile'}</small></span><IconSettings className="size-4 sidebar-label" /></Link>
     </nav>
-    <nav data-testid="dashboard-tabbar" aria-label="Main" className="workspace-mobile-nav md:hidden">{[{ href:'/dashboard',label:'Home',Icon:IconHome },{href:'/dashboard/properties',label:'Properties',Icon:IconBuilding},{href:'/dashboard/settings',label:'More',Icon:IconMore}].map(({href,label,Icon})=><Link href={href} key={href} aria-current={active(href)?'page':undefined}><Icon /><span>{label}</span></Link>)}</nav>
+    <nav data-testid="dashboard-tabbar" aria-label="Main" className="workspace-mobile-nav md:hidden">{[{ href:'/dashboard',label:'Home',Icon:IconHome },{href:'/dashboard/properties',label:'Properties',Icon:IconBuilding},{href:'/dashboard/calendar',label:'Calendar',Icon:IconCalendar},{href:'/dashboard/settings',label:'More',Icon:IconMore}].map(({href,label,Icon})=><Link href={href} key={href} aria-current={active(href)?'page':undefined}><Icon /><span>{label}</span></Link>)}</nav>
   </>;
 }
 

@@ -260,6 +260,7 @@ body {
 .month-grid-title { font-size: 15px; font-weight: 600; color: var(--ink); }
 .month-grid-weekdays, .month-grid-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .month-grid-weekdays span { text-align: center; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.month-grid-row { display: contents; } /* ARIA rows that don't break the 7-column grid */
 .month-grid-cell { display: block; }
 .month-grid-day { display: grid; place-items: center; inline-size: 100%; min-block-size: 44px; border-radius: 10px; font-size: 14px; color: var(--ink); background: transparent; border: 1px solid transparent; }
 button.month-grid-day { cursor: pointer; transition: background 150ms, border-color 150ms; }

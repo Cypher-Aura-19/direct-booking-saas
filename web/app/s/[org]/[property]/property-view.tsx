@@ -4,10 +4,13 @@ import { buttonClasses } from "@/components/ui/button";
 import { IconArrowLeft, IconCheck, IconChat, IconPhoto, IconUser } from "@/components/ui/icons";
 import { formatRupees } from "@/lib/properties/basics";
 import { amenityLabel } from "@/lib/properties/listing";
-import { whatsappLink, type PublicOrganization, type PublicProperty } from "@/lib/public/catalogue";
+import { whatsappLink, type PublicAvailability, type PublicOrganization, type PublicProperty } from "@/lib/public/catalogue";
 import { propertyTypeLabel } from "../catalogue-view";
+import { StayPicker } from "./stay-picker";
 
-export function PropertyView({ organization, property }: { organization: PublicOrganization; property: PublicProperty }) {
+type Props = { organization: PublicOrganization; property: PublicProperty; availability: PublicAvailability; today: string };
+
+export function PropertyView({ organization, property, availability, today }: Props) {
   const price = formatRupees(property.baseRateCents);
   const whatsapp = whatsappLink(organization.phone);
   const ask = whatsapp ? `${whatsapp}?text=${encodeURIComponent(`Hi, I'd like to ask about staying at ${property.name}.`)}` : null;
@@ -67,12 +70,17 @@ export function PropertyView({ organization, property }: { organization: PublicO
             </section>
           )}
 
+          <section className="property-section" aria-labelledby="availability-title">
+            <h2 id="availability-title" className="property-section-title">When you can stay</h2>
+            <StayPicker baseRateCents={property.baseRateCents} availability={availability} today={today} whatsappHref={whatsapp} propertyName={property.name} />
+          </section>
+
           <div className="property-section"><HostCard organization={organization} /></div>
         </article>
 
         <aside className="booking-panel" aria-label="Price and contact">
           <p className="booking-price"><strong>{price}</strong> / night</p>
-          <p className="booking-note">Dates, availability and booking requests are coming soon. For now, message the host to ask.</p>
+          <p className="booking-note">Pick your dates below to see the total, then message the host to book.</p>
           {ask && <a href={ask} className={buttonClasses("primary", "w-full")} rel="noopener"><IconChat className="size-4" /> Ask about dates on WhatsApp</a>}
         </aside>
       </div>

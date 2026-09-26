@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { nightStatus, quoteStay, requiredMinimumStay, type QuoteInput } from "./quote";
+import { lastCheckout, nightStatus, quoteStay, requiredMinimumStay, type QuoteInput } from "./quote";
 
 const input: QuoteInput = {
   baseRateCents: 1_000_000,
@@ -39,5 +39,17 @@ describe("quoteStay", () => {
     expect(quoteStay("2026-10-20", "2026-10-20", input)).toMatchObject({ ok: false, reason: "invalid" });
     expect(quoteStay("nope", "2026-10-20", input)).toMatchObject({ ok: false, reason: "invalid" });
     expect(quoteStay("2026-09-20", "2026-09-25", input)).toMatchObject({ ok: false, reason: "past" });
+  });
+});
+
+describe("lastCheckout", () => {
+  // @req CAL-08
+  it("is the first unavailable night after check-in, since checkout is that morning", () => {
+    expect(lastCheckout("2026-10-05", input, "2027-10-02")).toBe("2026-10-10");
+    expect(lastCheckout("2026-10-09", input, "2027-10-02")).toBe("2026-10-10");
+  });
+
+  it("is the horizon when nothing is blocked after check-in", () => {
+    expect(lastCheckout("2026-10-12", input, "2027-10-02")).toBe("2027-10-02");
   });
 });

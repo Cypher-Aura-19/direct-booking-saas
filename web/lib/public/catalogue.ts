@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { addDays, type DateRange } from "@/lib/availability/dates";
+import type { RateRule } from "@/lib/availability/quote";
 import type { Amenity } from "@/lib/properties/listing";
 import { PHOTO_BUCKET } from "@/lib/properties/photos";
 import { PHOTO_WIDTHS, variantPath } from "@/lib/properties/photo-variants";
@@ -6,6 +8,7 @@ import { PHOTO_WIDTHS, variantPath } from "@/lib/properties/photo-variants";
 export type PublicOrganization = { id: string; slug: string; name: string; headline: string; city: string; phone: string; hostingSince: number };
 export type PublicPhoto = { id: string; src: string; srcSet: string };
 export type PublicPropertySummary = { id: string; slug: string; name: string; propertyType: string; baseRateCents: number; maxGuests: number; cover: PublicPhoto | null };
+export type PublicAvailability = { minimumStay: number; rules: RateRule[]; blocks: DateRange[] };
 export type PublicProperty = PublicPropertySummary & { description: string; amenities: Amenity[]; photos: PublicPhoto[] };
 
 // Must outlive the page cache (revalidate = 3600 on the public routes), or a
@@ -121,6 +124,36 @@ export async function getPublishedProperty(supabase: SupabaseClient, organizatio
   const coverRow = rows.find((r) => r.is_cover);
   const cover = coverRow ? sources.get(coverRow.id) ?? null : photos[0] ?? null;
   return { ...summary(data as PropertyRow, cover), description: data.description, amenities: data.amenities as Amenity[], photos };
+}
+
+// The next 12 months of a published property's blocked nights and seasonal
+// rates, for the guest stay picker. Anon's grants (20260926030000) cover only
+// these columns, and only for published properties: a draft reads as empty.
+export async function getPublicAvailability(supabase: SupabaseClient, propertyId: string, today: string): Promise<PublicAvailability> {
+  const horizon = addDays(today, 366);
+  const [property, blocks, rules] = await Promise.all([
+    supabase.from("properties").select("minimum_stay").eq("id", propertyId).maybeSingle(),
+    supabase
+      .from("availability_blocks")
+      .select("start_date, end_date")
+      .eq("property_id", propertyId)
+      .gt("end_date", today)
+      .lt("start_date", horizon)
+      .order("start_date", { ascending: true }),
+    supabase
+      .from("seasonal_pricing_rules")
+      .select("start_date, end_date, rate_cents, minimum_stay")
+      .eq("property_id", propertyId)
+      .gt("end_date", today)
+      .lt("start_date", horizon)
+      .order("start_date", { ascending: true }),
+  ]);
+  for (const { error } of [property, blocks, rules]) if (error) throw error;
+  return {
+    minimumStay: property.data?.minimum_stay ?? 1,
+    blocks: (blocks.data ?? []).map((b) => ({ start: b.start_date, end: b.end_date })),
+    rules: (rules.data ?? []).map((r) => ({ start: r.start_date, end: r.end_date, rateCents: r.rate_cents, minimumStay: r.minimum_stay })),
+  };
 }
 
 // Pakistani numbers are written 0300 1234567, +92 300 1234567 or 92300…;

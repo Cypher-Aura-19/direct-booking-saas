@@ -5,7 +5,11 @@ import { createProperty } from "@/lib/properties/basics";
 import { PHOTO_WIDTHS } from "@/lib/properties/photo-variants";
 import { uploadPropertyPhoto } from "@/lib/properties/photos";
 import { updateListing } from "@/lib/properties/listing";
-import { getPublicOrganization, getPublishedProperty, listPublishedProperties, telLink, whatsappLink } from "./catalogue";
+import { addDays } from "@/lib/availability/dates";
+import { createBlock } from "@/lib/availability/blocks";
+import { createSeasonalRule } from "@/lib/availability/pricing";
+import { localToday } from "@/lib/dashboard/analytics";
+import { getPublicAvailability, getPublicOrganization, getPublishedProperty, listPublishedProperties, telLink, whatsappLink } from "./catalogue";
 
 const cleanups: Array<() => Promise<void>> = [];
 afterEach(async () => {
@@ -106,6 +110,25 @@ it("a draft property is not readable by slug, even with the right organisation",
   const { host, draftId } = await hostWithCatalogue();
   const { data } = await host.supabase.from("properties").select("slug").eq("id", draftId).single();
   expect(await getPublishedProperty(anonClient(), host.organizationId, data!.slug)).toBeNull();
+});
+
+// @req CAL-07
+// @req CAL-08
+it("anyone can read a published property's blocks, seasonal rates and minimum stay, but not a draft's", async () => {
+  const { host, publishedId, draftId } = await hostWithCatalogue();
+  const today = localToday();
+  const block = { start: addDays(today, 30), end: addDays(today, 33) };
+  const rule = { start: addDays(today, 60), end: addDays(today, 67), rateCents: 2_500_000, minimumStay: 3 };
+  for (const id of [publishedId, draftId]) {
+    expect(await createBlock(host.supabase, id, block)).toEqual({ error: null });
+    expect(await createSeasonalRule(host.supabase, id, rule)).toEqual({ error: null });
+  }
+  await host.supabase.from("properties").update({ minimum_stay: 2 }).eq("id", publishedId);
+
+  expect(await getPublicAvailability(anonClient(), publishedId, today)).toEqual({ minimumStay: 2, blocks: [block], rules: [rule] });
+  expect(await getPublicAvailability(anonClient(), draftId, today)).toEqual({ minimumStay: 1, blocks: [], rules: [] });
+  // Only the next 12 months are sent to the page.
+  expect(await getPublicAvailability(anonClient(), publishedId, addDays(today, -400))).toMatchObject({ blocks: [], rules: [] });
 });
 
 describe("contact links", () => {

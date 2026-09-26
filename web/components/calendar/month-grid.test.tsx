@@ -14,6 +14,10 @@ it("lays out a month Monday-first with the right day count and states", () => {
   );
   expect(screen.getByText("October 2026")).toBeInTheDocument();
   expect(screen.getAllByRole("gridcell")).toHaveLength(31);
+  // October 2026 starts on a Thursday: 3 pad cells + 31 days = 5 week rows.
+  const rows = screen.getAllByRole("row");
+  expect(rows).toHaveLength(5);
+  for (const row of rows) expect(row.parentElement).toHaveAttribute("role", "grid");
   expect(screen.getByRole("button", { name: "2026-10-06 available" })).toBeEnabled();
   expect(screen.queryByRole("button", { name: "2026-10-10 blocked" })).toBeNull();
   screen.getByRole("button", { name: "2026-10-06 available" }).click();

@@ -32,3 +32,10 @@ export function quoteStay(checkIn: string, checkOut: string, input: QuoteInput):
   }));
   return { ok: true, nights: nights.length, totalCents: breakdown.reduce((s, n) => s + n.rateCents, 0), breakdown, minimumStay };
 }
+
+// The last date a guest who checks in on `checkIn` may pick as checkout: the
+// morning of the first unavailable night after it (checkout happens before
+// that night starts), or `horizon` when nothing is blocked before it.
+export function lastCheckout(checkIn: string, input: Pick<QuoteInput, "blocks">, horizon: string): string {
+  return input.blocks.reduce((last, b) => (b.start > checkIn && b.start < last ? b.start : last), horizon);
+}

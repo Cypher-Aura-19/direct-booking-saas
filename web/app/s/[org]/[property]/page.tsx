@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
-import { getPublicOrganization, getPublishedProperty } from "@/lib/public/catalogue";
+import { localToday } from "@/lib/dashboard/analytics";
+import { getPublicAvailability, getPublicOrganization, getPublishedProperty } from "@/lib/public/catalogue";
 import { formatRupees } from "@/lib/properties/basics";
 import { PropertyView } from "./property-view";
 
@@ -15,7 +16,10 @@ const load = cache(async (orgSlug: string, propertySlug: string) => {
   const organization = await getPublicOrganization(supabase, orgSlug);
   if (!organization) return null;
   const property = await getPublishedProperty(supabase, organization.id, propertySlug);
-  return property ? { organization, property } : null;
+  if (!property) return null;
+  const today = localToday();
+  const availability = await getPublicAvailability(supabase, property.id, today);
+  return { organization, property, availability, today };
 });
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -33,5 +37,5 @@ export default async function PropertyPage({ params }: Props) {
   const { org, property } = await params;
   const data = await load(org, property);
   if (!data) notFound();
-  return <PropertyView organization={data.organization} property={data.property} />;
+  return <PropertyView organization={data.organization} property={data.property} availability={data.availability} today={data.today} />;
 }

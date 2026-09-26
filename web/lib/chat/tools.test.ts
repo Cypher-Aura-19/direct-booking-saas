@@ -71,6 +71,18 @@ test("invalid args return ok:false without throwing", async () => {
   expect(result).toMatchObject({ ok: false });
 });
 
+// A malformed (non-uuid) property id makes every `.eq("...id", propertyId)`
+// read fail with a genuine Postgres error (22P02, "invalid input syntax for
+// type uuid" — the same failure mode other libs in this codebase special-case,
+// e.g. properties/basics.ts's getProperty), not a guest-input problem. The
+// function's contract is to never throw regardless: this is the DB-hiccup
+// path the orchestrator's tool-call loop must never crash on.
+test("a genuine DB error resolves ok:false instead of throwing", async () => {
+  await expect(
+    runCheckStay(service, "not-a-valid-uuid", { check_in: "2026-10-10", check_out: "2026-10-12" }, TODAY),
+  ).resolves.toMatchObject({ ok: false });
+});
+
 test("parseRespondArgs accepts valid args", () => {
   expect(parseRespondArgs({ reply: "Hi there", escalate: false })).toEqual({
     reply: "Hi there",

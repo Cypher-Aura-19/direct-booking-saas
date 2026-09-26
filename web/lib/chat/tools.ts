@@ -71,6 +71,10 @@ type CheckStayResult =
   | { ok: true; nights: number; total: string; nightly: { rate: string; nights: number }[] }
   | { ok: false; reason: string; minimumStay: number };
 
+// Groups only *consecutive* same-rate nights (date-ordered), not all nights
+// at that rate overall: this is what reads naturally to a guest ("2 nights
+// at Rs X, then 2 at Rs Y"), and matches how quoteStay's breakdown is
+// already ordered by night.
 function groupByRate(breakdown: { night: string; rateCents: number }[]): { rateCents: number; nights: number }[] {
   const groups: { rateCents: number; nights: number }[] = [];
   for (const { rateCents } of breakdown) {
@@ -84,6 +88,7 @@ function groupByRate(breakdown: { night: string; rateCents: number }[]): { rateC
 const UNAVAILABLE_REASON = "Those dates are not available.";
 const INVALID_REASON = "Enter valid check-in and check-out dates.";
 const PAST_REASON = "Those dates are in the past.";
+const DB_ERROR_REASON = "Something went wrong checking availability. Please try again.";
 
 export async function runCheckStay(
   service: SupabaseClient,
@@ -96,49 +101,57 @@ export async function runCheckStay(
   const checkOut = typeof value.check_out === "string" ? value.check_out : "";
   if (!isIsoDate(checkIn) || !isIsoDate(checkOut)) return { ok: false, reason: INVALID_REASON, minimumStay: 1 };
 
-  const horizon = addDays(today, AVAILABILITY_HORIZON_DAYS);
-  const [property, blocks, rules] = await Promise.all([
-    service.from("properties").select("base_rate_cents, minimum_stay").eq("id", propertyId).maybeSingle(),
-    service
-      .from("availability_blocks")
-      .select("start_date, end_date")
-      .eq("property_id", propertyId)
-      .gt("end_date", today)
-      .lt("start_date", horizon),
-    service
-      .from("seasonal_pricing_rules")
-      .select("start_date, end_date, rate_cents, minimum_stay")
-      .eq("property_id", propertyId)
-      .gt("end_date", today)
-      .lt("start_date", horizon),
-  ]);
-  for (const { error } of [property, blocks, rules]) if (error) throw error;
-  if (!property.data) return { ok: false, reason: INVALID_REASON, minimumStay: 1 };
+  // The documented signature never throws: this is called from inside the
+  // orchestrator's bounded tool-call loop (spec §5), and a transient DB
+  // hiccup here must resolve to a gracefully escalatable result, never an
+  // uncaught rejection that would crash a guest's turn.
+  try {
+    const horizon = addDays(today, AVAILABILITY_HORIZON_DAYS);
+    const [property, blocks, rules] = await Promise.all([
+      service.from("properties").select("base_rate_cents, minimum_stay").eq("id", propertyId).maybeSingle(),
+      service
+        .from("availability_blocks")
+        .select("start_date, end_date")
+        .eq("property_id", propertyId)
+        .gt("end_date", today)
+        .lt("start_date", horizon),
+      service
+        .from("seasonal_pricing_rules")
+        .select("start_date, end_date, rate_cents, minimum_stay")
+        .eq("property_id", propertyId)
+        .gt("end_date", today)
+        .lt("start_date", horizon),
+    ]);
+    for (const { error } of [property, blocks, rules]) if (error) throw error;
+    if (!property.data) return { ok: false, reason: INVALID_REASON, minimumStay: 1 };
 
-  const quote = quoteStay(checkIn, checkOut, {
-    baseRateCents: property.data.base_rate_cents,
-    minimumStay: property.data.minimum_stay,
-    rules: (rules.data ?? []).map((r) => ({ start: r.start_date, end: r.end_date, rateCents: r.rate_cents, minimumStay: r.minimum_stay })),
-    blocks: (blocks.data ?? []).map((b) => ({ start: b.start_date, end: b.end_date })),
-    today,
-  });
+    const quote = quoteStay(checkIn, checkOut, {
+      baseRateCents: property.data.base_rate_cents,
+      minimumStay: property.data.minimum_stay,
+      rules: (rules.data ?? []).map((r) => ({ start: r.start_date, end: r.end_date, rateCents: r.rate_cents, minimumStay: r.minimum_stay })),
+      blocks: (blocks.data ?? []).map((b) => ({ start: b.start_date, end: b.end_date })),
+      today,
+    });
 
-  if (!quote.ok) {
-    const reason =
-      quote.reason === "unavailable"
-        ? UNAVAILABLE_REASON
-        : quote.reason === "minimum_stay"
-          ? `The minimum stay for those dates is ${quote.minimumStay} nights.`
-          : quote.reason === "past"
-            ? PAST_REASON
-            : INVALID_REASON;
-    return { ok: false, reason, minimumStay: quote.minimumStay };
+    if (!quote.ok) {
+      const reason =
+        quote.reason === "unavailable"
+          ? UNAVAILABLE_REASON
+          : quote.reason === "minimum_stay"
+            ? `The minimum stay for those dates is ${quote.minimumStay} nights.`
+            : quote.reason === "past"
+              ? PAST_REASON
+              : INVALID_REASON;
+      return { ok: false, reason, minimumStay: quote.minimumStay };
+    }
+
+    return {
+      ok: true,
+      nights: quote.nights,
+      total: formatRupees(quote.totalCents),
+      nightly: groupByRate(quote.breakdown).map((g) => ({ rate: formatRupees(g.rateCents), nights: g.nights })),
+    };
+  } catch {
+    return { ok: false, reason: DB_ERROR_REASON, minimumStay: 1 };
   }
-
-  return {
-    ok: true,
-    nights: quote.nights,
-    total: formatRupees(quote.totalCents),
-    nightly: groupByRate(quote.breakdown).map((g) => ({ rate: formatRupees(g.rateCents), nights: g.nights })),
-  };
 }

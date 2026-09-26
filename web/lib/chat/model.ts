@@ -113,7 +113,8 @@ export class ScriptedModel implements ChatModel {
 
   constructor(private readonly turns: ModelTurn[]) {}
 
-  async next(system: string, history: ModelMessage[]): Promise<ModelTurn> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for signature parity with ChatModel.next
+  async next(system: string, history: ModelMessage[], _tools?: ToolDeclaration[]): Promise<ModelTurn> {
     this.calls.push({ system, history });
     if (this.index >= this.turns.length) return { error: "script exhausted" };
     return this.turns[this.index++];

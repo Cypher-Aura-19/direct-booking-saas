@@ -19,6 +19,13 @@ export type ChatView = {
   escalated: boolean;
 };
 
+// `invalidToken: true` means the token itself is bad (malformed, or no
+// conversation matches it) — the caller should stop using it. Its absence
+// means the token may still be good; the failure was a transient one (a DB
+// or network hiccup), and the caller should keep the token and let the
+// guest retry rather than treating it as "not found".
+export type ChatLoadError = { error: string; invalidToken?: true };
+
 const GENERIC_ERROR = "Something went wrong. Please try again in a moment.";
 const INVALID_LINK = "This chat link isn't valid.";
 const NOT_TAKING_MESSAGES = "This place isn't taking messages right now.";
@@ -41,12 +48,12 @@ export async function startChatAction(propertyId: string): Promise<{ token: stri
   }
 }
 
-export async function loadChatAction(token: string): Promise<ChatView | { error: string }> {
-  if (typeof token !== "string" || !isToken(token)) return { error: INVALID_LINK };
+export async function loadChatAction(token: string): Promise<ChatView | ChatLoadError> {
+  if (typeof token !== "string" || !isToken(token)) return { error: INVALID_LINK, invalidToken: true };
   try {
     const service = createServiceClient();
     const conversation = await getConversation(service, token);
-    if (!conversation) return { error: INVALID_LINK };
+    if (!conversation) return { error: INVALID_LINK, invalidToken: true };
     return toView(await listMessages(service, conversation.id), conversation.escalated);
   } catch {
     console.error("[chat] could not load a conversation");

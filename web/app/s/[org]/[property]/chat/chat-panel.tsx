@@ -52,9 +52,18 @@ export function ChatPanel({ propertyId, propertyName, hostName, initialToken }: 
   const apply = useCallback((view: ChatView) => {
     setMessages(view.messages);
     setEscalated(view.escalated);
+    setError(null);
   }, []);
 
   // Restore: a token from a saved link wins over the one this browser kept.
+  // Only an actually-invalid token (malformed, or no conversation matches
+  // it) forgets the saved token here. A transient failure — a DB or network
+  // hiccup — must NOT drop it: that would be the guest's only way back to
+  // their conversation (and the host's replies in it), and their very next
+  // message would silently start a brand-new conversation instead, split
+  // from the one the host already sees. So on a transient failure the token
+  // is kept (in storage and in state, so the guest's next message still
+  // goes to the same conversation) and a retry-able error is shown instead.
   useEffect(() => {
     const fromLink = initialToken && TOKEN.test(initialToken) ? initialToken : null;
     const kept = storage.get(key);
@@ -66,13 +75,22 @@ export function ChatPanel({ propertyId, propertyName, hostName, initialToken }: 
       .then((view) => {
         if (cancelled) return;
         if ("error" in view) {
-          storage.remove(key);
+          if (view.invalidToken) {
+            storage.remove(key);
+          } else {
+            setToken(candidate);
+            setError(GENERIC_ERROR);
+          }
           return;
         }
         setToken(candidate);
         apply(view);
       })
-      .catch(() => { /* offline: the guest can still start a new chat */ });
+      .catch(() => {
+        if (cancelled) return;
+        setToken(candidate);
+        setError(GENERIC_ERROR);
+      });
     return () => { cancelled = true; };
   }, [key, initialToken, apply]);
 

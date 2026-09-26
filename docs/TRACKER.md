@@ -128,7 +128,7 @@ Status is computed, never asserted.
 | AI-14 | M7 | done | web/lib/chat/agent.test.ts, web/lib/chat/language.test.ts |
 | AI-15 | M7 | done | web/lib/chat/agent.test.ts |
 | AI-16 | M7 | done | web/lib/chat/agent.test.ts, web/lib/chat/language.test.ts |
-| AI-17 | M7 | done | web/lib/supabase/service.test.ts |
+| AI-17 | M7 | done | web/lib/chat/conversations.test.ts, web/lib/supabase/service.test.ts |
 | AI-18 | M7 | done | web/app/s/[org]/[property]/chat/chat-panel.test.tsx |
 | AIC-01 | M8 | todo | — |
 | AIC-02 | M8 | todo | — |
@@ -217,7 +217,7 @@ Status is computed, never asserted.
 | SEC-03 | Cross-cutting | todo | — |
 | SEC-04 | Cross-cutting | todo | — |
 | SEC-05 | Cross-cutting | todo | — |
-| SEC-06 | Cross-cutting | done | tests/db/m7-guest-chat.test.mjs, web/lib/chat/conversations.test.ts |
+| SEC-06 | Cross-cutting | done | tests/db/m7-guest-chat.test.mjs, web/app/s/[org]/[property]/chat/chat-panel.test.tsx, web/lib/chat/conversations.test.ts |
 | SEC-07 | Cross-cutting | done | tests/db/m7-guest-chat.test.mjs, web/lib/chat/conversations.test.ts |
 | SEC-08 | Cross-cutting | done | web/lib/chat/agent.test.ts |
 | PERF-01 | Cross-cutting | todo | — |

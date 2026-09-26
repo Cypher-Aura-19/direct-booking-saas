@@ -80,19 +80,26 @@ export async function getConversation(service: SupabaseClient, token: string): P
 }
 
 // Oldest first, capped at 200 (spec §4) so a very long-running conversation
-// never sends an unbounded payload to the model or the browser.
+// never sends an unbounded payload to the model or the browser. The query
+// itself fetches the NEWEST 200 (descending, with the same id tie-break
+// `recentHistory` in agent.ts uses for its own capped query, since
+// `created_at` alone doesn't guarantee a unique order) and the result is
+// reversed in JS back to oldest-first — the opposite (ascending + limit)
+// would freeze on the same oldest 200 rows forever once a conversation
+// passes the cap, so new messages would never appear.
 export async function listMessages(service: SupabaseClient, conversationId: string): Promise<ChatMessage[]> {
   const { data, error } = await service
     .from("messages")
     .select("id, sender, body, created_at")
     .eq("conversation_id", conversationId)
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(200);
   if (error) {
     if (error.code !== "22P02") throw error;
     return [];
   }
-  return (data ?? []).map((row) => ({
+  return (data ?? []).reverse().map((row) => ({
     id: row.id,
     sender: row.sender as Sender,
     body: row.body,

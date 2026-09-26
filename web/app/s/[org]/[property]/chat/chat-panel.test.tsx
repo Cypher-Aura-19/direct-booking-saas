@@ -86,12 +86,42 @@ it("keeps the token so a returning guest sees their history, and offers a saved 
   expect(start).toHaveBeenCalledTimes(1);
 });
 
-it("forgets a stored token the server no longer recognises", async () => {
+// @req SEC-06
+it("forgets a stored token the server marks invalid", async () => {
   localStorage.setItem(KEY, TOKEN);
-  load.mockResolvedValue({ error: "This chat link is not valid." });
+  load.mockResolvedValue({ error: "This chat link isn't valid.", invalidToken: true });
   render(panel());
   await waitFor(() => expect(localStorage.getItem(KEY)).toBeNull());
   expect(screen.getByRole("group", { name: /suggested questions/i })).toBeInTheDocument();
+});
+
+// @req AI-03
+it("keeps a stored token on a transient load failure and shows a retry-able error, instead of forgetting it", async () => {
+  localStorage.setItem(KEY, TOKEN);
+  load.mockResolvedValue({ error: "Something went wrong. Please try again in a moment." });
+  render(panel());
+  expect(await screen.findByRole("alert")).toHaveTextContent(/try again/i);
+  // Not forgotten: the token survives in storage...
+  expect(localStorage.getItem(KEY)).toBe(TOKEN);
+  // ...and in the component's own state, so the guest's next message still
+  // reaches this same conversation rather than silently starting a new one.
+  fireEvent.change(screen.getByRole("textbox", { name: /your message/i }), { target: { value: "Still there?" } });
+  fireEvent.click(screen.getByRole("button", { name: "Send" }));
+  await screen.findByText("Yes, the weekend of 10 October is open.");
+  expect(send).toHaveBeenCalledWith(TOKEN, "Still there?");
+  expect(start).not.toHaveBeenCalled();
+});
+
+// @req AI-03
+it("a transient load failure on the same rejected token still keeps it if the token is not marked invalid", async () => {
+  // Guards against distinguishing invalid-vs-transient by string content
+  // rather than by the discriminated field: same generic wording, but no
+  // `invalidToken` flag, must not clear storage.
+  localStorage.setItem(KEY, TOKEN);
+  load.mockResolvedValue({ error: "This chat link isn't valid." });
+  render(panel());
+  await screen.findByRole("alert");
+  expect(localStorage.getItem(KEY)).toBe(TOKEN);
 });
 
 it("ignores a malformed stored token without calling the server", () => {

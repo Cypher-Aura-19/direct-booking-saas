@@ -127,6 +127,46 @@ test("addMessage round-trips and listMessages returns them oldest first", async 
   }
 });
 
+// @req AI-17
+test("listMessages returns the newest 200 messages, oldest first, once a conversation passes the cap", async () => {
+  const host = await createTestHostWithOrg();
+  try {
+    const propertyId = await publishedProperty(host);
+    const service = supabaseAdmin();
+    const { token } = (await startConversation(service, propertyId)) as { token: string };
+    const conversation = await getConversation(service, token);
+
+    // Insert 205 messages directly with explicit, strictly increasing
+    // created_at values (one second apart) so ordering is deterministic
+    // regardless of how fast the inserts execute — a plain sequential
+    // addMessage loop would rely on now() ticking forward between round
+    // trips, which is not guaranteed at this volume.
+    const TOTAL = 205;
+    const base = Date.now();
+    const rows = Array.from({ length: TOTAL }, (_, i) => ({
+      conversation_id: conversation!.id,
+      sender: "guest" as const,
+      body: `msg-${String(i).padStart(3, "0")}`,
+      created_at: new Date(base + i * 1000).toISOString(),
+    }));
+    const { error: insertError } = await service.from("messages").insert(rows);
+    expect(insertError).toBeNull();
+
+    const messages = await listMessages(service, conversation!.id);
+    expect(messages).toHaveLength(200);
+    // The newest 200 of 205 are indices 5..204 ("msg-005".."msg-204").
+    expect(messages[0].body).toBe("msg-005");
+    expect(messages[messages.length - 1].body).toBe("msg-204");
+    const bodies = messages.map((m) => m.body);
+    expect(bodies).not.toContain("msg-000");
+    expect(bodies).not.toContain("msg-004");
+    // Still oldest-first within the returned window.
+    expect(bodies).toEqual([...bodies].sort());
+  } finally {
+    await host.cleanup();
+  }
+});
+
 test("escalate marks the conversation escalated, disables ai, and records the reason", async () => {
   const host = await createTestHostWithOrg();
   try {

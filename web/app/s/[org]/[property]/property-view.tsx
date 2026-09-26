@@ -6,6 +6,7 @@ import { formatRupees } from "@/lib/properties/basics";
 import { amenityLabel } from "@/lib/properties/listing";
 import { whatsappLink, type PublicAvailability, type PublicOrganization, type PublicProperty } from "@/lib/public/catalogue";
 import { propertyTypeLabel } from "../catalogue-view";
+import { ChatPanel } from "./chat/chat-panel";
 import { StayPicker } from "./stay-picker";
 
 type Props = { organization: PublicOrganization; property: PublicProperty; availability: PublicAvailability; today: string };
@@ -75,22 +76,29 @@ export function PropertyView({ organization, property, availability, today }: Pr
             <StayPicker baseRateCents={property.baseRateCents} availability={availability} today={today} whatsappHref={whatsapp} propertyName={property.name} />
           </section>
 
+          <div id="chat" className="property-section chat-section">
+            <h2 className="property-section-title">Ask a question</h2>
+            <ChatPanel propertyId={property.id} propertyName={property.name} hostName={organization.name} />
+          </div>
+
           <div className="property-section"><HostCard organization={organization} /></div>
         </article>
 
         <aside className="booking-panel" aria-label="Price and contact">
           <p className="booking-price"><strong>{price}</strong> / night</p>
           <p className="booking-note">Pick your dates below to see the total, then message the host to book.</p>
-          {ask && <a href={ask} className={buttonClasses("primary", "w-full")} rel="noopener"><IconChat className="size-4" /> Ask about dates on WhatsApp</a>}
+          <a href="#chat" className={buttonClasses("primary", "w-full")}><IconChat className="size-4" /> Ask a question</a>
+          {ask && <a href={ask} className={buttonClasses("secondary", "w-full")} rel="noopener">Message on WhatsApp</a>}
         </aside>
       </div>
 
-      {ask && (
-        <div className="booking-bar" role="region" aria-label="Book this place">
-          <p><strong>{price}</strong> / night</p>
-          <a href={ask} className={buttonClasses("primary")} rel="noopener">Ask on WhatsApp</a>
+      <div className="booking-bar" role="region" aria-label="Book this place">
+        <p className="booking-bar-price"><strong>{price}</strong> <span>/ night</span></p>
+        <div className="booking-bar-actions">
+          {ask && <a href={ask} className={buttonClasses("ghost", "booking-bar-whatsapp")} rel="noopener">WhatsApp</a>}
+          <a href="#chat" className={buttonClasses("primary", "booking-bar-ask")}>Ask a question</a>
         </div>
-      )}
+      </div>
     </main>
   );
 }

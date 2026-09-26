@@ -1,6 +1,9 @@
 import { render, screen, within } from "@testing-library/react";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { PropertyView } from "./property-view";
+
+// The embedded chat's Server Actions are the network boundary; nothing here sends a message.
+vi.mock("./chat/actions", () => ({ startChatAction: vi.fn(), sendMessageAction: vi.fn(), loadChatAction: vi.fn() }));
 
 const organization = { id: "o1", slug: "altit", name: "Altit Heights", headline: "", city: "Hunza", phone: "0300 1234567", hostingSince: 2026 };
 const photo = (id: string) => ({ id, src: `https://img/${id}.webp`, srcSet: `https://img/${id}.w480.webp 480w` });
@@ -43,4 +46,30 @@ it("has a section to pick dates and see the total", () => {
   expect(screen.getByRole("heading", { name: "When you can stay" })).toBeInTheDocument();
   expect(screen.getByText("October 2026")).toBeInTheDocument();
   expect(screen.getByText(/pick your dates below to see the total/i)).toBeInTheDocument();
+});
+
+// @req AI-04
+it("has an inline 'Ask a question' chat between availability and the host card", () => {
+  const { container } = render(<PropertyView organization={organization} property={property} {...stay} />);
+  const chat = screen.getByRole("region", { name: "Ask a question" });
+  expect(chat.closest("#chat")).toHaveClass("property-section");
+  expect(screen.getByText("Ask Altit Heights's assistant anything about River Hut")).toBeInTheDocument();
+  const order = [...container.querySelectorAll("#availability-title, #chat, .host-card")].map((el) => el.id || el.className);
+  expect(order).toEqual(["availability-title", "chat", "host-card"]);
+});
+
+it("the booking panel and bar point to the chat, with WhatsApp as the other option", () => {
+  render(<PropertyView organization={organization} property={property} {...stay} />);
+  const panel = screen.getByRole("complementary", { name: /price and contact/i });
+  expect(within(panel).getByRole("link", { name: /ask a question/i })).toHaveAttribute("href", "#chat");
+  expect(within(panel).getByRole("link", { name: /whatsapp/i })).toHaveAttribute("href", expect.stringContaining("https://wa.me/923001234567"));
+  const bar = screen.getByRole("region", { name: /book this place/i });
+  expect(within(bar).getByRole("link", { name: /ask a question/i })).toHaveAttribute("href", "#chat");
+  expect(within(bar).getByRole("link", { name: /whatsapp/i })).toBeInTheDocument();
+});
+
+it("without a phone number the chat is still offered and nothing links to WhatsApp", () => {
+  render(<PropertyView organization={{ ...organization, phone: "" }} property={property} {...stay} />);
+  expect(within(screen.getByRole("region", { name: /book this place/i })).getByRole("link", { name: /ask a question/i })).toHaveAttribute("href", "#chat");
+  expect(screen.queryByRole("link", { name: /whatsapp/i })).not.toBeInTheDocument();
 });

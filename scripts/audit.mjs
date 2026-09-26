@@ -29,7 +29,9 @@ function walk(dir) {
   const out = [];
   let entries;
   try {
-    entries = readdirSync(dir);
+    // Sorted by code unit: readdirSync order differs between NTFS and
+    // Linux filesystems, which made the generated tracker differ on CI.
+    entries = readdirSync(dir).sort();
   } catch {
     return out;
   }

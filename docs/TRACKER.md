@@ -94,7 +94,7 @@ Status is computed, never asserted.
 | PROP-15 | M4 | done | web/app/dashboard/properties/property-list.test.tsx, web/lib/properties/basics.test.ts |
 | PUB-01 | M5 | done | web/app/s/[org]/catalogue-view.test.tsx, web/lib/public/catalogue.test.ts |
 | PUB-02 | M5 | done | web/app/s/[org]/[property]/property-view.test.tsx, web/lib/properties/listing.test.ts, web/lib/public/catalogue.test.ts |
-| PUB-03 | M5 | done | web/app/s/[org]/catalogue-view.test.tsx, web/app/s/[org]/[property]/property-view.test.tsx, web/lib/public/catalogue.test.ts |
+| PUB-03 | M5 | done | web/app/s/[org]/[property]/property-view.test.tsx, web/app/s/[org]/catalogue-view.test.tsx, web/lib/public/catalogue.test.ts |
 | PUB-04 | M5 | done | web/lib/public/catalogue.test.ts, web/lib/supabase/middleware.test.ts |
 | PUB-05 | M5 | done | web/lib/properties/basics.test.ts, web/lib/supabase/middleware.test.ts |
 | PUB-06 | M5 | done | web/app/s/[org]/not-found.test.tsx, web/lib/public/catalogue.test.ts |

@@ -1,13 +1,21 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
+import path from "node:path";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: { "@": here },
+    alias: {
+      "@": here,
+      // Next/Turbopack alias the bare "server-only" specifier to its own
+      // bundled empty stub internally; Vitest doesn't know that trick, so
+      // without this alias any test that imports (even indirectly) a file
+      // starting with `import "server-only"` fails to resolve the import.
+      "server-only": path.resolve(here, "node_modules/next/dist/compiled/server-only/empty.js"),
+    },
   },
   test: {
     environment: "jsdom",

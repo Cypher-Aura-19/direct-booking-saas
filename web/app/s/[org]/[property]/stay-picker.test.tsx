@@ -40,9 +40,9 @@ it("blocked nights are shown as unavailable and can't be picked", () => {
   renderPicker();
   for (const label of [/^Saturday 10 October 2026/, /^Sunday 11 October 2026/]) {
     expect(screen.queryByRole("button", { name: label })).toBeNull();
-    expect(screen.getByLabelText(label).getAttribute("aria-label")).toMatch(/, unavailable$/);
+    expect(screen.getByRole("gridcell", { name: label }).getAttribute("aria-label")).toMatch(/, unavailable$/);
   }
-  expect(screen.getByLabelText(/^Monday 12 October 2026/).getAttribute("aria-label")).toBe("Monday 12 October 2026, available");
+  expect(day(/^Monday 12 October 2026/)).toHaveAccessibleName("Monday 12 October 2026, available");
 });
 
 // @req CAL-09

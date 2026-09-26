@@ -15,7 +15,7 @@ export function SubNav({ items }: { items: { href: string; label: string }[] }) 
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-10 items-center whitespace-nowrap rounded-pill px-4 text-sm transition ${
+              className={`flex min-h-11 items-center whitespace-nowrap rounded-pill px-4 text-sm transition ${
                 active ? "bg-ink font-medium text-white" : "text-muted hover:bg-surface-muted hover:text-ink"
               }`}
             >

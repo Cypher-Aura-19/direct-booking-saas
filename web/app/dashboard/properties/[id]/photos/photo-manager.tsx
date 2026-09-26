@@ -89,7 +89,7 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
             JPEG, PNG or WebP, up to 10 MB each. The first photo is the cover until you choose another.
           </span>
         </span>
-        <span className="mt-1 inline-flex min-h-10 items-center rounded-pill border border-hairline bg-surface px-4 text-sm font-medium text-ink shadow-[0_1px_2px_rgb(20_24_36/0.05)]">
+        <span className="mt-1 inline-flex min-h-11 items-center rounded-pill border border-hairline bg-surface px-4 text-sm font-medium text-ink shadow-[0_1px_2px_rgb(20_24_36/0.05)]">
           Choose files
         </span>
         <input
@@ -170,7 +170,7 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
                   {!photo.is_cover && (
                     <Button
                       variant="ghost"
-                      className="min-h-10 px-3"
+                      className="min-h-11 px-3"
                       disabled={pending}
                       onClick={() => run(() => setCoverPhotoAction(propertyId, photo.id))}
                     >
@@ -181,7 +181,7 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
                   <span className="ms-auto flex items-center gap-1">
                     <Button
                       variant="ghost"
-                      className="min-h-10 min-w-10 px-3"
+                      className="min-h-11 min-w-11 px-3"
                       disabled={pending || index === 0}
                       aria-label={`Move photo ${index + 1} earlier`}
                       onClick={() => move(index, index - 1)}
@@ -190,7 +190,7 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
                     </Button>
                     <Button
                       variant="ghost"
-                      className="min-h-10 min-w-10 px-3"
+                      className="min-h-11 min-w-11 px-3"
                       disabled={pending || index === photos.length - 1}
                       aria-label={`Move photo ${index + 1} later`}
                       onClick={() => move(index, index + 1)}
@@ -201,7 +201,7 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
                       variant="ghost"
                       disabled={pending}
                       aria-label={`Delete photo ${index + 1}`}
-                      className="min-h-10 min-w-10 px-3 text-destructive hover:bg-destructive/[0.07]"
+                      className="min-h-11 min-w-11 px-3 text-destructive hover:bg-destructive/[0.07]"
                       onClick={() => {
                         if (window.confirm("Delete this photo? This cannot be undone.")) {
                           run(() => deletePhotoAction(propertyId, photo.id));

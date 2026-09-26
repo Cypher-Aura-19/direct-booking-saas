@@ -96,7 +96,7 @@ export function RulesSection({
                 </span>
                 <Button
                   variant="ghost"
-                  className="min-h-10 px-3 text-destructive hover:bg-destructive/[0.07]"
+                  className="min-h-11 px-3 text-destructive hover:bg-destructive/[0.07]"
                   disabled={removing && removingId === rule.id}
                   onClick={() => remove(rule.id)}
                 >

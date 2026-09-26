@@ -109,7 +109,7 @@ Status is computed, never asserted.
 | CAL-05 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/lib/availability/pricing.test.ts, web/lib/availability/quote.test.ts |
 | CAL-06 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/lib/availability/pricing.test.ts |
 | CAL-07 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/app/s/[org]/[property]/property-view.test.tsx, web/app/s/[org]/[property]/stay-picker.test.tsx, web/lib/public/catalogue.test.ts |
-| CAL-08 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/app/s/[org]/[property]/stay-picker.test.tsx, web/lib/availability/quote.test.ts, web/lib/public/catalogue.test.ts |
+| CAL-08 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/app/s/[org]/[property]/stay-picker.test.tsx, web/components/calendar/month-grid.test.tsx, web/lib/availability/quote.test.ts, web/lib/public/catalogue.test.ts |
 | CAL-09 | M6 | done | web/app/s/[org]/[property]/stay-picker.test.tsx, web/lib/availability/quote.test.ts |
 | CAL-10 | M6 | done | tests/db/m6-availability-pricing.test.mjs, web/lib/availability/blocks.test.ts, web/lib/availability/pricing.test.ts |
 | AI-01 | M7 | todo | — |

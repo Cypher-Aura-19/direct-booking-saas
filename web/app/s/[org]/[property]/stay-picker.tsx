@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MonthGrid, type DayState } from "@/components/calendar/month-grid";
+import { formatDayName, MonthGrid, type DayState } from "@/components/calendar/month-grid";
 import { buttonClasses } from "@/components/ui/button";
 import { IconChat } from "@/components/ui/icons";
 import { addDays, daysInMonth, monthStart } from "@/lib/availability/dates";
@@ -10,8 +10,6 @@ import { formatRupees } from "@/lib/properties/basics";
 import type { PublicAvailability } from "@/lib/public/catalogue";
 
 const utc = (date: string) => new Date(`${date}T00:00:00Z`);
-const WEEKDAY = new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "UTC" });
-const LONG = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 const SHORT = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 const nights = (n: number) => `${n} ${n === 1 ? "night" : "nights"}`;
 const shiftMonth = (month: string, by: number) => (by > 0 ? addDays(month, daysInMonth(month)) : monthStart(addDays(month, -1)));
@@ -40,7 +38,7 @@ export function StayPicker({ baseRateCents, availability, today, whatsappHref, p
 
   function labelFor(date: string, state: DayState) {
     const status = date === checkIn ? "check-in" : date === checkOut ? "checkout" : state === "available" || state === "in-range" ? "available" : "unavailable";
-    return `${WEEKDAY.format(utc(date))} ${LONG.format(utc(date))}, ${status}`;
+    return `${formatDayName(date)}, ${status}`;
   }
 
   function select(date: string) {

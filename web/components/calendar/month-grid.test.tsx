@@ -23,3 +23,17 @@ it("lays out a month Monday-first with the right day count and states", () => {
   screen.getByRole("button", { name: "2026-10-06 available" }).click();
   expect(onSelect).toHaveBeenCalledWith("2026-10-06");
 });
+
+// @req CAL-08
+it("gives non-interactive days an accessible name on the gridcell, not a role-less span", () => {
+  render(
+    <MonthGrid
+      month="2026-10-15"
+      stateFor={(d) => (d === "2026-10-10" ? "blocked" : "past")}
+      labelFor={(d, s) => `${d} ${s}`}
+    />,
+  );
+  const cell = screen.getByRole("gridcell", { name: "2026-10-10 blocked" });
+  expect(cell).toHaveAttribute("aria-label", "2026-10-10 blocked");
+  expect(screen.queryByRole("button")).toBeNull();
+});

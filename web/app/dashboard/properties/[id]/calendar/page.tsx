@@ -3,7 +3,7 @@ import { listBlocks } from "@/lib/availability/blocks";
 import { covers } from "@/lib/availability/dates";
 import { localToday } from "@/lib/dashboard/analytics";
 import { Sheet, SheetHeader } from "@/components/ui/page-header";
-import { MonthGrid, type DayState } from "@/components/calendar/month-grid";
+import { formatDayName, MonthGrid, type DayState } from "@/components/calendar/month-grid";
 import { createBlockAction } from "../../actions";
 import { BlockForm } from "./block-form";
 import { BlockList } from "./block-list";
@@ -33,6 +33,10 @@ export default async function PropertyCalendarPage({ params }: { params: Promise
     return "available";
   }
 
+  function labelFor(date: string, state: DayState): string {
+    return `${formatDayName(date)}, ${state}`;
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <Sheet>
@@ -49,7 +53,7 @@ export default async function PropertyCalendarPage({ params }: { params: Promise
         <SheetHeader title="Next three months" />
         <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-3">
           {months.map((month) => (
-            <MonthGrid key={month} month={month} stateFor={stateFor} />
+            <MonthGrid key={month} month={month} stateFor={stateFor} labelFor={labelFor} />
           ))}
         </div>
       </Sheet>

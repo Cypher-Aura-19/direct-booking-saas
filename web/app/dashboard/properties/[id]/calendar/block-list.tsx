@@ -59,7 +59,7 @@ export function BlockList({ propertyId, blocks }: { propertyId: string; blocks: 
             ) : (
               <Button
                 variant="ghost"
-                className="min-h-10 px-3 text-destructive hover:bg-destructive/[0.07]"
+                className="min-h-11 px-3 text-destructive hover:bg-destructive/[0.07]"
                 disabled={pending && removingId === block.id}
                 onClick={() => remove(block.id)}
               >

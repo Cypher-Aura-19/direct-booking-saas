@@ -97,7 +97,7 @@ Status is computed, never asserted.
 | PUB-03 | M5 | done | web/app/s/[org]/catalogue-view.test.tsx, web/app/s/[org]/[property]/property-view.test.tsx, web/lib/public/catalogue.test.ts |
 | PUB-04 | M5 | done | web/lib/public/catalogue.test.ts, web/lib/supabase/middleware.test.ts |
 | PUB-05 | M5 | done | web/lib/properties/basics.test.ts, web/lib/supabase/middleware.test.ts |
-| PUB-06 | M5 | done | web/lib/public/catalogue.test.ts |
+| PUB-06 | M5 | done | web/app/s/[org]/not-found.test.tsx, web/lib/public/catalogue.test.ts |
 | PUB-07 | M5 | done | web/lib/properties/photo-variants.test.ts, web/lib/properties/photos.test.ts, web/lib/public/catalogue.test.ts |
 | PUB-08 | M5 | done | web/app/s/[org]/public-css.test.ts |
 | PUB-09 | M5 | done | web/app/s/routes.test.ts |

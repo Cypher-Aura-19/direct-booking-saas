@@ -39,7 +39,7 @@ export function holdingMessage(lang: ChatLanguage): string {
 }
 
 const HUMAN_REQUEST_PATTERNS: readonly RegExp[] = [
-  /(talk|speak|chat) (to|with) (a )?(human|person|host|owner|someone|real person)/i,
+  /(talk|speak|chat) (to|with) (a |an |the |your |my )?(human|person|host|owner|someone|real person)/i,
   /\b(human|real person|customer service|agent)\b/i,
   /\bcall me\b/i,
   /\b(insaan|banda|host|malik|owner)\s+(se\s+)?(baat|rabta)/i,

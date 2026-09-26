@@ -43,6 +43,11 @@ test("isHumanRequest recognises asks for a person in English, Roman Urdu and Urd
   expect(isHumanRequest("host se baat karni hai")).toBe(true);
   expect(isHumanRequest("میزبان سے بات کرنی ہے")).toBe(true);
   expect(isHumanRequest("I want to SPEAK WITH someone")).toBe(true);
+  expect(isHumanRequest("Can I speak with the owner?")).toBe(true);
+  expect(isHumanRequest("talk to the host")).toBe(true);
+  expect(isHumanRequest("Could I chat with your host please")).toBe(true);
+  expect(isHumanRequest("I need to talk to an agent")).toBe(true);
+  expect(isHumanRequest("let me speak to my host")).toBe(true);
   expect(isHumanRequest("please call me")).toBe(true);
   expect(isHumanRequest("malik se rabta karwa dein")).toBe(true);
   expect(isHumanRequest("مالک سے بات")).toBe(true);

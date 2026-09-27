@@ -198,3 +198,23 @@
 @media (max-width: 767px) { .calendar-cell-sticky { min-inline-size: 128px; max-inline-size: 128px; padding-inline: 12px; } }
 .attention-row-link { text-decoration: none; color: inherit; cursor: pointer; transition: background-color 160ms ease; }
 .attention-row-link:hover { background: var(--surface-muted); }
+.inbox-layout { display:grid; grid-template-columns:minmax(280px,.9fr) minmax(0,2fr); gap:24px; align-items:start; }
+.inbox-list-pane { border:1px solid var(--hairline); border-radius:12px; background:var(--surface); overflow:hidden; }
+.inbox-toolbar { display:flex; flex-wrap:wrap; gap:10px; padding:16px; border-bottom:1px solid var(--hairline); background:#f4f7ef; }
+.inbox-toolbar input { flex:1 1 160px; border:1px solid var(--hairline); background:var(--surface-muted); border-radius:8px; min-height:42px; padding:9px 14px; font-size:12px; }
+.inbox-toolbar select { min-height:42px; border:1px solid var(--hairline); border-radius:8px; background:var(--surface); padding:8px 12px; font-size:11px; color:var(--ink); }
+.inbox-clear-filter { border:1px solid var(--hairline); border-radius:8px; padding:8px 12px; font-size:11px; background:var(--surface); color:var(--accent); }
+.inbox-list { max-height:70vh; overflow-y:auto; }
+.inbox-row a { display:block; padding:14px 16px; text-decoration:none; color:inherit; }
+.inbox-row:hover, .inbox-row.is-active { background:var(--surface-muted); }
+.inbox-row-top { display:flex; justify-content:space-between; gap:10px; align-items:baseline; }
+.inbox-row-time { font-size:10px; color:var(--muted); white-space:nowrap; }
+.inbox-row-preview { margin:4px 0 8px; font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.inbox-row-badges { display:flex; align-items:center; gap:8px; }
+.inbox-unread-badge { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:999px; background:var(--accent); color:var(--accent-contrast); font-size:11px; font-weight:600; }
+.inbox-detail-pane { min-height:70vh; }
+.inbox-empty-detail { display:flex; flex-direction:column; align-items:center; justify-content:center; height:70vh; gap:12px; color:var(--muted); border:1px dashed var(--hairline); border-radius:12px; }
+@media (max-width:1023px) {
+  .inbox-layout { grid-template-columns:1fr; }
+  .inbox-list-pane[data-has-open="true"] { display:none; }
+}

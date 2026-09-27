@@ -3,6 +3,7 @@ import { addDays, isIsoDate } from "../availability/dates";
 import { quoteStay } from "../availability/quote";
 import { formatRupees } from "../properties/basics";
 import type { ToolDeclaration } from "./model";
+import type { AiSwitches } from "../properties/ai-settings";
 
 // The one tool that touches live data (AI-11, AI-12), plus the tool the
 // model must always end a turn with. Both are declared here so the
@@ -29,7 +30,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
       properties: {
         reply: { type: "string" },
         escalate: { type: "boolean" },
-        escalation_reason: { type: "string", enum: ["unknown", "human", "money", "other"] },
+        escalation_reason: { type: "string", enum: ["unknown", "human", "money", "other", "capability_disabled"] },
       },
       required: ["reply", "escalate"],
     },
@@ -39,7 +40,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
 export type RespondArgs = { reply: string; escalate: boolean; escalation_reason?: string };
 
 const MAX_REPLY_LENGTH = 2000;
-const ESCALATION_REASONS = new Set(["unknown", "human", "money", "other"]);
+const ESCALATION_REASONS = new Set(["unknown", "human", "money", "other", "capability_disabled"]);
 
 // The model is untrusted input: whatever it hands back for `respond` is
 // validated exactly like a guest form submission before anything downstream
@@ -68,7 +69,7 @@ export function parseRespondArgs(args: unknown): RespondArgs | null {
 const AVAILABILITY_HORIZON_DAYS = 366;
 
 type CheckStayResult =
-  | { ok: true; nights: number; total: string; nightly: { rate: string; nights: number }[] }
+  | { ok: true; nights: number; total?: string; nightly?: { rate: string; nights: number }[] }
   | { ok: false; reason: string; minimumStay: number };
 
 // Groups only *consecutive* same-rate nights (date-ordered), not all nights
@@ -95,6 +96,10 @@ export async function runCheckStay(
   propertyId: string,
   args: unknown,
   today: string,
+  switches: Pick<AiSwitches, "quote_nightly_rate" | "quote_full_stay_total"> = {
+    quote_nightly_rate: true,
+    quote_full_stay_total: true,
+  },
 ): Promise<CheckStayResult> {
   const value = typeof args === "object" && args !== null ? (args as Record<string, unknown>) : {};
   const checkIn = typeof value.check_in === "string" ? value.check_in : "";
@@ -148,8 +153,8 @@ export async function runCheckStay(
     return {
       ok: true,
       nights: quote.nights,
-      total: formatRupees(quote.totalCents),
-      nightly: groupByRate(quote.breakdown).map((g) => ({ rate: formatRupees(g.rateCents), nights: g.nights })),
+      ...(switches.quote_full_stay_total ? { total: formatRupees(quote.totalCents) } : {}),
+      ...(switches.quote_nightly_rate ? { nightly: groupByRate(quote.breakdown).map((g) => ({ rate: formatRupees(g.rateCents), nights: g.nights })) } : {}),
     };
   } catch {
     return { ok: false, reason: DB_ERROR_REASON, minimumStay: 1 };

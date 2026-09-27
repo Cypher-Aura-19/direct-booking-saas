@@ -28,11 +28,17 @@ export function InboxShell({ initialConversations, children }: Props) {
   const [query, setQuery] = useState("");
   const [propertyId, setPropertyId] = useState("all");
   const [status, setStatus] = useState("all");
-  const [showEscalatedOnly, setShowEscalatedOnly] = useState(
-    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("filter") === "escalated",
-  );
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  // Seeded from the useSearchParams() hook, not from window.location: on a
+  // client-side <Link> navigation, Next.js updates window.location slightly
+  // AFTER the initial render commits (inside useInsertionEffect), while
+  // useSearchParams() already reflects the new params during that same
+  // first render. Reading window here would silently lose the filter on
+  // the most common path a host uses (the dashboard home's "Escalated
+  // chats" link). A hard page load/refresh happens to work either way,
+  // since the two sources agree by the time anything runs.
+  const [showEscalatedOnly, setShowEscalatedOnly] = useState(() => searchParams?.get("filter") === "escalated");
   const knownIds = useRef(new Set(initialConversations.map((c) => c.id)));
 
   // Adjusted during render, not in a useEffect (react-hooks/set-state-in-effect):
@@ -66,7 +72,10 @@ export function InboxShell({ initialConversations, children }: Props) {
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, (payload) => {
         const row = payload.new as { id: string } | undefined;
         if (!row) return;
-        if (!knownIds.current.has(row.id)) { void reconcile(); return; }
+        // knownIds.current.has(row.id) is checked but both branches
+        // currently reconcile the same way — the check exists as a hook
+        // for a future optimization (e.g. patching known rows in place
+        // instead of a full reconcile) and has no behavioral effect today.
         void reconcile();
       })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
@@ -77,7 +86,15 @@ export function InboxShell({ initialConversations, children }: Props) {
       .subscribe((status) => {
         if (status === "SUBSCRIBED") void reconcile();
       });
-    return () => { void channel.unsubscribe(); };
+    return () => {
+      // removeChannel (not just unsubscribe) fully releases the channel
+      // from the client's internal registry once unsubscribe completes, so
+      // a later supabase.channel("inbox") call (StrictMode's dev double-
+      // effect, or a host re-entering the inbox quickly) gets a fresh
+      // channel rather than one still mid-leave that may never re-fire
+      // SUBSCRIBED.
+      void supabase.removeChannel(channel);
+    };
   }, [reconcile]);
 
   // Labeled with each property's conversation count (a real, useful signal

@@ -23,17 +23,28 @@ vi.mock("@/lib/supabase/client", () => ({
   createClient: () => {
     const channel = {
       on: () => channel,
-      subscribe: (cb: (s: string) => void) => { cb("SUBSCRIBED"); return { unsubscribe: vi.fn() }; },
+      subscribe: (cb: (s: string) => void) => { cb("SUBSCRIBED"); return channel; },
+      unsubscribe: vi.fn(),
     };
-    return { channel: () => channel };
+    // removeChannel is the cleanup path InboxShell now uses (Supabase's
+    // recommended way to fully release a channel on unmount) — it must
+    // exist on the mock or the effect's cleanup throws on every test.
+    return { channel: () => channel, removeChannel: vi.fn() };
   },
 }));
 // No global next/navigation mock exists in this repo (confirmed in Task 3) —
 // InboxShell calls both usePathname and useSearchParams, so this file mocks
-// both directly.
+// both directly. useSearchParams falls back to window.location.search by
+// default (so existing tests that only stub window keep working), but a
+// test can set mockSearchParamsOverride to make the hook disagree with
+// window.location — the exact scenario the Critical review finding needed
+// a test to distinguish (a client-side <Link> navigation updates
+// window.location strictly after the hook already reflects the new params).
+let mockSearchParamsOverride: string | null = null;
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/inbox",
-  useSearchParams: () => new URLSearchParams(typeof window !== "undefined" ? window.location.search : ""),
+  useSearchParams: () =>
+    new URLSearchParams(mockSearchParamsOverride ?? (typeof window !== "undefined" ? window.location.search : "")),
 }));
 
 const conversations: HostConversationSummary[] = [
@@ -53,27 +64,36 @@ describe("InboxShell", () => {
   });
 
   // @req INBOX-10
-  test("search narrows the list by property name or last message", () => {
+  test("search narrows the list by property name or last message", async () => {
+    const refreshInboxAction = (await import("./actions")).refreshInboxAction;
     render(<InboxShell initialConversations={conversations}>{null}</InboxShell>);
     fireEvent.change(screen.getByRole("searchbox", { name: /search conversations/i }), { target: { value: "parking" } });
     expect(screen.getByText("River Hut")).toBeInTheDocument();
     expect(screen.queryByText("Hill House")).not.toBeInTheDocument();
+    // Lets the SUBSCRIBED-triggered reconcile() settle before the test ends
+    // (it fires on every mount in these mocks), so its state update doesn't
+    // land after the test has already exited and log an act() warning.
+    await waitFor(() => expect(refreshInboxAction).toHaveBeenCalled());
   });
 
   // @req INBOX-11
-  test("filtering by property narrows the list", () => {
+  test("filtering by property narrows the list", async () => {
+    const refreshInboxAction = (await import("./actions")).refreshInboxAction;
     render(<InboxShell initialConversations={conversations}>{null}</InboxShell>);
     fireEvent.change(screen.getByRole("combobox", { name: /filter by property/i }), { target: { value: "p2" } });
     expect(screen.queryByText("River Hut")).not.toBeInTheDocument();
     expect(screen.getByText("Hill House")).toBeInTheDocument();
+    await waitFor(() => expect(refreshInboxAction).toHaveBeenCalled());
   });
 
   // @req INBOX-11
-  test("filtering by conversation status (ai_state) narrows the list", () => {
+  test("filtering by conversation status (ai_state) narrows the list", async () => {
+    const refreshInboxAction = (await import("./actions")).refreshInboxAction;
     render(<InboxShell initialConversations={conversations}>{null}</InboxShell>);
     fireEvent.change(screen.getByRole("combobox", { name: /filter by status/i }), { target: { value: "stay" } });
     expect(screen.queryByText("River Hut")).not.toBeInTheDocument();
     expect(screen.getByText("Hill House")).toBeInTheDocument();
+    await waitFor(() => expect(refreshInboxAction).toHaveBeenCalled());
   });
 
   // @req INBOX-12
@@ -91,6 +111,50 @@ describe("InboxShell", () => {
       expect(screen.queryByText("River Hut")).not.toBeInTheDocument();
       expect(screen.getByText("Hill House")).toBeInTheDocument();
     } finally {
+      Object.defineProperty(window, "location", { value: originalLocation, writable: true, configurable: true });
+    }
+  });
+
+  // @req INBOX-12
+  // Regression test for the Critical review finding: seeds the two sources
+  // to DISAGREE (the hook says escalated, window.location.search says
+  // nothing — the exact shape of a client-side <Link> navigation, where
+  // Next.js updates window.location only after the first render commits)
+  // and asserts the component follows the hook, not window. Before the
+  // fix, InboxShell's initial state read window.location.search directly,
+  // so this exact scenario would have rendered both conversations instead
+  // of filtering to the escalated one.
+  test("seeds the escalated filter from useSearchParams(), not window.location, when the two disagree", async () => {
+    const refreshInboxAction = (await import("./actions")).refreshInboxAction;
+    expect(window.location.search).toBe(""); // sanity: window has no filter param here
+    mockSearchParamsOverride = "?filter=escalated";
+    try {
+      render(<InboxShell initialConversations={conversations}>{null}</InboxShell>);
+      expect(screen.queryByText("River Hut")).not.toBeInTheDocument();
+      expect(screen.getByText("Hill House")).toBeInTheDocument();
+      await waitFor(() => expect(refreshInboxAction).toHaveBeenCalled());
+    } finally {
+      mockSearchParamsOverride = null;
+    }
+  });
+
+  // @req INBOX-12
+  // The mirror image: window.location.search claims the escalated filter
+  // but the hook does not. If the component read window (the pre-fix
+  // behavior), it would incorrectly filter here too — this proves it
+  // no longer consults window at all for the initial seed.
+  test("does not seed the escalated filter from window.location when useSearchParams() disagrees", async () => {
+    const refreshInboxAction = (await import("./actions")).refreshInboxAction;
+    mockSearchParamsOverride = ""; // hook: no filter param
+    const originalLocation = window.location;
+    Object.defineProperty(window, "location", { value: { ...originalLocation, search: "?filter=escalated" }, writable: true, configurable: true });
+    try {
+      render(<InboxShell initialConversations={conversations}>{null}</InboxShell>);
+      expect(screen.getByText("River Hut")).toBeInTheDocument();
+      expect(screen.getByText("Hill House")).toBeInTheDocument();
+      await waitFor(() => expect(refreshInboxAction).toHaveBeenCalled());
+    } finally {
+      mockSearchParamsOverride = null;
       Object.defineProperty(window, "location", { value: originalLocation, writable: true, configurable: true });
     }
   });

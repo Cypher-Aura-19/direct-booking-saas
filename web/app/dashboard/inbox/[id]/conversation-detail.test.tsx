@@ -50,12 +50,35 @@ describe("ConversationDetail", () => {
     await waitFor(() => expect(actions.sendHostMessageAction).toHaveBeenCalled());
   });
 
+  // Task-5 review finding #1: a validation error must not wipe out what the
+  // host already typed — the textarea is controlled by draft state, which
+  // only clears on a confirmed success.
+  test("the host's draft survives a validation error", async () => {
+    vi.mocked(actions.sendHostMessageAction).mockResolvedValueOnce({ error: "Message can't be empty.", success: false });
+    render(<ConversationDetail conversation={conversation} initialMessages={messages} />);
+    const textarea = screen.getByRole("textbox", { name: /your message/i });
+    fireEvent.change(textarea, { target: { value: "   " } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+    await waitFor(() => expect(screen.getByText("Message can't be empty.")).toBeInTheDocument());
+    expect(textarea).toHaveValue("   ");
+  });
+
   // @req INBOX-04
   test("toggling the AI off calls the action and flips the switch's label", async () => {
     render(<ConversationDetail conversation={conversation} initialMessages={messages} />);
     const toggle = screen.getByRole("button", { name: /turn ai off/i });
     fireEvent.click(toggle);
     await waitFor(() => expect(actions.setAiEnabledAction).toHaveBeenCalledWith("c1", false));
+  });
+
+  // Task-5 review finding #2: a rejected toggle must surface visible
+  // feedback, not a silent no-op.
+  test("a failed AI toggle shows an error and leaves the label unchanged", async () => {
+    vi.mocked(actions.setAiEnabledAction).mockRejectedValueOnce(new Error("network down"));
+    render(<ConversationDetail conversation={conversation} initialMessages={messages} />);
+    fireEvent.click(screen.getByRole("button", { name: /turn ai off/i }));
+    await waitFor(() => expect(screen.getByText(/couldn't update the ai toggle/i)).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: /turn ai off/i })).toBeInTheDocument();
   });
 
   // @req INBOX-13

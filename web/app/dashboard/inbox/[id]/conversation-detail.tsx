@@ -14,13 +14,13 @@ export function ConversationDetail({ conversation, initialMessages }: { conversa
   const [messages, setMessages] = useState(initialMessages);
   const [aiEnabled, setAiEnabledState] = useState(conversation.aiEnabled);
   const [togglePending, setTogglePending] = useState(false);
+  const [toggleError, setToggleError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const knownIds = useRef(new Set(initialMessages.map((m) => m.id)));
+  const [draft, setDraft] = useState("");
   const logRef = useRef<HTMLDivElement>(null);
 
   const reconcile = useCallback(async () => {
     const fresh = await refreshMessagesAction(conversation.id);
-    knownIds.current = new Set(fresh.map((m) => m.id));
     setMessages(fresh);
   }, [conversation.id]);
 
@@ -56,10 +56,13 @@ export function ConversationDetail({ conversation, initialMessages }: { conversa
 
   async function toggleAi() {
     setTogglePending(true);
+    setToggleError(null);
     const next = !aiEnabled;
     try {
       await setAiEnabledAction(conversation.id, next);
       setAiEnabledState(next);
+    } catch {
+      setToggleError("Couldn't update the AI toggle. Please try again.");
     } finally {
       setTogglePending(false);
     }
@@ -67,15 +70,24 @@ export function ConversationDetail({ conversation, initialMessages }: { conversa
 
   async function copyLink() {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    await navigator.clipboard.writeText(`${origin}/c/${conversation.guestToken}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(`${origin}/c/${conversation.guestToken}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access can be denied (e.g. no permission, insecure
+      // context) — leave the button label as-is rather than lying about
+      // success, and don't let the rejection escape unhandled.
+    }
   }
 
   const [state, formAction, sendPending] = useActionState<FormState, FormData>(
     async (_prev, formData) => {
       const result = await sendHostMessageAction(conversation.id, { error: null, success: false }, formData);
-      if (result.success) await reconcile();
+      if (result.success) {
+        setDraft("");
+        await reconcile();
+      }
       return result;
     },
     { error: null, success: false },
@@ -100,6 +112,7 @@ export function ConversationDetail({ conversation, initialMessages }: { conversa
           </Button>
         </div>
       </div>
+      {toggleError && <Notice tone="error">{toggleError}</Notice>}
 
       <div ref={logRef} className="conversation-log" role="log" aria-label="Conversation">
         {messages.map((m) => (
@@ -112,7 +125,15 @@ export function ConversationDetail({ conversation, initialMessages }: { conversa
 
       <form action={formAction} className="conversation-composer">
         <label htmlFor="host-message" className="sr-only">Your message</label>
-        <textarea id="host-message" name="body" rows={2} maxLength={2000} placeholder="Type a message..." />
+        <textarea
+          id="host-message"
+          name="body"
+          rows={2}
+          maxLength={2000}
+          placeholder="Type a message..."
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+        />
         {state.error && <Notice tone="error">{state.error}</Notice>}
         <Button type="submit" disabled={sendPending}>{sendPending ? "Sending…" : "Send"}</Button>
       </form>

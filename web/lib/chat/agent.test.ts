@@ -410,7 +410,8 @@ test("a thrown error inside the model or tool phase escalates as model_error ins
   expect(await conversationRow(token)).toMatchObject({ escalated: true, escalation_reason: "model_error" });
 });
 
-// @req AIC-11, AIC-13
+// @req AIC-11
+// @req AIC-13
 test("a disabled topic is declined before the model is ever called", async () => {
   await updateAiSettings(host.supabase, propertyA, {
     ...DEFAULT_AI_SETTINGS,

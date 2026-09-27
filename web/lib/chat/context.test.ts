@@ -212,7 +212,12 @@ test("a 'never say this' prohibition is added as a rule and scanned for on the w
   expect(context.withheld).toContain("the pool is heated");
 });
 
-// @req AIC-02, AIC-03, AIC-04, AIC-05, AIC-06, AIC-08
+// @req AIC-02
+// @req AIC-03
+// @req AIC-04
+// @req AIC-05
+// @req AIC-06
+// @req AIC-08
 test("each disabled switch adds its own rule line to the prompt", async () => {
   const settings = {
     ...DEFAULT_AI_SETTINGS,

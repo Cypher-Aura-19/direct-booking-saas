@@ -19,6 +19,7 @@ import {
 } from "@/lib/availability/pricing";
 import { localToday } from "@/lib/dashboard/analytics";
 import { parseKnowledgeBase, updateKnowledgeBase } from "@/lib/properties/knowledge-base";
+import { parseAiSettings, updateAiSettings } from "@/lib/properties/ai-settings";
 import { parseListing, updateListing } from "@/lib/properties/listing";
 import { deletePropertyPhoto, reorderPropertyPhotos, setCoverPhoto } from "@/lib/properties/photos";
 import { revalidatePublicPages } from "@/lib/public/revalidate";
@@ -95,6 +96,22 @@ export async function updateKnowledgeBaseAction(
   if (error) return { error, success: false };
   // Knowledge base / AI settings are never public (global constraints), so
   // this only needs the dashboard cache, not the public /s/* pages.
+  revalidatePath("/dashboard/properties", "layout");
+  return { error: null, success: true };
+}
+
+export async function updateAiSettingsAction(
+  propertyId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = parseAiSettings(Object.fromEntries(formData));
+  if (!parsed.ok) return { error: parsed.error, success: false };
+  const { supabase } = await dashboardContext();
+  const { error } = await updateAiSettings(supabase, propertyId, parsed.value);
+  if (error) return { error, success: false };
+  // AI settings are never public (same reasoning as updateKnowledgeBaseAction
+  // above), so this only needs the dashboard cache, not the public /s/* pages.
   revalidatePath("/dashboard/properties", "layout");
   return { error: null, success: true };
 }

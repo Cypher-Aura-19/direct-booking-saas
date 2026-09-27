@@ -25,11 +25,14 @@ const PHOTO_COLUMNS = "id, property_id, storage_path, position, is_cover, has_va
 type PhotoRow = { id: string; property_id: string; storage_path: string; position: number; is_cover: boolean; has_variants: boolean; created_at: string };
 type PropertyRow = { id: string; slug: string; name: string; property_type: string; base_rate_cents: number; max_guests: number };
 
+// Reads via get_public_organization (a single-row RPC), not a direct table
+// select: anon has no SELECT grant on organizations at all (20260927020000).
+// A slug lookup — even for an org with nothing published, which PUB-10
+// requires still renders — never widens into an unfiltered listing that
+// could enumerate every host's name and phone number.
 export async function getPublicOrganization(supabase: SupabaseClient, slug: string): Promise<PublicOrganization | null> {
   const { data, error } = await supabase
-    .from("organizations")
-    .select("id, slug, name, profile, created_at")
-    .eq("slug", slug.toLowerCase())
+    .rpc("get_public_organization", { org_slug: slug.toLowerCase() })
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;

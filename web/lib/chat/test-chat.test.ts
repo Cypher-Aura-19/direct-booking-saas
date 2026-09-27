@@ -74,7 +74,7 @@ test("a disabled switch declines in the test chat exactly as it would for a real
 
 test("a long test conversation is rejected with a plain error, not a crash", async () => {
   const history = Array.from({ length: TEST_CHAT_HISTORY_LIMIT }, (_, i) => ({
-    role: (i % 2 === 0 ? "guest" : "ai") as const,
+    role: i % 2 === 0 ? ("guest" as const) : ("ai" as const),
     text: `message ${i}`,
   }));
   const result = await runTestTurn({

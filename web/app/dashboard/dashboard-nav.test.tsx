@@ -16,6 +16,14 @@ test("the Inbox nav item is a real link, not a disabled 'Soon' placeholder", () 
   const link = within(sidebar).getByRole("link", { name: /inbox/i });
   expect(link).toHaveAttribute("href", "/dashboard/inbox");
   expect(screen.queryByText(/soon/i)).not.toBeInTheDocument();
+
+  // The mobile tab bar renders its own Inbox link independently of the
+  // sidebar's; scope to it separately so this test also catches a regression
+  // there (e.g. Inbox missing from, or misconfigured in, the tab bar's item
+  // list) rather than only ever checking the sidebar.
+  const tabbar = screen.getByTestId("dashboard-tabbar");
+  const tabbarLink = within(tabbar).getByRole("link", { name: /inbox/i });
+  expect(tabbarLink).toHaveAttribute("href", "/dashboard/inbox");
 });
 
 test("the workspace breadcrumb names the Inbox section on /dashboard/inbox routes", () => {

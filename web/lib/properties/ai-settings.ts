@@ -23,7 +23,7 @@ export const AI_SWITCHES: readonly { key: AiSwitchKey; label: string; hint: stri
   { key: "take_booking_requests", label: "Take booking requests", hint: "Lets a guest ask to book; you still confirm it yourself.", defaultOn: true },
   { key: "answer_house_rules", label: "Answer house rules", hint: "Pets, smoking, parties, noise and similar policies.", defaultOn: true },
   { key: "give_directions", label: "Give directions and travel help", hint: "How to reach the property.", defaultOn: true },
-  { key: "share_wifi_gate_codes", label: "Share wifi and gate codes before check-in", hint: "Off by default — otherwise these are only shared once a stay begins.", defaultOn: false },
+  { key: "share_wifi_gate_codes", label: "Share wifi and gate codes before check-in", hint: "Off by default. On lets the assistant share these with anyone chatting, even before they've booked.", defaultOn: false },
   { key: "recommend_nearby", label: "Recommend nearby food and attractions", hint: "Restaurants, sights and things to do close by.", defaultOn: true },
   { key: "answer_urdu", label: "Answer in Urdu and Roman Urdu", hint: "Off replies in English even if the guest writes in Urdu.", defaultOn: true },
 ] as const;

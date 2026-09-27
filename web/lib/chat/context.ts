@@ -18,6 +18,12 @@ export type GroundedContext = { systemPrompt: string; withheld: string[] };
 // guests get directions only from the host's `directions` note.
 const STAY_ONLY_KEYS: readonly KnowledgeBaseKey[] = ["wifi_password", "gate_code"];
 
+// Withheld only from `houseNotes` (see the loop below), never added to
+// `withheld` — this free-form text doesn't have one static value the way a
+// gate code or a rate does.
+const DIRECTIONS_KEYS: readonly KnowledgeBaseKey[] = ["directions"];
+const NEARBY_KEYS: readonly KnowledgeBaseKey[] = ["nearby_food", "nearby_attractions"];
+
 const MIN_WITHHELD_LENGTH = 3;
 
 const LANGUAGE_INSTRUCTIONS: Record<ChatLanguage, string> = {
@@ -78,6 +84,14 @@ export async function buildContext(
         if (value.length >= MIN_WITHHELD_LENGTH) withheld.push(value);
         continue;
       }
+      // give_directions/recommend_nearby off: the field is simply never
+      // written into the prompt at all (same shape as STAY_ONLY_KEYS above),
+      // not pushed to `withheld` either — this free-form text is too varied
+      // for the substring scan in containsWithheld to reliably catch a
+      // reworded restatement, so omission from the prompt is the real
+      // enforcement here.
+      if (!settings.switches.give_directions && DIRECTIONS_KEYS.includes(field.key)) continue;
+      if (!settings.switches.recommend_nearby && NEARBY_KEYS.includes(field.key)) continue;
       houseNotes.push(`- ${field.label}: ${value}`);
     }
   }
@@ -95,10 +109,20 @@ export async function buildContext(
   const city = String(organization.profile?.city ?? "").trim();
   const description = String(property.description ?? "").trim();
 
+  // quote_nightly_rate off: the base rate is omitted from the prompt
+  // entirely (runCheckStay in tools.ts already strips it from the
+  // check_stay tool result the same way) and pushed onto `withheld` instead,
+  // so a model that states this exact figure anyway is still caught by
+  // containsWithheld.
+  const baseRate = formatRupees(property.base_rate_cents);
+  if (!settings.switches.quote_nightly_rate) {
+    if (baseRate.length >= MIN_WITHHELD_LENGTH) withheld.push(baseRate);
+  }
+
   const facts = [
     `- Type: ${typeLabel}`,
     `- Maximum guests: ${property.max_guests}`,
-    `- Base nightly rate: ${formatRupees(property.base_rate_cents)}`,
+    settings.switches.quote_nightly_rate ? `- Base nightly rate: ${baseRate}` : null,
     `- Minimum stay: ${property.minimum_stay} ${property.minimum_stay === 1 ? "night" : "nights"}`,
     description ? `- Description: ${description}` : null,
     amenities.length > 0 ? `- Amenities: ${amenities.join(", ")}` : null,

@@ -25,6 +25,8 @@ const A = {
     wifi_password: "a-wifi-pass",
     geyser: "Gas geyser, switch on 15 min before",
     directions: "Turn left after the Alpha mosque",
+    nearby_food: "Follow the river path to Alpha Karahi House",
+    nearby_attractions: "The Alpha heritage trail is a 10 minute walk",
   },
 };
 
@@ -43,6 +45,8 @@ const B = {
     wifi_password: "b-wifi-pass",
     geyser: "B geyser note",
     directions: "Past the Bravo bakery roundabout",
+    nearby_food: "Bravo lakeside cafe is a short walk",
+    nearby_attractions: "The Bravo jetty viewpoint is nearby",
   },
 };
 
@@ -238,6 +242,32 @@ test("each disabled switch adds its own rule line to the prompt", async () => {
   expect(context.systemPrompt).toContain("Do not discuss house rules or policies");
   expect(context.systemPrompt).toContain("Do not give directions or travel help");
   expect(context.systemPrompt).toContain("Do not recommend nearby food or attractions");
+});
+
+// @req AIC-02
+test("quote_nightly_rate off omits the base rate from the prompt and withholds it", async () => {
+  const settings = { ...DEFAULT_AI_SETTINGS, switches: { ...DEFAULT_AI_SETTINGS.switches, quote_nightly_rate: false } };
+  const context = await buildContext(service, conversationA, "en", TODAY, settings);
+  expect(context.systemPrompt).not.toContain("Rs 12,500");
+  expect(context.withheld).toContain("Rs 12,500");
+});
+
+// @req AIC-06
+test("give_directions off omits the directions note from the prompt entirely", async () => {
+  const settings = { ...DEFAULT_AI_SETTINGS, switches: { ...DEFAULT_AI_SETTINGS.switches, give_directions: false } };
+  const context = await buildContext(service, conversationA, "en", TODAY, settings);
+  expect(context.systemPrompt).not.toContain(A.knowledgeBase.directions);
+  expect(context.withheld).not.toContain(A.knowledgeBase.directions);
+});
+
+// @req AIC-08
+test("recommend_nearby off omits nearby food and attractions from the prompt entirely", async () => {
+  const settings = { ...DEFAULT_AI_SETTINGS, switches: { ...DEFAULT_AI_SETTINGS.switches, recommend_nearby: false } };
+  const context = await buildContext(service, conversationA, "en", TODAY, settings);
+  expect(context.systemPrompt).not.toContain(A.knowledgeBase.nearby_food);
+  expect(context.systemPrompt).not.toContain(A.knowledgeBase.nearby_attractions);
+  expect(context.withheld).not.toContain(A.knowledgeBase.nearby_food);
+  expect(context.withheld).not.toContain(A.knowledgeBase.nearby_attractions);
 });
 
 // Runs last: stay is terminal, so A's conversation cannot go back to enquiry.

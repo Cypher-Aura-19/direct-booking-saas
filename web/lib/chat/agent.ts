@@ -15,6 +15,8 @@ import { buildContext } from "./context";
 import { detectLanguage, holdingMessage, isHumanRequest } from "./language";
 import type { ChatModel, ModelMessage } from "./model";
 import { TOOL_DECLARATIONS, parseRespondArgs, runCheckStay, type RespondArgs } from "./tools";
+import { getAiSettings, DEFAULT_AI_SETTINGS, type AiSettings } from "../properties/ai-settings";
+import { disabledCapabilityRequested, violatesDisabledCapability, languageViolation } from "./capabilities";
 
 // The guest turn (spec §5; AI-06, AI-07, AI-11 to AI-16, SEC-08). The order of
 // the steps below is load-bearing: nothing is stored before the token, the
@@ -83,13 +85,14 @@ function parseRespond(args: unknown): RespondArgs | null {
 
 type Outcome = { respond: RespondArgs } | { escalate: "model_error" };
 
-async function runModel(
+export async function runModel(
   service: SupabaseClient,
   model: ChatModel,
   conversation: Conversation,
   system: string,
   history: ModelMessage[],
   today: string,
+  settings: AiSettings,
 ): Promise<Outcome> {
   for (let round = 0; round < MAX_ROUNDS; round++) {
     // A copy per call, so a recorded call is a snapshot of what was sent.
@@ -98,7 +101,10 @@ async function runModel(
 
     const { name, args } = turn.toolCall;
     if (name === "check_stay") {
-      const result = await runCheckStay(service, conversation.propertyId, args, today);
+      const result = await runCheckStay(service, conversation.propertyId, args, today, {
+        quote_nightly_rate: settings.switches.quote_nightly_rate,
+        quote_full_stay_total: settings.switches.quote_full_stay_total,
+      });
       history.push({ role: "model", toolCall: { name, args } }, { role: "tool", name, result });
       continue;
     }
@@ -143,8 +149,12 @@ export async function runGuestTurn(opts: {
     return { messages: [guest], escalated: conversation.escalated };
   }
 
-  // 6.
-  const lang = detectLanguage(body);
+  // 5.5. This property's AI settings — fetched once, used by every check below.
+  const settings = (await getAiSettings(service, conversation.propertyId)) ?? DEFAULT_AI_SETTINGS;
+
+  // 6. answer_urdu off means only English was ever offered to the model.
+  const detected = detectLanguage(body);
+  const lang = settings.switches.answer_urdu ? detected : "en";
 
   const handOff = async (reason: string): Promise<TurnResult> => {
     await escalate(service, conversation.id, reason);
@@ -155,6 +165,9 @@ export async function runGuestTurn(opts: {
   // 7. A request for a person never reaches the model (AI-14).
   if (isHumanRequest(body)) return handOff("human");
 
+  // 7.5. A topic the host switched off never reaches the model either (AIC-11, AIC-13).
+  if (disabledCapabilityRequested(body, settings.switches)) return handOff("capability_disabled");
+
   // 8. No API key configured.
   if (!model) return handOff("no_model");
 
@@ -164,22 +177,26 @@ export async function runGuestTurn(opts: {
   let outcome: Outcome;
   let withheld: string[];
   try {
-    const context = await buildContext(service, conversation, lang, today);
+    const context = await buildContext(service, conversation, lang, today, settings);
     withheld = context.withheld;
     const history = await recentHistory(service, conversation.id);
-    outcome = await runModel(service, model, conversation, context.systemPrompt, history, today);
+    outcome = await runModel(service, model, conversation, context.systemPrompt, history, today, settings);
   } catch {
     return handOff("model_error");
   }
   if ("escalate" in outcome) return handOff(outcome.escalate);
   const { reply, escalate: wantsEscalation, escalation_reason } = outcome.respond;
 
-  // 11. Post-check: nothing that was withheld from the prompt may leave in a
-  // reply. Logged by conversation id only — never the value or the reply.
+  // 11. Post-check: withheld values, then a disabled-capability or
+  // language violation the model produced despite its instructions.
   const blank = reply.trim() === "";
   if (containsWithheld(reply, withheld) || (blank && !wantsEscalation)) {
     if (!blank) console.warn(`[chat] reply blocked by leak scan in conversation ${conversation.id}`);
     return handOff("leak_blocked");
+  }
+  if (violatesDisabledCapability(reply, settings.switches) || languageViolation(reply, settings.switches)) {
+    console.warn(`[chat] reply blocked by capability scan in conversation ${conversation.id}`);
+    return handOff("capability_disabled");
   }
 
   // 12. Model-requested escalation. The reply is stored before escalating;

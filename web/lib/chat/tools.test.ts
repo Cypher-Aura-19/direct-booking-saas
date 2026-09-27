@@ -107,3 +107,33 @@ test("parseRespondArgs rejects a non-boolean escalate", () => {
 test("parseRespondArgs rejects a reply over 2000 chars", () => {
   expect(parseRespondArgs({ reply: "a".repeat(2001), escalate: false })).toBeNull();
 });
+
+// @req AIC-02
+test("quote_nightly_rate off strips the nightly breakdown but keeps the total", async () => {
+  const result = await runCheckStay(service, propertyId, { check_in: "2026-11-10", check_out: "2026-11-12" }, TODAY, {
+    quote_nightly_rate: false,
+    quote_full_stay_total: true,
+  });
+  expect(result).toMatchObject({ ok: true });
+  if (!("ok" in result) || !result.ok) throw new Error("expected ok");
+  expect(result.nightly).toBeUndefined();
+  expect(result.total).toBeDefined();
+});
+
+// @req AIC-03
+test("quote_full_stay_total off strips the total but keeps the nightly breakdown", async () => {
+  const result = await runCheckStay(service, propertyId, { check_in: "2026-11-10", check_out: "2026-11-12" }, TODAY, {
+    quote_nightly_rate: true,
+    quote_full_stay_total: false,
+  });
+  if (!("ok" in result) || !result.ok) throw new Error("expected ok");
+  expect(result.total).toBeUndefined();
+  expect(result.nightly).toBeDefined();
+});
+
+test("omitting the switches argument keeps both fields, unchanged from before this task", async () => {
+  const result = await runCheckStay(service, propertyId, { check_in: "2026-11-10", check_out: "2026-11-12" }, TODAY);
+  if (!("ok" in result) || !result.ok) throw new Error("expected ok");
+  expect(result.total).toBeDefined();
+  expect(result.nightly).toBeDefined();
+});

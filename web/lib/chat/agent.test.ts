@@ -9,6 +9,7 @@ import { ScriptedModel, type ModelTurn } from "./model";
 import { createProperty, setPropertyPublished } from "../properties/basics";
 import { updateKnowledgeBase } from "../properties/knowledge-base";
 import { createTestHostWithOrg, supabaseAdmin } from "../../tests/helpers";
+import { updateAiSettings, DEFAULT_AI_SETTINGS, AI_SWITCHES, type AiSettings } from "../properties/ai-settings";
 
 const TODAY = "2026-10-01";
 
@@ -407,4 +408,102 @@ test("a thrown error inside the model or tool phase escalates as model_error ins
   if (!("messages" in result)) throw new Error("expected messages");
   expect(result.messages.map((m) => m.body)).toEqual(["Is it free next week?", holdingMessage("en")]);
   expect(await conversationRow(token)).toMatchObject({ escalated: true, escalation_reason: "model_error" });
+});
+
+// @req AIC-11
+// @req AIC-13
+test("a disabled topic is declined before the model is ever called", async () => {
+  await updateAiSettings(host.supabase, propertyA, {
+    ...DEFAULT_AI_SETTINGS,
+    switches: { ...DEFAULT_AI_SETTINGS.switches, recommend_nearby: false },
+  });
+  try {
+    const token = await newChat();
+    const model = new ScriptedModel([respond("should never be reached")]);
+    const result = await runGuestTurn({ service, model, token, text: "Any good restaurants nearby?", today: TODAY });
+    if (!("messages" in result)) throw new Error("expected messages");
+    expect(result.escalated).toBe(true);
+    expect(result.messages.at(-1)!.body).toBe(holdingMessage("en"));
+    expect(model.calls).toHaveLength(0);
+    expect((await conversationRow(token)).escalation_reason).toBe("capability_disabled");
+  } finally {
+    await updateAiSettings(host.supabase, propertyA, DEFAULT_AI_SETTINGS);
+  }
+});
+
+// @req AIC-12
+test("a reply that violates a disabled switch is blocked and the conversation escalates", async () => {
+  await updateAiSettings(host.supabase, propertyA, {
+    ...DEFAULT_AI_SETTINGS,
+    switches: { ...DEFAULT_AI_SETTINGS.switches, answer_house_rules: false },
+  });
+  try {
+    const token = await newChat();
+    const model = new ScriptedModel([respond("Our house rules say no pets and no smoking indoors.")]);
+    const result = await runGuestTurn({ service, model, token, text: "Is there hot water?", today: TODAY });
+    if (!("messages" in result)) throw new Error("expected messages");
+    expect(result.messages.at(-1)!.body).toBe(holdingMessage("en"));
+    expect((await conversationRow(token)).escalation_reason).toBe("capability_disabled");
+  } finally {
+    await updateAiSettings(host.supabase, propertyA, DEFAULT_AI_SETTINGS);
+  }
+});
+
+// @req AIC-12
+test("a reply stating the withheld base rate is blocked even though it wasn't asked about a disabled topic", async () => {
+  await updateAiSettings(host.supabase, propertyA, {
+    ...DEFAULT_AI_SETTINGS,
+    switches: { ...DEFAULT_AI_SETTINGS.switches, quote_nightly_rate: false },
+  });
+  try {
+    const token = await newChat();
+    // A.basics.base_rate_cents is 1_250_000 -> "Rs 12,500" (formatRupees).
+    const model = new ScriptedModel([respond("It's Rs 12,500 a night.")]);
+    const result = await runGuestTurn({ service, model, token, text: "What's the nightly rate?", today: TODAY });
+    if (!("messages" in result)) throw new Error("expected messages");
+    expect(result.escalated).toBe(true);
+    expect(result.messages.at(-1)!.body).toBe(holdingMessage("en"));
+    expect((await conversationRow(token)).escalation_reason).toBe("leak_blocked");
+    expect(JSON.stringify(await stored(token))).not.toContain("12,500");
+  } finally {
+    await updateAiSettings(host.supabase, propertyA, DEFAULT_AI_SETTINGS);
+  }
+});
+
+// @req AIC-09
+test("answer_urdu off forces English regardless of the guest's language", async () => {
+  await updateAiSettings(host.supabase, propertyA, {
+    ...DEFAULT_AI_SETTINGS,
+    switches: { ...DEFAULT_AI_SETTINGS.switches, answer_urdu: false },
+  });
+  try {
+    const token = await newChat();
+    const model = new ScriptedModel([respond("Yes, there is a gas geyser.")]);
+    await runGuestTurn({ service, model, token, text: "kya geyser hai, kitna garam hota hai?", today: TODAY });
+    expect(model.calls[0].system).toContain("Reply in English.");
+  } finally {
+    await updateAiSettings(host.supabase, propertyA, DEFAULT_AI_SETTINGS);
+  }
+});
+
+// @req AIC-15
+test("all switches on still cannot make the AI speak in payment state", async () => {
+  const allOn: AiSettings = {
+    ...DEFAULT_AI_SETTINGS,
+    switches: Object.fromEntries(AI_SWITCHES.map((s) => [s.key, true])) as AiSettings["switches"],
+  };
+  await updateAiSettings(host.supabase, propertyA, allOn);
+  try {
+    const token = await newChat();
+    const conversation = (await getConversation(service, token))!;
+    const { error } = await service.from("conversations").update({ ai_state: "payment" }).eq("id", conversation.id);
+    if (error) throw error;
+    const model = new ScriptedModel([respond("should never be reached")]);
+    const result = await runGuestTurn({ service, model, token, text: "What's the wifi password?", today: TODAY });
+    if (!("messages" in result)) throw new Error("expected messages");
+    expect(result.messages).toHaveLength(1);
+    expect(model.calls).toHaveLength(0);
+  } finally {
+    await updateAiSettings(host.supabase, propertyA, DEFAULT_AI_SETTINGS);
+  }
 });

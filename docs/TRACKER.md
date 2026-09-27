@@ -5,7 +5,7 @@
 A requirement is done when a passing test carries its `@req` tag.
 Status is computed, never asserted.
 
-**Overall: 109 of 200 requirements covered (55%)**
+**Overall: 124 of 200 requirements covered (62%)**
 
 ## By milestone
 
@@ -18,7 +18,7 @@ Status is computed, never asserted.
 | M5 | 10 | 10 |
 | M6 | 10 | 10 |
 | M7 | 18 | 18 |
-| M8 | 0 | 15 |
+| M8 | 15 | 15 |
 | M9 | 0 | 13 |
 | M10 | 0 | 12 |
 | M11 | 0 | 21 |
@@ -130,21 +130,21 @@ Status is computed, never asserted.
 | AI-16 | M7 | done | web/lib/chat/agent.test.ts, web/lib/chat/language.test.ts |
 | AI-17 | M7 | done | web/lib/chat/conversations.test.ts, web/lib/supabase/service.test.ts |
 | AI-18 | M7 | done | web/app/s/[org]/[property]/chat/chat-panel.test.tsx |
-| AIC-01 | M8 | todo | — |
-| AIC-02 | M8 | todo | — |
-| AIC-03 | M8 | todo | — |
-| AIC-04 | M8 | todo | — |
-| AIC-05 | M8 | todo | — |
-| AIC-06 | M8 | todo | — |
-| AIC-07 | M8 | todo | — |
-| AIC-08 | M8 | todo | — |
-| AIC-09 | M8 | todo | — |
-| AIC-10 | M8 | todo | — |
-| AIC-11 | M8 | todo | — |
-| AIC-12 | M8 | todo | — |
-| AIC-13 | M8 | todo | — |
-| AIC-14 | M8 | todo | — |
-| AIC-15 | M8 | todo | — |
+| AIC-01 | M8 | done | web/lib/properties/ai-settings.test.ts |
+| AIC-02 | M8 | done | web/lib/chat/context.test.ts, web/lib/chat/tools.test.ts |
+| AIC-03 | M8 | done | web/lib/chat/context.test.ts, web/lib/chat/tools.test.ts |
+| AIC-04 | M8 | done | web/lib/chat/context.test.ts |
+| AIC-05 | M8 | done | web/lib/chat/context.test.ts |
+| AIC-06 | M8 | done | web/lib/chat/context.test.ts |
+| AIC-07 | M8 | done | web/lib/chat/context.test.ts |
+| AIC-08 | M8 | done | web/lib/chat/context.test.ts |
+| AIC-09 | M8 | done | web/lib/chat/agent.test.ts, web/lib/chat/capabilities.test.ts |
+| AIC-10 | M8 | done | web/lib/chat/context.test.ts |
+| AIC-11 | M8 | done | web/lib/chat/agent.test.ts, web/lib/chat/capabilities.test.ts |
+| AIC-12 | M8 | done | web/lib/chat/agent.test.ts, web/lib/chat/capabilities.test.ts |
+| AIC-13 | M8 | done | web/lib/chat/agent.test.ts |
+| AIC-14 | M8 | done | web/lib/chat/test-chat.test.ts |
+| AIC-15 | M8 | done | web/lib/chat/agent.test.ts |
 | INBOX-01 | M9 | todo | — |
 | INBOX-02 | M9 | todo | — |
 | INBOX-03 | M9 | todo | — |

@@ -23,6 +23,7 @@ export default async function PropertyLayout({
     { href: `/dashboard/properties/${id}/calendar`, label: "Calendar" },
     { href: `/dashboard/properties/${id}/pricing`, label: "Pricing" },
     { href: `/dashboard/properties/${id}/knowledge`, label: "Knowledge base" },
+    { href: `/dashboard/properties/${id}/ai-settings`, label: "AI settings" },
   ];
 
   return (

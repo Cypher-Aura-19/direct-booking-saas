@@ -12,6 +12,7 @@ test("a disabled topic is detected in the guest's message; an enabled one is not
   expect(disabledCapabilityRequested("What are the house rules about pets?", allOn)).toBeNull();
 });
 
+// @req AIC-11
 test("each of the four decline-topic switches has a matching phrase", () => {
   const off = {
     ...allOn,
@@ -24,6 +25,7 @@ test("each of the four decline-topic switches has a matching phrase", () => {
   expect(disabledCapabilityRequested("I want to book this for next weekend", off)).toBe("take_booking_requests");
 });
 
+// @req AIC-11
 test("an unrelated question matches no disabled topic", () => {
   const off = { ...allOn, answer_house_rules: false, give_directions: false, recommend_nearby: false, take_booking_requests: false };
   expect(disabledCapabilityRequested("Is there hot water in the mornings?", off)).toBeNull();

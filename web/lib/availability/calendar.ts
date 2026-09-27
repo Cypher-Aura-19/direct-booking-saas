@@ -4,7 +4,12 @@ import { addDays, type DateRange } from "./dates";
 export type CalendarEntry = DateRange & { kind: "blocked" | "booking"; label: string };
 export type CalendarRow = { propertyId: string; propertyName: string; entries: CalendarEntry[] };
 
-const CONFIRMED_STATUSES = ["approved", "paid", "staying"];
+// Matches dashboard/analytics.ts's CONFIRMED set: a booking that really
+// happened, for display purposes. Without "checked_out" here, a completed
+// stay would vanish from a past calendar window (the calendar page's
+// "Previous" navigation reaches these) the moment M10 marks it checked out,
+// even though the stay itself still occurred.
+const CONFIRMED_STATUSES = ["approved", "paid", "staying", "checked_out"];
 
 // CAL-03: every property in the org, including drafts, with the blocks and
 // confirmed bookings that overlap the [from, from+nights) window. Booking

@@ -54,3 +54,23 @@ it("lists every property with the blocks and confirmed bookings inside the windo
     },
   ]);
 });
+
+// @req CAL-03
+it("a completed (checked_out) stay still shows as booked, not just approved/paid/staying ones", async () => {
+  const { host, propertyA } = await hostWithTwoProperties();
+
+  const { error: bookingError } = await host.supabase.from("bookings").insert({
+    property_id: propertyA,
+    start_date: "2027-03-05",
+    end_date: "2027-03-07",
+    status: "checked_out",
+    total_price_cents: 1_800_000,
+  });
+  expect(bookingError).toBeNull();
+
+  const rows = await listCalendar(host.supabase, host.organizationId, "2027-03-01", 30);
+
+  expect(rows.find((r) => r.propertyId === propertyA)?.entries).toMatchObject([
+    { start: "2027-03-05", end: "2027-03-07", kind: "booking", label: "Booked" },
+  ]);
+});

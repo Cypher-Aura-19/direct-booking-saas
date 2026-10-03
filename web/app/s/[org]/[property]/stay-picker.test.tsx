@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { StayPicker } from "./stay-picker";
+
+vi.mock("./request-actions", () => ({ requestBookingAction: vi.fn() }));
 
 const availability = {
   minimumStay: 2,
@@ -11,6 +13,7 @@ const availability = {
 function renderPicker() {
   render(
     <StayPicker
+      propertyId="p1"
       baseRateCents={1_000_000}
       availability={availability}
       today="2026-10-01"
@@ -46,7 +49,7 @@ it("blocked nights are shown as unavailable and can't be picked", () => {
 });
 
 // @req CAL-09
-it("prices the chosen nights, seasonal rates included, and links to WhatsApp", () => {
+it("prices the chosen nights, seasonal rates included, offers a booking request, and links to WhatsApp", () => {
   renderPicker();
   fireEvent.click(day(/^Monday 19 October 2026/));
   expect(day(/^Monday 19 October 2026/)).toHaveAccessibleName("Monday 19 October 2026, check-in");
@@ -55,7 +58,8 @@ it("prices the chosen nights, seasonal rates included, and links to WhatsApp", (
   expect(screen.getByText("Rs 60,000")).toBeInTheDocument();
   expect(screen.getByText("1 × Rs 10,000 · 2 × Rs 25,000")).toBeInTheDocument();
   expect(day(/^Thursday 22 October 2026/)).toHaveAccessibleName("Thursday 22 October 2026, checkout");
-  const link = screen.getByRole("link", { name: /ask to book on whatsapp/i });
+  expect(screen.getByRole("button", { name: /request to book/i })).toBeInTheDocument();
+  const link = screen.getByRole("link", { name: /prefer whatsapp/i });
   expect(link.getAttribute("href")).toBe(
     `https://wa.me/923001234567?text=${encodeURIComponent("Hi, I'd like to book River Hut from 19 Oct to 22 Oct (3 nights).")}`,
   );

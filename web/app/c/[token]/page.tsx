@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { IconArrowLeft } from "@/components/ui/icons";
+import { getGuestBookingView } from "@/lib/bookings/guest";
 import { getConversation, isToken } from "@/lib/chat/conversations";
 import { createServiceClient } from "@/lib/supabase/service";
 import PublicLayout from "../../s/[org]/layout";
 import { ChatPanel } from "../../s/[org]/[property]/chat/chat-panel";
+import { GuestBookingCard } from "./guest-booking-card";
 
 // "Save your chat" (AI-03): the guest's token is the whole credential, so the
 // page is never indexed, never cached, and sends no referrer onward.
@@ -42,6 +44,7 @@ async function load(token: string): Promise<ChatSubject | null> {
 export default async function SavedChatPage({ params }: Props) {
   const { token } = await params;
   const subject = await load(token);
+  const view = subject ? await getGuestBookingView(createServiceClient(), token) : null;
 
   return (
     <PublicLayout>
@@ -55,6 +58,7 @@ export default async function SavedChatPage({ params }: Props) {
               <p className="public-eyebrow">Your chat with {subject.hostName}</p>
               <h1 className="public-display">{subject.propertyName}</h1>
             </header>
+            {view && <GuestBookingCard view={view} />}
             <ChatPanel propertyId={subject.propertyId} propertyName={subject.propertyName} hostName={subject.hostName} initialToken={token} />
           </div>
         ) : (

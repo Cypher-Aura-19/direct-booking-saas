@@ -73,7 +73,7 @@ export function PropertyView({ organization, property, availability, today }: Pr
 
           <section className="property-section" aria-labelledby="availability-title">
             <h2 id="availability-title" className="property-section-title">When you can stay</h2>
-            <StayPicker baseRateCents={property.baseRateCents} availability={availability} today={today} whatsappHref={whatsapp} propertyName={property.name} />
+            <StayPicker propertyId={property.id} baseRateCents={property.baseRateCents} availability={availability} today={today} whatsappHref={whatsapp} propertyName={property.name} />
           </section>
 
           <div id="chat" className="property-section chat-section">
@@ -86,7 +86,7 @@ export function PropertyView({ organization, property, availability, today }: Pr
 
         <aside className="booking-panel" aria-label="Price and contact">
           <p className="booking-price"><strong>{price}</strong> / night</p>
-          <p className="booking-note">Pick your dates below to see the total, then message the host to book.</p>
+          <p className="booking-note">Pick your dates below to see the total, then send the host a booking request.</p>
           <a href="#chat" className={buttonClasses("primary", "w-full")}><IconChat className="size-4" /> Ask a question</a>
           {ask && <a href={ask} className={buttonClasses("secondary", "w-full")} rel="noopener">Message on WhatsApp</a>}
         </aside>

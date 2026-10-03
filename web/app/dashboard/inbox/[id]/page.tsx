@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { dashboardContext } from "../../_lib/context";
 import { getHostConversation, listMessages, markConversationRead } from "@/lib/chat/conversations";
+import { getBookingForConversation } from "@/lib/bookings/host";
+import { InboxBookingCard } from "./booking-card";
 import { ConversationDetail } from "./conversation-detail";
 
 export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
@@ -10,5 +12,11 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   if (!conversation) notFound();
   const messages = await listMessages(supabase, id);
   await markConversationRead(supabase, id); // opening it is reading it (INBOX-09)
-  return <ConversationDetail conversation={conversation} initialMessages={messages} />;
+  const booking = await getBookingForConversation(supabase, id);
+  return (
+    <>
+      {booking && <InboxBookingCard booking={booking} />}
+      <ConversationDetail conversation={conversation} initialMessages={messages} />
+    </>
+  );
 }

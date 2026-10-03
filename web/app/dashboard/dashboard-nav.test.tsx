@@ -32,3 +32,11 @@ test("the workspace breadcrumb names the Inbox section on /dashboard/inbox route
   expect(screen.getByText("Inbox")).toBeInTheDocument();
   mockPathname = "/dashboard"; // reset so later tests in this file aren't affected
 });
+
+test("Bookings is a real nav link, in the sidebar and the mobile bar", () => {
+  render(<DashboardNav />);
+  const links = screen.getAllByRole("link", { name: /bookings/i });
+  expect(links.length).toBeGreaterThanOrEqual(2);
+  for (const link of links) expect(link).toHaveAttribute("href", "/dashboard/bookings");
+  expect(within(screen.getByTestId("dashboard-tabbar")).getByRole("link", { name: /bookings/i })).toBeInTheDocument();
+});

@@ -192,13 +192,27 @@ export function parseHostMessage(text: string): { body: string } | { error: stri
 // activity first, with the unread count and last message pre-computed —
 // see the migration's list_host_conversations() for why this is one RPC
 // call rather than N+1 queries.
+type HostConversationRow = {
+  id: string;
+  property_id: string;
+  property_name: string;
+  guest_token: string;
+  ai_state: HostConversationSummary["aiState"];
+  ai_enabled: boolean;
+  escalated: boolean;
+  last_sender: string | null;
+  last_body: string | null;
+  last_created_at: string | null;
+  unread_count: number | string;
+};
+
 export async function listHostConversations(
   supabase: SupabaseClient,
   organizationId: string,
 ): Promise<HostConversationSummary[]> {
   const { data, error } = await supabase.rpc("list_host_conversations", { org_id: organizationId });
   if (error) throw error;
-  return (data ?? []).map((row: any): HostConversationSummary => ({
+  return ((data ?? []) as HostConversationRow[]).map((row): HostConversationSummary => ({
     id: row.id,
     propertyId: row.property_id,
     propertyName: row.property_name,

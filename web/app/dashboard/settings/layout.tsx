@@ -3,6 +3,7 @@ import { SubNav } from "@/components/ui/sub-nav";
 
 const SETTINGS_LINKS = [
   { href: "/dashboard/settings", label: "Organisation" },
+  { href: "/dashboard/settings/payment", label: "Payment" },
   { href: "/dashboard/settings/account", label: "Account" },
 ];
 

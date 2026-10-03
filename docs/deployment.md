@@ -16,6 +16,7 @@ Set for Production, Preview and Development:
 | `SUPABASE_SERVICE_ROLE_KEY` | server only, never `NEXT_PUBLIC_`; bypasses RLS (`supabase projects api-keys --project-ref vhzplaphuaydfwtvryla`) |
 | `GEMINI_API_KEY` | server only, used by the guest-chat AI orchestrator |
 | `GEMINI_MODEL` | optional, defaults to `gemini-2.5-flash` |
+| `CRON_SECRET` | server only; any long random string. Vercel Cron sends it as `Authorization: Bearer …` to `/api/cron/retention` (nightly CNIC deletion). Without it the route always returns 401 and nothing is ever deleted — set it before the first real guest ID |
 
 Without them the session-refresh middleware throws on every request and Vercel
 answers every route with `500 MIDDLEWARE_INVOCATION_FAILED`.

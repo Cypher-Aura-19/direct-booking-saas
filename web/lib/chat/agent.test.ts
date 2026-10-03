@@ -507,3 +507,59 @@ test("all switches on still cannot make the AI speak in payment state", async ()
     await updateAiSettings(host.supabase, propertyA, DEFAULT_AI_SETTINGS);
   }
 });
+
+async function inStay(token: string) {
+  const { conversation } = await conversationRow(token);
+  const { error } = await service.from("conversations").update({ ai_state: "stay" }).eq("id", conversation.id);
+  if (error) throw error;
+}
+
+// @req PAY-04
+test("in stay state the AI answers a house question again, with the stay-only details unlocked", async () => {
+  const token = await newChat();
+  await inStay(token);
+  const model = new ScriptedModel([respond("The geyser is gas; switch it on 15 minutes before.")]);
+
+  const result = await runGuestTurn({ service, model, token, text: "How do I use the geyser?", today: TODAY });
+  if (!("messages" in result)) throw new Error("expected messages");
+
+  expect(model.calls).toHaveLength(1); // the model is called again
+  expect(result.messages.map((m) => m.sender)).toEqual(["guest", "ai"]);
+  expect(result.escalated).toBe(false);
+  expect(model.calls[0].system).toContain("A-GATE-4412"); // stay unlocks the gate code
+  expect(model.calls[0].system).toContain("Gas geyser");
+  expect(model.calls[0].system).toContain("The guest is staying"); // the stay-state rule line
+});
+
+// @req PAY-05
+test("in stay state a refund question is handed to the host without calling the model", async () => {
+  const token = await newChat();
+  await inStay(token);
+  const model = new ScriptedModel([respond("should never be sent")]);
+
+  const result = await runGuestTurn({ service, model, token, text: "I want a refund for last night", today: TODAY });
+  if (!("messages" in result)) throw new Error("expected messages");
+
+  expect(model.calls).toHaveLength(0);
+  expect(result.escalated).toBe(true);
+  expect(result.messages.map((m) => m.sender)).toEqual(["guest", "ai"]);
+  expect(result.messages[1].body).toBe(holdingMessage("en"));
+  expect(await conversationRow(token)).toMatchObject({ escalated: true, escalation_reason: "money" });
+});
+
+// @req PAY-05
+test("in stay state an extra-charge question is handed to the host too", async () => {
+  const token = await newChat();
+  await inStay(token);
+  const model = new ScriptedModel([respond("should never be sent")]);
+  await runGuestTurn({ service, model, token, text: "Why was I charged extra for the bonfire?", today: TODAY });
+  expect(model.calls).toHaveLength(0);
+  expect(await conversationRow(token)).toMatchObject({ escalation_reason: "money" });
+});
+
+test("outside stay state the same wording is not intercepted — the prompt rule handles it there", async () => {
+  const token = await newChat(); // enquiry
+  const model = new ScriptedModel([respond("The host handles refunds.", true, "money")]);
+  await runGuestTurn({ service, model, token, text: "What is your refund policy?", today: TODAY });
+  expect(model.calls).toHaveLength(1);
+});

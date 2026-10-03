@@ -1,11 +1,14 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { IconArrowLeft } from "@/components/ui/icons";
 import { PageHeader, Sheet } from "@/components/ui/page-header";
 import { Stamp } from "@/components/ui/stamp";
 import { getBooking } from "@/lib/bookings/host";
+import { getBookingIdStatus } from "@/lib/hotel-eye/records";
 import { formatRupees } from "@/lib/properties/basics";
 import { dashboardContext } from "../../_lib/context";
+import { CopyField } from "../../guests/[id]/copy-field";
 import { BOOKING_STATUS_LABEL, BOOKING_STATUS_TONE } from "../bookings-view";
 import { BookingActions } from "./booking-actions";
 
@@ -17,6 +20,9 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
   const { supabase } = await dashboardContext();
   const booking = await getBooking(supabase, id);
   if (!booking) notFound();
+  const idStatus = await getBookingIdStatus(supabase, booking.id);
+  const requestHeaders = await headers();
+  const origin = `${requestHeaders.get("x-forwarded-proto") ?? "http"}://${requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host")}`;
 
   return (
     <div className="flex flex-col gap-6">
@@ -31,6 +37,11 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
           {booking.conversationId && (
             <div><dt>Chat</dt><dd><Link href={`/dashboard/inbox/${booking.conversationId}`} className="booking-link">Open the conversation</Link></dd></div>
           )}
+          {idStatus.state === "received" && (
+            <div><dt>Guest ID</dt><dd><Link href={`/dashboard/guests/${idStatus.recordId}`} className="booking-link">Received — view record</Link></dd></div>
+          )}
+          {idStatus.state === "open" && <CopyField label="ID upload link" value={`${origin}${idStatus.path}`} />}
+          {idStatus.state === "expired" && <div><dt>Guest ID</dt><dd>The upload link expired without an ID.</dd></div>}
         </dl>
         <BookingActions bookingId={booking.id} status={booking.status} />
       </Sheet>

@@ -29,3 +29,20 @@ test("a declined request says so plainly", () => {
   render(<GuestBookingCard view={{ ...base, status: "rejected" }} />);
   expect(screen.getByText(/wasn.t accepted/i)).toBeInTheDocument();
 });
+
+const paidView: GuestBookingView = { ...base, status: "paid" };
+
+// @req CNIC-01
+test("a paid booking with an open upload link prompts the guest to upload their ID", () => {
+  render(<GuestBookingCard view={{ ...paidView, idUpload: { status: "open", path: `/id/${"b".repeat(64)}` } }} />);
+  const link = screen.getByRole("link", { name: /upload your id/i });
+  expect(link).toHaveAttribute("href", `/id/${"b".repeat(64)}`);
+});
+
+test("once the ID is received the prompt becomes a thank-you, and an expired link shows nothing", () => {
+  const { rerender } = render(<GuestBookingCard view={{ ...paidView, idUpload: { status: "received" } }} />);
+  expect(screen.getByText(/ID received/i)).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /upload your id/i })).not.toBeInTheDocument();
+  rerender(<GuestBookingCard view={{ ...paidView, idUpload: null }} />);
+  expect(screen.queryByText(/ID received/i)).not.toBeInTheDocument();
+});

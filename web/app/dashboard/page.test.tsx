@@ -32,3 +32,9 @@ test('overview filters analytics by period and property',()=>{
  expect(screen.getByText('Waiting booking requests')).toBeInTheDocument();
  expect(screen.getByText('Escalated chats')).toBeInTheDocument();
 });
+
+// @req BOOK-05
+test('the waiting-requests row links to the pending bookings', () => {
+  render(<DashboardHome today="2026-09-25" />);
+  expect(screen.getByRole('link', { name: /waiting booking requests/i })).toHaveAttribute('href', '/dashboard/bookings?status=requested');
+});

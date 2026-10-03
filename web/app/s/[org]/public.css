@@ -208,3 +208,13 @@
 .request-sent { display:flex; flex-direction:column; gap:6px; margin-block-start:14px; padding:16px; border:1px solid var(--hairline); border-radius:12px; background:var(--accent-soft); }
 .request-sent p { font-size:12px; color:var(--muted); }
 .request-sent-link { align-self:flex-start; font-size:12px; font-weight:600; color:var(--accent); text-decoration:underline; }
+
+.guest-booking-card { margin-block-end:20px; padding:18px 20px; border:1px solid var(--hairline); border-radius:14px; background:var(--surface); }
+.guest-booking-status { font-size:15px; font-weight:600; }
+.guest-booking-status[data-status="approved"] { color:var(--accent); }
+.guest-booking-stay, .guest-booking-help, .guest-booking-note { margin-block-start:6px; font-size:13px; color:var(--muted); }
+.guest-booking-pay { margin-block-start:14px; padding-block-start:14px; border-block-start:1px solid var(--hairline); font-size:13px; }
+.guest-booking-pay dl { display:grid; gap:8px; margin-block-start:10px; }
+.guest-booking-pay dl > div { display:grid; grid-template-columns:120px minmax(0,1fr); gap:10px; }
+.guest-booking-pay dt { color:var(--muted); font-size:12px; }
+.guest-booking-pay dd { font-weight:500; overflow-wrap:anywhere; }

@@ -9,6 +9,9 @@ import { dashboardContext } from "../../_lib/context";
 import { BOOKING_STATUS_LABEL, BOOKING_STATUS_TONE } from "../bookings-view";
 import { BookingActions } from "./booking-actions";
 
+const LONG = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const long = (iso: string) => LONG.format(new Date(`${iso}T00:00:00Z`));
+
 export default async function BookingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { supabase } = await dashboardContext();
@@ -22,7 +25,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
       <Sheet className="p-5 sm:p-8">
         <dl className="booking-facts">
           <div><dt>Status</dt><dd><Stamp tone={BOOKING_STATUS_TONE[booking.status]}>{BOOKING_STATUS_LABEL[booking.status]}</Stamp></dd></div>
-          <div><dt>Stay</dt><dd>{booking.startDate} → {booking.endDate} ({booking.nights} {booking.nights === 1 ? "night" : "nights"})</dd></div>
+          <div><dt>Stay</dt><dd>{long(booking.startDate)} → {long(booking.endDate)} ({booking.nights} {booking.nights === 1 ? "night" : "nights"})</dd></div>
           <div><dt>Total</dt><dd>{formatRupees(booking.totalCents)} <small>computed by the server</small></dd></div>
           <div><dt>Phone</dt><dd>{booking.guestPhone ?? "—"}</dd></div>
           {booking.conversationId && (

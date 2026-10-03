@@ -86,7 +86,7 @@ export function PropertyView({ organization, property, availability, today }: Pr
 
         <aside className="booking-panel" aria-label="Price and contact">
           <p className="booking-price"><strong>{price}</strong> / night</p>
-          <p className="booking-note">Pick your dates below to see the total, then message the host to book.</p>
+          <p className="booking-note">Pick your dates below to see the total, then send the host a booking request.</p>
           <a href="#chat" className={buttonClasses("primary", "w-full")}><IconChat className="size-4" /> Ask a question</a>
           {ask && <a href={ask} className={buttonClasses("secondary", "w-full")} rel="noopener">Message on WhatsApp</a>}
         </aside>

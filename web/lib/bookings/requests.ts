@@ -5,6 +5,9 @@ import { addMessage, getConversation, isToken, startConversation, type Conversat
 import { formatRupees } from "../properties/basics";
 
 export const MAX_REQUESTS_PER_PROPERTY_PER_DAY = 30;
+
+const SHORT_DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+const shortDate = (iso: string) => SHORT_DATE.format(new Date(`${iso}T00:00:00Z`));
 // The public picker offers the next 12 months only (stay-picker.tsx).
 const HORIZON_DAYS = 366;
 
@@ -121,7 +124,7 @@ export async function createBookingRequest(service: SupabaseClient, input: Input
     service,
     conversation.id,
     "guest",
-    `Booking request: ${checkIn} to ${checkOut} (${quote.nights} ${quote.nights === 1 ? "night" : "nights"}, ${formatRupees(quote.totalCents)}).`,
+    `Booking request: ${shortDate(checkIn)} to ${shortDate(checkOut)} (${quote.nights} ${quote.nights === 1 ? "night" : "nights"}, ${formatRupees(quote.totalCents)}).`,
   );
 
   return { ok: true, bookingId: booking.id as string, token: token as string, nights: quote.nights, totalCents: quote.totalCents };

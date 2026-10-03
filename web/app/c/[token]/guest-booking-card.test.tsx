@@ -5,7 +5,7 @@ import type { GuestBookingView } from "@/lib/bookings/guest";
 
 const base: GuestBookingView = {
   status: "requested", startDate: "2026-11-01", endDate: "2026-11-04", nights: 3, totalCents: 1_500_000,
-  advancePercent: 30, advanceCents: 450_000, paymentInstructions: null,
+  advancePercent: 30, advanceCents: 450_000, paymentInstructions: null, idUpload: null,
 };
 
 test("a pending request tells the guest it is waiting on the host and shows no payment details", () => {
@@ -28,4 +28,21 @@ test("an approved booking shows the amount to pay and the host's payment instruc
 test("a declined request says so plainly", () => {
   render(<GuestBookingCard view={{ ...base, status: "rejected" }} />);
   expect(screen.getByText(/wasn.t accepted/i)).toBeInTheDocument();
+});
+
+const paidView: GuestBookingView = { ...base, status: "paid" };
+
+// @req CNIC-01
+test("a paid booking with an open upload link prompts the guest to upload their ID", () => {
+  render(<GuestBookingCard view={{ ...paidView, idUpload: { status: "open", path: `/id/${"b".repeat(64)}` } }} />);
+  const link = screen.getByRole("link", { name: /upload your id/i });
+  expect(link).toHaveAttribute("href", `/id/${"b".repeat(64)}`);
+});
+
+test("once the ID is received the prompt becomes a thank-you, and an expired link shows nothing", () => {
+  const { rerender } = render(<GuestBookingCard view={{ ...paidView, idUpload: { status: "received" } }} />);
+  expect(screen.getByText(/ID received/i)).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /upload your id/i })).not.toBeInTheDocument();
+  rerender(<GuestBookingCard view={{ ...paidView, idUpload: null }} />);
+  expect(screen.queryByText(/ID received/i)).not.toBeInTheDocument();
 });

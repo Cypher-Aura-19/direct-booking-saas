@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { IconChat } from "@/components/ui/icons";
 import { Notice } from "@/components/ui/notice";
 import { loadChatAction, sendMessageAction, startChatAction, type ChatView } from "./actions";
+import { LinkifiedBody } from "./linkify";
 
 // The embedded guest chat (AI-01, 03, 04, 05, 18). It talks to the server
 // only through ./actions: nothing here may import from lib/chat or the
@@ -198,7 +199,7 @@ export function ChatPanel({ propertyId, propertyName, hostName, initialToken }: 
             return (
               <div key={m.id} className="chat-message" data-sender={m.sender}>
                 {label ? <span className="chat-sender">{label}</span> : <span className="sr-only">You</span>}
-                <p className="chat-bubble" lang={m.lang} dir={m.lang === "ur" ? "rtl" : undefined}>{m.body}</p>
+                <p className="chat-bubble" lang={m.lang} dir={m.lang === "ur" ? "rtl" : undefined}><LinkifiedBody body={m.body} /></p>
               </div>
             );
           })}

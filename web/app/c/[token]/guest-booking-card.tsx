@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatRupees } from "@/lib/properties/basics";
 import type { GuestBookingView } from "@/lib/bookings/guest";
 
@@ -46,6 +47,13 @@ export function GuestBookingCard({ view }: { view: GuestBookingView }) {
           {pi.note && <p className="guest-booking-note">{pi.note}</p>}
         </div>
       )}
+      {view.idUpload?.status === "open" && (
+        <div className="guest-booking-id">
+          <p>Please upload your ID before you arrive — your host needs it to register your stay.</p>
+          <Link href={view.idUpload.path} className="guest-booking-id-link">Upload your ID</Link>
+        </div>
+      )}
+      {view.idUpload?.status === "received" && <p className="guest-booking-help">ID received — thank you.</p>}
     </section>
   );
 }

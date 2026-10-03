@@ -13,6 +13,9 @@ export type GuestBookingView = {
   advancePercent: number;
   advanceCents: number;
   paymentInstructions: PaymentInstructions | null;
+  // CNIC-01: the ID-upload prompt. Only while the link is open (path) or once
+  // the ID is in (received); expired links show nothing.
+  idUpload: null | { status: "open"; path: string } | { status: "received" };
 };
 
 // Resolved strictly through the guest's own conversation token. The org's
@@ -25,7 +28,7 @@ export async function getGuestBookingView(service: SupabaseClient, token: string
 
   const { data: booking, error } = await service
     .from("bookings")
-    .select("status, start_date, end_date, total_price_cents, properties(advance_percent, organizations(payment_instructions))")
+    .select("id, status, start_date, end_date, total_price_cents, properties(advance_percent, organizations(payment_instructions))")
     .eq("conversation_id", conversation.id)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -39,6 +42,20 @@ export async function getGuestBookingView(service: SupabaseClient, token: string
   const organization = property ? (Array.isArray(property.organizations) ? property.organizations[0] : property.organizations) : null;
   const advancePercent = property?.advance_percent ?? 0;
 
+  const { data: link, error: linkError } = await service
+    .from("id_upload_links")
+    .select("token, expires_at, used_at")
+    .eq("booking_id", booking.id)
+    .maybeSingle();
+  if (linkError) throw linkError;
+  const idUpload: GuestBookingView["idUpload"] = !link
+    ? null
+    : link.used_at
+      ? { status: "received" }
+      : Date.parse(link.expires_at) > Date.now()
+        ? { status: "open", path: `/id/${link.token}` }
+        : null;
+
   return {
     status: booking.status as BookingStatus,
     startDate: booking.start_date,
@@ -48,5 +65,6 @@ export async function getGuestBookingView(service: SupabaseClient, token: string
     advancePercent,
     advanceCents: Math.round((booking.total_price_cents * advancePercent) / 100),
     paymentInstructions: booking.status === "approved" ? readPaymentInstructions(organization?.payment_instructions) : null,
+    idUpload,
   };
 }

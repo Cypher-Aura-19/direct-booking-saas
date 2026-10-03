@@ -5,7 +5,7 @@
 A requirement is done when a passing test carries its `@req` tag.
 Status is computed, never asserted.
 
-**Overall: 155 of 200 requirements covered (78%)**
+**Overall: 170 of 200 requirements covered (85%)**
 
 ## By milestone
 
@@ -21,7 +21,7 @@ Status is computed, never asserted.
 | M8 | 15 | 15 |
 | M9 | 13 | 13 |
 | M10 | 12 | 12 |
-| M11 | 6 | 21 |
+| M11 | 21 | 21 |
 | M12 | 0 | 21 |
 | Cross-cutting | 8 | 17 |
 
@@ -176,21 +176,21 @@ Status is computed, never asserted.
 | PAY-04 | M11 | done | web/lib/chat/agent.test.ts |
 | PAY-05 | M11 | done | web/lib/chat/agent.test.ts |
 | PAY-06 | M11 | done | web/app/dashboard/bookings/[id]/booking-actions.test.tsx, web/app/dashboard/bookings/bookings.integration.test.ts, web/lib/bookings/stay.test.ts |
-| CNIC-01 | M11 | todo | — |
-| CNIC-02 | M11 | todo | — |
-| CNIC-03 | M11 | todo | — |
-| CNIC-04 | M11 | todo | — |
-| CNIC-05 | M11 | todo | — |
-| CNIC-06 | M11 | todo | — |
-| CNIC-07 | M11 | todo | — |
-| CNIC-08 | M11 | todo | — |
-| CNIC-09 | M11 | todo | — |
-| CNIC-10 | M11 | todo | — |
-| CNIC-11 | M11 | todo | — |
-| CNIC-12 | M11 | todo | — |
-| CNIC-13 | M11 | todo | — |
-| CNIC-14 | M11 | todo | — |
-| CNIC-15 | M11 | todo | — |
+| CNIC-01 | M11 | done | web/app/c/[token]/guest-booking-card.test.tsx, web/app/s/[org]/[property]/chat/linkify.test.tsx, web/lib/bookings/guest-id.test.ts, web/lib/hotel-eye/schema.test.ts |
+| CNIC-02 | M11 | done | web/lib/hotel-eye/upload.test.ts |
+| CNIC-03 | M11 | done | web/lib/hotel-eye/upload.test.ts |
+| CNIC-04 | M11 | done | web/lib/hotel-eye/schema.test.ts |
+| CNIC-05 | M11 | done | web/lib/hotel-eye/records.test.ts |
+| CNIC-06 | M11 | done | web/app/id/[token]/id-upload-form.test.tsx |
+| CNIC-07 | M11 | done | web/app/id/[token]/id-upload-form.test.tsx |
+| CNIC-08 | M11 | done | web/app/dashboard/guests/[id]/copy-field.test.tsx |
+| CNIC-09 | M11 | done | web/lib/hotel-eye/records.test.ts |
+| CNIC-10 | M11 | done | web/lib/hotel-eye/csv.test.ts, web/lib/hotel-eye/records.test.ts |
+| CNIC-11 | M11 | done | web/lib/hotel-eye/schema.test.ts, web/lib/hotel-eye/upload.test.ts |
+| CNIC-12 | M11 | done | web/lib/hotel-eye/records.test.ts, web/lib/hotel-eye/schema.test.ts |
+| CNIC-13 | M11 | done | web/app/api/cron/retention/route.test.ts, web/lib/hotel-eye/retention.test.ts |
+| CNIC-14 | M11 | done | web/lib/hotel-eye/dates.test.ts |
+| CNIC-15 | M11 | done | web/lib/hotel-eye/records.test.ts, web/lib/hotel-eye/schema.test.ts |
 | TRUST-01 | M12 | todo | — |
 | TRUST-02 | M12 | todo | — |
 | TRUST-03 | M12 | todo | — |

@@ -90,6 +90,11 @@ describe("ConversationDetail", () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringContaining(conversation.guestToken)));
   });
 
+  test("a back link returns to the list (the only way back on a phone, where one pane shows at a time)", () => {
+    render(<ConversationDetail conversation={conversation} initialMessages={messages} />);
+    expect(screen.getByRole("link", { name: /all conversations/i })).toHaveAttribute("href", "/dashboard/inbox");
+  });
+
   // @req INBOX-12
   test("an escalated conversation shows why", () => {
     render(<ConversationDetail conversation={{ ...conversation, escalated: true, escalationReason: "human" }} initialMessages={messages} />);

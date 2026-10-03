@@ -1,7 +1,9 @@
 "use client";
 
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { IconArrowLeft } from "@/components/ui/icons";
 import { Notice } from "@/components/ui/notice";
 import { Stamp } from "@/components/ui/stamp";
 import { createClient } from "@/lib/supabase/client";
@@ -97,6 +99,7 @@ export function ConversationDetail({ conversation, initialMessages }: { conversa
     <div className="conversation-detail">
       <div className="conversation-detail-header">
         <div>
+          <Link href="/dashboard/inbox" className="inbox-back"><IconArrowLeft />All conversations</Link>
           <h2>{conversation.propertyName}</h2>
           {conversation.escalated && (
             <p className="conversation-escalated-note">

@@ -159,6 +159,12 @@ describe("InboxShell", () => {
     }
   });
 
+  test("on the index route the list pane is the visible one on narrow screens", () => {
+    const { container } = render(<InboxShell initialConversations={conversations}>{null}</InboxShell>);
+    expect(container.querySelector(".inbox-list-pane")).toHaveAttribute("data-has-open", "false");
+    expect(container.querySelector(".inbox-detail-pane")).toHaveAttribute("data-has-open", "false");
+  });
+
   test("each conversation links to its detail route", () => {
     render(<InboxShell initialConversations={conversations}>{null}</InboxShell>);
     expect(screen.getByRole("link", { name: /river hut/i })).toHaveAttribute("href", "/dashboard/inbox/c1");

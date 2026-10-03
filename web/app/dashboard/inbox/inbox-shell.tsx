@@ -29,6 +29,8 @@ export function InboxShell({ initialConversations, children }: Props) {
   const [propertyId, setPropertyId] = useState("all");
   const [status, setStatus] = useState("all");
   const pathname = usePathname();
+  // On narrow screens exactly one pane shows: the open conversation, or the list.
+  const hasOpen = !!pathname && pathname !== "/dashboard/inbox" && pathname.startsWith("/dashboard/inbox/");
   const searchParams = useSearchParams();
   // Seeded from the useSearchParams() hook, not from window.location: on a
   // client-side <Link> navigation, Next.js updates window.location slightly
@@ -122,7 +124,7 @@ export function InboxShell({ initialConversations, children }: Props) {
 
   return (
     <div className="inbox-layout">
-      <div className="inbox-list-pane">
+      <div className="inbox-list-pane" data-has-open={hasOpen}>
         <div className="inbox-toolbar">
           <input
             type="search"
@@ -180,7 +182,7 @@ export function InboxShell({ initialConversations, children }: Props) {
           </ul>
         )}
       </div>
-      <div className="inbox-detail-pane">{children}</div>
+      <div className="inbox-detail-pane" data-has-open={hasOpen}>{children}</div>
     </div>
   );
 }

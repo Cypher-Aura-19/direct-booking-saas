@@ -67,6 +67,9 @@ export function BookingActions({ bookingId, status }: { bookingId: string; statu
       try {
         const result = await ACTIONS[key].run(bookingId);
         if (result.error) { setError(result.error); setConfirming(null); return; }
+        // The booking has moved on: drop this step's confirmation so the next
+        // step (or nothing) shows once the refreshed status arrives.
+        setConfirming(null);
         router.refresh();
       } catch {
         setError("Something went wrong. Please try again.");

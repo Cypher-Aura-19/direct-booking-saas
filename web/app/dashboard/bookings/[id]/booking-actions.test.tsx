@@ -70,6 +70,17 @@ describe("BookingActions", () => {
     await waitFor(() => expect(paid).toHaveBeenCalledWith("b1"));
   });
 
+  // @req PAY-01
+  test("after a step succeeds its confirmation closes, so the stale step can't be confirmed twice", async () => {
+    paid.mockResolvedValue({ error: null });
+    render(<BookingActions bookingId="b1" status="approved" />);
+    fireEvent.click(screen.getByRole("button", { name: /mark payment received/i }));
+    fireEvent.click(screen.getByRole("button", { name: /confirm payment received/i }));
+    await waitFor(() => expect(paid).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.queryByRole("button", { name: /confirm payment received/i })).not.toBeInTheDocument());
+    expect(screen.queryByText(/AI resumes/i)).not.toBeInTheDocument();
+  });
+
   // @req PAY-06
   test("a paid booking offers check-in; a staying booking offers check-out", async () => {
     checkIn.mockResolvedValue({ error: null });

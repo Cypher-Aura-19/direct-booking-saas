@@ -5,7 +5,7 @@
 A requirement is done when a passing test carries its `@req` tag.
 Status is computed, never asserted.
 
-**Overall: 124 of 200 requirements covered (62%)**
+**Overall: 137 of 200 requirements covered (69%)**
 
 ## By milestone
 
@@ -19,7 +19,7 @@ Status is computed, never asserted.
 | M6 | 10 | 10 |
 | M7 | 18 | 18 |
 | M8 | 15 | 15 |
-| M9 | 0 | 13 |
+| M9 | 13 | 13 |
 | M10 | 0 | 12 |
 | M11 | 0 | 21 |
 | M12 | 0 | 21 |
@@ -145,19 +145,19 @@ Status is computed, never asserted.
 | AIC-13 | M8 | done | web/lib/chat/agent.test.ts |
 | AIC-14 | M8 | done | web/lib/chat/test-chat.test.ts |
 | AIC-15 | M8 | done | web/lib/chat/agent.test.ts |
-| INBOX-01 | M9 | todo | — |
-| INBOX-02 | M9 | todo | — |
-| INBOX-03 | M9 | todo | — |
-| INBOX-04 | M9 | todo | — |
-| INBOX-05 | M9 | todo | — |
-| INBOX-06 | M9 | todo | — |
-| INBOX-07 | M9 | todo | — |
-| INBOX-08 | M9 | todo | — |
-| INBOX-09 | M9 | todo | — |
-| INBOX-10 | M9 | todo | — |
-| INBOX-11 | M9 | todo | — |
-| INBOX-12 | M9 | todo | — |
-| INBOX-13 | M9 | todo | — |
+| INBOX-01 | M9 | done | web/app/dashboard/inbox/inbox-shell.test.tsx, web/lib/chat/conversations.test.ts |
+| INBOX-02 | M9 | done | web/app/dashboard/inbox/inbox.integration.test.ts |
+| INBOX-03 | M9 | done | web/app/dashboard/inbox/inbox-shell.test.tsx |
+| INBOX-04 | M9 | done | web/app/dashboard/inbox/[id]/conversation-detail.test.tsx, web/app/dashboard/inbox/inbox.integration.test.ts, web/lib/chat/conversations.test.ts |
+| INBOX-05 | M9 | done | web/lib/chat/conversations.test.ts |
+| INBOX-06 | M9 | done | web/app/dashboard/inbox/[id]/conversation-detail.test.tsx, web/app/dashboard/inbox/inbox.integration.test.ts, web/lib/chat/conversations.test.ts |
+| INBOX-07 | M9 | done | web/app/dashboard/inbox/inbox.integration.test.ts, web/lib/chat/conversations.test.ts |
+| INBOX-08 | M9 | done | web/app/dashboard/inbox/[id]/conversation-detail.test.tsx |
+| INBOX-09 | M9 | done | web/app/dashboard/inbox/inbox-shell.test.tsx, web/app/dashboard/inbox/inbox.integration.test.ts, web/app/dashboard/page.test.tsx, web/lib/chat/conversations.test.ts |
+| INBOX-10 | M9 | done | web/app/dashboard/inbox/inbox-shell.test.tsx |
+| INBOX-11 | M9 | done | web/app/dashboard/inbox/inbox-shell.test.tsx |
+| INBOX-12 | M9 | done | web/app/dashboard/inbox/[id]/conversation-detail.test.tsx, web/app/dashboard/inbox/inbox-shell.test.tsx, web/app/dashboard/page.test.tsx |
+| INBOX-13 | M9 | done | web/app/dashboard/inbox/[id]/conversation-detail.test.tsx |
 | BOOK-01 | M10 | todo | — |
 | BOOK-02 | M10 | todo | — |
 | BOOK-03 | M10 | todo | — |

@@ -143,6 +143,11 @@ export async function buildContext(
   if (!settings.switches.quote_nightly_rate) rules.push(`Never state a per-night rate; if asked, ${declineRule}`);
   if (!settings.switches.quote_full_stay_total) rules.push(`Never state a total stay price; if asked, ${declineRule}`);
   if (!settings.switches.take_booking_requests) rules.push(`Do not take or encourage a booking request; ${declineRule}`);
+  if (inStay) {
+    rules.push(
+      "The guest is staying: refunds, cancellations and any new or extra charge are the host's to handle — call `respond` with escalate: true and escalation_reason: \"money\".",
+    );
+  }
   if (!settings.switches.answer_house_rules) rules.push(`Do not discuss house rules or policies; ${declineRule}`);
   if (!settings.switches.give_directions) rules.push(`Do not give directions or travel help; ${declineRule}`);
   if (!settings.switches.recommend_nearby) rules.push(`Do not recommend nearby food or attractions; ${declineRule}`);

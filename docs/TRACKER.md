@@ -5,7 +5,7 @@
 A requirement is done when a passing test carries its `@req` tag.
 Status is computed, never asserted.
 
-**Overall: 149 of 200 requirements covered (75%)**
+**Overall: 155 of 200 requirements covered (78%)**
 
 ## By milestone
 
@@ -21,7 +21,7 @@ Status is computed, never asserted.
 | M8 | 15 | 15 |
 | M9 | 13 | 13 |
 | M10 | 12 | 12 |
-| M11 | 0 | 21 |
+| M11 | 6 | 21 |
 | M12 | 0 | 21 |
 | Cross-cutting | 8 | 17 |
 
@@ -170,12 +170,12 @@ Status is computed, never asserted.
 | BOOK-10 | M10 | done | web/lib/bookings/host.test.ts |
 | BOOK-11 | M10 | done | web/app/dashboard/bookings/bookings-view.test.tsx |
 | BOOK-12 | M10 | done | web/app/c/[token]/guest-booking-card.test.tsx, web/app/dashboard/settings/payment/payment-form.test.tsx, web/lib/bookings/guest.test.ts |
-| PAY-01 | M11 | todo | — |
-| PAY-02 | M11 | todo | — |
-| PAY-03 | M11 | todo | — |
-| PAY-04 | M11 | todo | — |
-| PAY-05 | M11 | todo | — |
-| PAY-06 | M11 | todo | — |
+| PAY-01 | M11 | done | web/app/dashboard/bookings/[id]/booking-actions.test.tsx, web/app/dashboard/bookings/bookings.integration.test.ts, web/lib/bookings/stay.test.ts |
+| PAY-02 | M11 | done | web/lib/bookings/stay.test.ts |
+| PAY-03 | M11 | done | web/lib/bookings/stay.test.ts |
+| PAY-04 | M11 | done | web/lib/chat/agent.test.ts |
+| PAY-05 | M11 | done | web/lib/chat/agent.test.ts |
+| PAY-06 | M11 | done | web/app/dashboard/bookings/[id]/booking-actions.test.tsx, web/app/dashboard/bookings/bookings.integration.test.ts, web/lib/bookings/stay.test.ts |
 | CNIC-01 | M11 | todo | — |
 | CNIC-02 | M11 | todo | — |
 | CNIC-03 | M11 | todo | — |

@@ -13,6 +13,7 @@ import {
 } from "./conversations";
 import { buildContext } from "./context";
 import { detectLanguage, holdingMessage, isHumanRequest } from "./language";
+import { isMoneyRequest } from "./money";
 import type { ChatModel, ModelMessage } from "./model";
 import { TOOL_DECLARATIONS, parseRespondArgs, runCheckStay, type RespondArgs } from "./tools";
 import { getAiSettings, DEFAULT_AI_SETTINGS, type AiSettings } from "../properties/ai-settings";
@@ -164,6 +165,10 @@ export async function runGuestTurn(opts: {
 
   // 7. A request for a person never reaches the model (AI-14).
   if (isHumanRequest(body)) return handOff("human");
+
+  // 7.2. Stay state: refunds, cancellations and new charges are the host's,
+  // never the model's — handed off before the model is ever called (PAY-05).
+  if (conversation.aiState === "stay" && isMoneyRequest(body)) return handOff("money");
 
   // 7.5. A topic the host switched off never reaches the model either (AIC-11, AIC-13).
   if (disabledCapabilityRequested(body, settings.switches)) return handOff("capability_disabled");

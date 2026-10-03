@@ -112,3 +112,18 @@ export async function rejectBooking(supabase: SupabaseClient, id: string): Promi
   const { error } = await supabase.rpc("reject_booking", { booking_id: id });
   return decision(error);
 }
+
+export async function markBookingPaid(supabase: SupabaseClient, id: string): Promise<DecisionResult> {
+  const { error } = await supabase.rpc("mark_booking_paid", { booking_id: id });
+  return decision(error);
+}
+
+export async function checkInBooking(supabase: SupabaseClient, id: string): Promise<DecisionResult> {
+  const { error } = await supabase.rpc("check_in_booking", { booking_id: id });
+  return decision(error);
+}
+
+export async function checkOutBooking(supabase: SupabaseClient, id: string): Promise<DecisionResult> {
+  const { error } = await supabase.rpc("check_out_booking", { booking_id: id });
+  return decision(error);
+}

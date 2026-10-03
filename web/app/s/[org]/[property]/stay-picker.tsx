@@ -8,15 +8,16 @@ import { addDays, daysInMonth, monthStart } from "@/lib/availability/dates";
 import { lastCheckout, nightStatus, quoteStay, requiredMinimumStay, type QuoteInput } from "@/lib/availability/quote";
 import { formatRupees } from "@/lib/properties/basics";
 import type { PublicAvailability } from "@/lib/public/catalogue";
+import { RequestForm } from "./request-form";
 
 const utc = (date: string) => new Date(`${date}T00:00:00Z`);
 const SHORT = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 const nights = (n: number) => `${n} ${n === 1 ? "night" : "nights"}`;
 const shiftMonth = (month: string, by: number) => (by > 0 ? addDays(month, daysInMonth(month)) : monthStart(addDays(month, -1)));
 
-type Props = { baseRateCents: number; availability: PublicAvailability; today: string; whatsappHref: string | null; propertyName: string };
+type Props = { propertyId: string; baseRateCents: number; availability: PublicAvailability; today: string; whatsappHref: string | null; propertyName: string };
 
-export function StayPicker({ baseRateCents, availability, today, whatsappHref, propertyName }: Props) {
+export function StayPicker({ propertyId, baseRateCents, availability, today, whatsappHref, propertyName }: Props) {
   const [month, setMonth] = useState(monthStart(today));
   const [checkIn, setCheckIn] = useState<string | null>(null);
   const [checkOut, setCheckOut] = useState<string | null>(null);
@@ -72,14 +73,14 @@ export function StayPicker({ baseRateCents, availability, today, whatsappHref, p
         <li><span className="stay-swatch" data-kind="selected" aria-hidden="true" />Your stay</li>
       </ul>
       <div className="stay-quote" aria-live="polite">
-        <Quote checkIn={checkIn} checkOut={checkOut} input={input} whatsappHref={whatsappHref} propertyName={propertyName} />
+        <Quote propertyId={propertyId} checkIn={checkIn} checkOut={checkOut} input={input} whatsappHref={whatsappHref} propertyName={propertyName} />
         {checkIn && <button type="button" className={buttonClasses("ghost", "stay-quote-clear")} onClick={clear}>Clear dates</button>}
       </div>
     </div>
   );
 }
 
-function Quote({ checkIn, checkOut, input, whatsappHref, propertyName }: { checkIn: string | null; checkOut: string | null; input: QuoteInput; whatsappHref: string | null; propertyName: string }) {
+function Quote({ propertyId, checkIn, checkOut, input, whatsappHref, propertyName }: { propertyId: string; checkIn: string | null; checkOut: string | null; input: QuoteInput; whatsappHref: string | null; propertyName: string }) {
   if (!checkIn) {
     return (
       <div className="stay-quote-body">
@@ -112,9 +113,10 @@ function Quote({ checkIn, checkOut, input, whatsappHref, propertyName }: { check
       <p className="stay-quote-meta">{from} → {to}</p>
       <p className="stay-quote-total"><span>{nights(quote.nights)}</span> · <strong>{formatRupees(quote.totalCents)}</strong></p>
       {counts.size > 1 && <p className="stay-quote-meta">{breakdown}</p>}
+      <RequestForm propertyId={propertyId} checkIn={checkIn} checkOut={checkOut} />
       {whatsappHref && (
-        <a href={`${whatsappHref}?text=${encodeURIComponent(message)}`} className={buttonClasses("primary", "w-full")} rel="noopener">
-          <IconChat className="size-4" /> Ask to book on WhatsApp
+        <a href={`${whatsappHref}?text=${encodeURIComponent(message)}`} className={buttonClasses("ghost", "w-full")} rel="noopener">
+          <IconChat className="size-4" /> Prefer WhatsApp? Ask there
         </a>
       )}
     </div>

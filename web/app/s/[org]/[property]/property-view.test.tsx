@@ -3,6 +3,7 @@ import { expect, it, vi } from "vitest";
 import { PropertyView } from "./property-view";
 
 // The embedded chat's Server Actions are the network boundary; nothing here sends a message.
+vi.mock("./request-actions", () => ({ requestBookingAction: vi.fn() }));
 vi.mock("./chat/actions", () => ({ startChatAction: vi.fn(), sendMessageAction: vi.fn(), loadChatAction: vi.fn() }));
 
 const organization = { id: "o1", slug: "altit", name: "Altit Heights", headline: "", city: "Hunza", phone: "0300 1234567", hostingSince: 2026 };

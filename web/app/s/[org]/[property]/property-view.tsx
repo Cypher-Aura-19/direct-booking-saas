@@ -73,7 +73,7 @@ export function PropertyView({ organization, property, availability, today }: Pr
 
           <section className="property-section" aria-labelledby="availability-title">
             <h2 id="availability-title" className="property-section-title">When you can stay</h2>
-            <StayPicker baseRateCents={property.baseRateCents} availability={availability} today={today} whatsappHref={whatsapp} propertyName={property.name} />
+            <StayPicker propertyId={property.id} baseRateCents={property.baseRateCents} availability={availability} today={today} whatsappHref={whatsapp} propertyName={property.name} />
           </section>
 
           <div id="chat" className="property-section chat-section">

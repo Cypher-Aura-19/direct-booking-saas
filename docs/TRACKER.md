@@ -5,7 +5,7 @@
 A requirement is done when a passing test carries its `@req` tag.
 Status is computed, never asserted.
 
-**Overall: 137 of 200 requirements covered (69%)**
+**Overall: 149 of 200 requirements covered (75%)**
 
 ## By milestone
 
@@ -20,7 +20,7 @@ Status is computed, never asserted.
 | M7 | 18 | 18 |
 | M8 | 15 | 15 |
 | M9 | 13 | 13 |
-| M10 | 0 | 12 |
+| M10 | 12 | 12 |
 | M11 | 0 | 21 |
 | M12 | 0 | 21 |
 | Cross-cutting | 8 | 17 |
@@ -158,18 +158,18 @@ Status is computed, never asserted.
 | INBOX-11 | M9 | done | web/app/dashboard/inbox/inbox-shell.test.tsx |
 | INBOX-12 | M9 | done | web/app/dashboard/inbox/[id]/conversation-detail.test.tsx, web/app/dashboard/inbox/inbox-shell.test.tsx, web/app/dashboard/page.test.tsx |
 | INBOX-13 | M9 | done | web/app/dashboard/inbox/[id]/conversation-detail.test.tsx |
-| BOOK-01 | M10 | todo | — |
-| BOOK-02 | M10 | todo | — |
-| BOOK-03 | M10 | todo | — |
-| BOOK-04 | M10 | todo | — |
-| BOOK-05 | M10 | todo | — |
-| BOOK-06 | M10 | todo | — |
-| BOOK-07 | M10 | todo | — |
-| BOOK-08 | M10 | todo | — |
-| BOOK-09 | M10 | todo | — |
-| BOOK-10 | M10 | todo | — |
-| BOOK-11 | M10 | todo | — |
-| BOOK-12 | M10 | todo | — |
+| BOOK-01 | M10 | done | web/app/s/[org]/[property]/request-form.test.tsx, web/lib/bookings/requests.test.ts |
+| BOOK-02 | M10 | done | web/lib/bookings/requests.test.ts |
+| BOOK-03 | M10 | done | web/lib/bookings/requests.test.ts |
+| BOOK-04 | M10 | done | web/lib/bookings/requests.test.ts |
+| BOOK-05 | M10 | done | web/app/dashboard/bookings/[id]/booking-actions.test.tsx, web/app/dashboard/bookings/bookings.integration.test.ts, web/app/dashboard/page.test.tsx, web/lib/bookings/host.test.ts |
+| BOOK-06 | M10 | done | web/lib/bookings/host.test.ts |
+| BOOK-07 | M10 | done | web/lib/bookings/host.test.ts |
+| BOOK-08 | M10 | done | web/lib/bookings/host.test.ts |
+| BOOK-09 | M10 | done | web/lib/bookings/host.test.ts |
+| BOOK-10 | M10 | done | web/lib/bookings/host.test.ts |
+| BOOK-11 | M10 | done | web/app/dashboard/bookings/bookings-view.test.tsx |
+| BOOK-12 | M10 | done | web/app/c/[token]/guest-booking-card.test.tsx, web/app/dashboard/settings/payment/payment-form.test.tsx, web/lib/bookings/guest.test.ts |
 | PAY-01 | M11 | todo | — |
 | PAY-02 | M11 | todo | — |
 | PAY-03 | M11 | todo | — |

@@ -5,7 +5,7 @@ import type { GuestBookingView } from "@/lib/bookings/guest";
 
 const base: GuestBookingView = {
   status: "requested", startDate: "2026-11-01", endDate: "2026-11-04", nights: 3, totalCents: 1_500_000,
-  advancePercent: 30, advanceCents: 450_000, paymentInstructions: null,
+  advancePercent: 30, advanceCents: 450_000, paymentInstructions: null, idUpload: null,
 };
 
 test("a pending request tells the guest it is waiting on the host and shows no payment details", () => {

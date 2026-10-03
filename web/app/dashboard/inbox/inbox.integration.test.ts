@@ -96,7 +96,8 @@ test("refreshMessagesAction marks the conversation read as a side effect", async
 // coverage of anything materially different.
 test("a message inserted by the service role arrives over the host's own realtime subscription", async () => {
   const received = new Promise<{ body: string }>((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error("realtime event did not arrive within 10s")), 10_000);
+    let probe: ReturnType<typeof setInterval> | undefined;
+    const timeout = setTimeout(() => { clearInterval(probe); reject(new Error("realtime event did not arrive within 30s")); }, 30_000);
     host.supabase
       .channel(`test-${conversationId}`)
       .on(
@@ -114,16 +115,27 @@ test("a message inserted by the service role arrives over the host's own realtim
           const row = payload.new as { body: string };
           if (row.body !== "Realtime probe message") return;
           clearTimeout(timeout);
+          clearInterval(probe);
           resolve(row);
         },
       )
       .subscribe(async (status) => {
         if (status !== "SUBSCRIBED") return;
-        // Must be awaited: a supabase-js query builder is a lazy thenable and
-        // sends nothing until awaited, so `void builder` never inserts.
-        const { error } = await service.from("messages").insert({ conversation_id: conversationId, sender: "guest", body: "Realtime probe message" });
-        if (error) { clearTimeout(timeout); reject(error); }
+        // SUBSCRIBED only means the socket joined the channel; on a cold
+        // Realtime service (a fresh `supabase start`, i.e. CI) the server-side
+        // postgres_changes registration can land a moment later, and an insert
+        // fired before that is dropped, not delayed — the very gap the app's
+        // subscribe-then-reconcile design exists to cover. So keep inserting
+        // probe rows until one is delivered; any single delivery proves the
+        // live path. (Inserts must be awaited: a supabase-js query builder is
+        // a lazy thenable and sends nothing until awaited.)
+        const insertProbe = async () => {
+          const { error } = await service.from("messages").insert({ conversation_id: conversationId, sender: "guest", body: "Realtime probe message" });
+          if (error) { clearTimeout(timeout); clearInterval(probe); reject(error); }
+        };
+        await insertProbe();
+        probe = setInterval(() => void insertProbe(), 1500);
       });
   });
   expect((await received).body).toBe("Realtime probe message");
-}, 15_000);
+}, 40_000);

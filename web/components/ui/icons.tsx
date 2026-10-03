@@ -44,6 +44,13 @@ export const IconCalendar = (p: IconProps) => (
   </Svg>
 );
 
+export const IconBookings = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5 4.5h14a1 1 0 0 1 1 1v3a2.5 2.5 0 0 0 0 5v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a2.5 2.5 0 0 0 0-5v-3a1 1 0 0 1 1-1Z" />
+    <path d="M9 9.5h6M9 13h3.5" />
+  </Svg>
+);
+
 export const IconBuilding = (p: IconProps) => (
   <Svg {...p}>
     <path d="M3.5 20h17M6 20V9l6-4.5L18 9v11" />

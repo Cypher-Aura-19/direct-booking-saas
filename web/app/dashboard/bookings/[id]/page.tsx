@@ -32,7 +32,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
             <div><dt>Chat</dt><dd><Link href={`/dashboard/inbox/${booking.conversationId}`} className="booking-link">Open the conversation</Link></dd></div>
           )}
         </dl>
-        {booking.status === "requested" && <BookingActions bookingId={booking.id} />}
+        <BookingActions bookingId={booking.id} status={booking.status} />
       </Sheet>
     </div>
   );

@@ -35,8 +35,8 @@
 .is-collapsed .sidebar-org { border:0; padding:12px; margin:0 0 20px; }
 .is-collapsed .sidebar-link { justify-content:center; padding:12px; }
 .is-collapsed .sidebar-account { margin-top:auto; justify-content:center; }
-.workspace-mobile-nav { position:fixed; bottom:0; inset-inline:0; z-index:30; background:#fcfdf8f5; border-top:1px solid var(--hairline); backdrop-filter:blur(12px); justify-content:space-around; padding:5px 10px max(5px,env(safe-area-inset-bottom)); }
-.workspace-mobile-nav a { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:52px; min-width:80px; border-radius:10px; color:var(--muted); font-size:10px; }
+.workspace-mobile-nav { position:fixed; bottom:0; inset-inline:0; z-index:30; background:#fcfdf8f5; border-top:1px solid var(--hairline); backdrop-filter:blur(12px); justify-content:space-around; padding:5px 6px max(5px,env(safe-area-inset-bottom)); gap:2px; }
+.workspace-mobile-nav a { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:52px; flex:1 1 0; min-width:0; border-radius:10px; color:var(--muted); font-size:10px; }
 .workspace-mobile-nav a[aria-current] { background:var(--accent-soft); color:var(--accent); }
 .dashboard-overview { display:flex; flex-direction:column; gap:22px; }
 .overview-heading { display:flex; align-items:center; justify-content:space-between; gap:20px; }

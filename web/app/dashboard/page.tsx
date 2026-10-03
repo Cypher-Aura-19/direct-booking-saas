@@ -1,6 +1,7 @@
 import { dashboardContext } from './_lib/context';
 import { DashboardHome } from './dashboard-home';
 import { localToday, shiftDate, type Booking, type DashboardProperty } from '@/lib/dashboard/analytics';
+import { listHostConversations } from '@/lib/chat/conversations';
 
 export default async function DashboardPage() {
   const { supabase, organization } = await dashboardContext();
@@ -14,6 +15,7 @@ export default async function DashboardPage() {
   }
   const bookings: Booking[] = [];
   let escalatedCount = 0;
+  let unreadCount = 0;
   // RLS and the organization join both scope these reads. Paginate to avoid silently truncated analytics.
   if (properties.length) {
     const cutoff = shiftDate(today, -180);
@@ -28,6 +30,8 @@ export default async function DashboardPage() {
     const { count, error } = await supabase.from('conversations').select('id,properties!inner(organization_id)', { count: 'exact', head: true }).eq('properties.organization_id', organization.id).eq('escalated', true);
     if (error) throw error;
     escalatedCount = count ?? 0;
+    const conversations = await listHostConversations(supabase, organization.id);
+    unreadCount = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
   }
-  return <DashboardHome bookings={bookings} properties={properties} today={today} organizationName={organization.name} escalatedCount={escalatedCount} />;
+  return <DashboardHome bookings={bookings} properties={properties} today={today} organizationName={organization.name} escalatedCount={escalatedCount} unreadCount={unreadCount} />;
 }

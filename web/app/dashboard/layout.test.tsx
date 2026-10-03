@@ -6,8 +6,8 @@ test('dashboard navigation supports accessible collapse and reachable mobile des
  render(<DashboardNav />);
  const sidebar=screen.getByTestId('dashboard-sidebar'), mobile=screen.getByTestId('dashboard-tabbar');
  expect(sidebar.className).toMatch(/hidden/);expect(sidebar.className).toMatch(/md:flex/);expect(mobile.className).toMatch(/md:hidden/);
- for(const label of ['Home','Properties','Calendar','Settings'])expect(within(sidebar).getByRole('link',{name:label})).toBeInTheDocument();
- expect(within(sidebar).getByText('Inbox').closest('[aria-disabled]')).toHaveAttribute('aria-disabled','true');
+ for(const label of ['Home','Inbox','Properties','Calendar','Settings'])expect(within(sidebar).getByRole('link',{name:label})).toBeInTheDocument();
+ expect(within(sidebar).getByRole('link',{name:'Inbox'})).toHaveAttribute('href','/dashboard/inbox');
  fireEvent.click(screen.getByRole('button',{name:'Collapse sidebar'}));
  expect(sidebar).toHaveClass('is-collapsed');expect(screen.getByRole('button',{name:'Expand sidebar'})).toHaveAttribute('aria-expanded','false');
  fireEvent.click(screen.getByRole('button',{name:'Expand sidebar'}));expect(sidebar).not.toHaveClass('is-collapsed');

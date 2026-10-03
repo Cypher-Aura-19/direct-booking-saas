@@ -23,6 +23,7 @@ const PROPERTY_COLUMNS = "id, slug, name, property_type, base_rate_cents, max_gu
 const PHOTO_COLUMNS = "id, property_id, storage_path, position, is_cover, has_variants, created_at";
 
 type PhotoRow = { id: string; property_id: string; storage_path: string; position: number; is_cover: boolean; has_variants: boolean; created_at: string };
+type OrganizationRow = { id: string; slug: string; name: string; profile: unknown; created_at: string };
 type PropertyRow = { id: string; slug: string; name: string; property_type: string; base_rate_cents: number; max_guests: number };
 
 // Reads via get_public_organization (a single-row RPC), not a direct table
@@ -33,7 +34,7 @@ type PropertyRow = { id: string; slug: string; name: string; property_type: stri
 export async function getPublicOrganization(supabase: SupabaseClient, slug: string): Promise<PublicOrganization | null> {
   const { data, error } = await supabase
     .rpc("get_public_organization", { org_slug: slug.toLowerCase() })
-    .maybeSingle();
+    .maybeSingle<OrganizationRow>();
   if (error) throw error;
   if (!data) return null;
   const profile = (data.profile ?? {}) as { city?: string; phone?: string; headline?: string };

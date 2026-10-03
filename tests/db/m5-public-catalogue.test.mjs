@@ -37,23 +37,28 @@ test("properties carry a description and known amenities, and reject unknown one
   }
 });
 
-test("anon reads an organisation's public columns but never its owner, payments or policies", async () => {
+test("anon reads an organisation only through the slug-scoped RPC, never the table, its owner, payments or policies", async () => {
   const host = await createTestHost();
   try {
     await withDb(async (db) => {
-      const orgId = await insertOrg(db, host.userId, { slug: `m5-org-${Date.now()}` });
+      const orgSlug = `m5-org-${Date.now()}`;
+      const orgId = await insertOrg(db, host.userId, { slug: orgSlug });
       await db.query(
         `update public.organizations set profile = '{"city":"Hunza","phone":"03001234567","headline":"Cabins"}',
            payment_instructions = '{"bank":"secret"}' where id = $1`,
         [orgId],
       );
       await actAsAnon(db);
-      const { rows } = await db.query("select id, slug, name, profile, created_at from public.organizations where id = $1", [orgId]);
-      assert.equal(rows.length, 1);
-      assert.equal(rows[0].profile.city, "Hunza");
-      for (const column of ["owner_id", "payment_instructions", "policies", "account_status"]) {
+      // Anon has no direct table access at all (20260927020000 closed org
+      // enumeration) — not even the public columns, and no unfiltered listing.
+      for (const column of ["id", "slug", "name", "profile", "owner_id", "payment_instructions", "policies", "account_status"]) {
         await expectPgError(db, "42501", () => db.query(`select ${column} from public.organizations where id = $1`, [orgId]));
       }
+      // The only door is the slug-scoped RPC: one row, public columns only.
+      const { rows } = await db.query("select * from public.get_public_organization($1)", [orgSlug]);
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].profile.city, "Hunza");
+      assert.deepEqual(Object.keys(rows[0]).sort(), ["created_at", "id", "name", "profile", "slug"]);
     });
   } finally {
     await host.cleanup();

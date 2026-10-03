@@ -155,3 +155,119 @@ export function parseGuestMessage(text: string): { body: string } | { error: str
   if (body.length > MAX_GUEST_MESSAGE) return { error: "Messages can be up to 1,000 characters." };
   return { body };
 }
+
+export type HostConversationSummary = {
+  id: string;
+  propertyId: string;
+  propertyName: string;
+  guestToken: string;
+  aiState: "enquiry" | "payment" | "stay";
+  aiEnabled: boolean;
+  escalated: boolean;
+  lastMessage: { sender: Sender; body: string; createdAt: string } | null;
+  unreadCount: number;
+};
+
+export type HostConversation = {
+  id: string;
+  propertyId: string;
+  propertyName: string;
+  guestToken: string;
+  aiState: "enquiry" | "payment" | "stay";
+  aiEnabled: boolean;
+  escalated: boolean;
+  escalationReason: string | null;
+};
+
+export const MAX_HOST_MESSAGE = 2000;
+
+export function parseHostMessage(text: string): { body: string } | { error: string } {
+  const body = text.trim();
+  if (!body) return { error: "Type a message first." };
+  if (body.length > MAX_HOST_MESSAGE) return { error: `Messages can be up to ${MAX_HOST_MESSAGE} characters.` };
+  return { body };
+}
+
+// All conversations across every property in the org (INBOX-01), newest
+// activity first, with the unread count and last message pre-computed —
+// see the migration's list_host_conversations() for why this is one RPC
+// call rather than N+1 queries.
+type HostConversationRow = {
+  id: string;
+  property_id: string;
+  property_name: string;
+  guest_token: string;
+  ai_state: HostConversationSummary["aiState"];
+  ai_enabled: boolean;
+  escalated: boolean;
+  last_sender: string | null;
+  last_body: string | null;
+  last_created_at: string | null;
+  unread_count: number | string;
+};
+
+export async function listHostConversations(
+  supabase: SupabaseClient,
+  organizationId: string,
+): Promise<HostConversationSummary[]> {
+  const { data, error } = await supabase.rpc("list_host_conversations", { org_id: organizationId });
+  if (error) throw error;
+  return ((data ?? []) as HostConversationRow[]).map((row): HostConversationSummary => ({
+    id: row.id,
+    propertyId: row.property_id,
+    propertyName: row.property_name,
+    guestToken: row.guest_token,
+    aiState: row.ai_state,
+    aiEnabled: row.ai_enabled,
+    escalated: row.escalated,
+    lastMessage: row.last_sender
+      ? { sender: row.last_sender as Sender, body: row.last_body as string, createdAt: row.last_created_at as string }
+      : null,
+    unreadCount: Number(row.unread_count),
+  }));
+}
+
+// The one conversation a host opened (INBOX-08's detail view). Unlike
+// getConversation (token-keyed, guest-facing), this is id-keyed and scoped
+// entirely by the caller's own RLS — a foreign conversation id resolves to
+// null, never a cross-org read.
+export async function getHostConversation(supabase: SupabaseClient, conversationId: string): Promise<HostConversation | null> {
+  const { data, error } = await supabase
+    .from("conversations")
+    .select("id, property_id, guest_token, ai_state, ai_enabled, escalated, escalation_reason, properties(name)")
+    .eq("id", conversationId)
+    .maybeSingle();
+  if (error) {
+    if (error.code === "22P02") return null;
+    throw error;
+  }
+  if (!data) return null;
+  const property = data.properties as unknown as { name: string } | { name: string }[];
+  const propertyName = Array.isArray(property) ? property[0]?.name ?? "" : property?.name ?? "";
+  return {
+    id: data.id,
+    propertyId: data.property_id,
+    propertyName,
+    guestToken: data.guest_token,
+    aiState: data.ai_state,
+    aiEnabled: data.ai_enabled,
+    escalated: data.escalated,
+    escalationReason: data.escalation_reason,
+  };
+}
+
+// Independent of escalate(): a host taking over is a deliberate choice, not
+// the AI giving up, so this never touches `escalated`/`escalation_reason`.
+// Turning the AI back on needs nothing else — runGuestTurn already reads
+// ai_enabled fresh on every turn (agent.ts) and recentHistory() rebuilds the
+// model's context from `messages` fresh every time, so a host message sent
+// while the AI is off is already in context the instant it's re-enabled.
+export async function setAiEnabled(supabase: SupabaseClient, conversationId: string, enabled: boolean): Promise<void> {
+  const { error } = await supabase.from("conversations").update({ ai_enabled: enabled }).eq("id", conversationId);
+  if (error) throw error;
+}
+
+export async function markConversationRead(supabase: SupabaseClient, conversationId: string): Promise<void> {
+  const { error } = await supabase.from("conversations").update({ host_last_read_at: new Date().toISOString() }).eq("id", conversationId);
+  if (error) throw error;
+}
